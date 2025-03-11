@@ -644,3 +644,5 @@ function outputBookingCalendar() {
 </body>
 
 </html>
+
+
