@@ -1,0 +1,563 @@
+body {
+  background: #e8e8e8;
+}
+
+  /* General Styles */
+.nav-bar,
+.nav-bar *,
+.notifications,
+.notifications * {
+  box-sizing: border-box;
+}
+
+#notificationButton {
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+  /* Sidebar Navigation */
+.nav-bar {
+  background: #faf1ea;
+  height: 100%; /* Instead of 100vh */
+  width: 200px;
+  position: fixed;
+  overflow: hidden;
+  left: 0;
+  top: 0;
+}
+  
+  /* Sidebar Container */
+.nav-container {
+  background: #ffffff;
+  border-right: 1.5px solid #000000;
+  width: 200px;
+  height: 100%;
+  position: absolute;
+  top: 80px; /* Aligns directly below the header */
+  overflow-y: auto; /* Allows scrolling if needed */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.5px; /* Removes space between elements */
+  padding-top: 20px;
+}
+  
+  /* Common Button Styles */
+  .home-button,
+  .book-button,
+  .customer-button,
+  .profile-button {
+    width: 90%;
+    background: transparent;
+    border-radius: 15px;
+    padding: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    transition: background 0.3s ease-in-out;
+  }
+  
+  /* Button Hover Effect */
+  .home-button:hover,
+  .book-button:hover,
+  .customer-button:hover,
+  .profile-button:hover,
+  .home-button.active,
+  .book-button.active,
+  .customer-button.active,
+  .profile-button.active {
+    background: #d98d62;
+  }
+  
+  /* Common Text Styles */
+  .home-text,
+  .booking-text,
+  .customers-text,
+  .profile-text {
+    font-family: "BalooTammudu2-Medium", sans-serif;
+    font-size: 23px;
+    line-height: 35px;
+    font-weight: 500;
+    color: #421d11;
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    width: 100%;
+    height: 30px;
+    padding-left: 15px;
+  }
+  
+  /* Text Color on Hover & Active */
+  .home-button:hover .home-text,
+  .book-button:hover .booking-text,
+  .customer-button:hover .customers-text,
+  .profile-button:hover .profile-text,
+  .home-button.active .home-text,
+  .book-button.active .booking-text,
+  .customer-button.active .customers-text,
+  .profile-button.active .profile-text {
+    color: #ffffff;
+  }
+  
+  /* Header Container */
+  .header-img-container {
+    background: #faf1ea;
+    width: calc(100% - 195px); /* Adjust for sidebar */
+    height: 80px;
+    position: fixed;
+    left: 195px;
+    top: 0;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end; /* Push items to the right */
+    padding-right: 88px; /* Add some spacing from the right */
+  }
+
+.notifications {
+  width: 55px; 
+  height: 55px;
+  cursor: pointer;
+}
+  
+  /* Logo Styling */
+.adorafur-logo {
+  margin-left: 15px;
+  height: 80px; /* Adjust this to fit better */
+  width: auto;
+}
+
+.panel-container {
+  background: #ffffff;
+  border-radius: 20px;
+  width: 100%;
+  max-width: 100%;
+  height: 100%;
+  position: fixed;
+  left: 220px;
+  top: 100px;
+  overflow: hidden;
+}
+
+.head{
+  margin-top: 100px;
+  border-bottom: solid 1px black;
+  max-width: 100%;
+  width: 100%;
+  height: fit-content;
+}
+
+.head-text {
+  color: #663a2c;
+  text-align: left;
+  font-family: "BalooTammudu2-Bold", sans-serif;
+  font-size: 42px;
+  letter-spacing: 0.02em;
+  font-weight: 700;
+  position: absolute;
+  left: 32px;
+  top: 20px;
+  width: 512px;
+  height: 65px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  
+}
+
+.time-text {
+  color: #663a2c;
+  text-align: left;
+  font-family: "BarlowCondensed-Italic", sans-serif;
+  font-size: 42px;
+  letter-spacing: 0.02em;
+  font-weight: 550;
+  font-style: italic;
+  position: absolute;
+  top: 20px;
+  width: 512px;
+  height: 65px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  margin-left: 50%;
+}
+
+.date-and-day {
+  color: #000000;
+  text-align: left;
+  font-family: "BarlowCondensed-Regular", sans-serif;
+  font-size: 25px;
+  letter-spacing: -5px;
+  line-height: 4px;
+  letter-spacing: 0.06em;
+  font-weight: 400;
+  position: absolute;
+  left: 32px;
+  top: 100px;
+  height: 65px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+}
+
+
+/* Scrollable Notification List */
+.modal-body {
+  max-height: 60vh; /* Limits height to enable scrolling */
+  overflow-y: auto; /* Enables scrolling */
+  padding-right: 10px; /* Prevents text from touching the edge */
+}
+
+/* Notification Cards */
+.notification-card {
+  background: rgba(102, 58, 44, 0.26);
+  padding: 15px;
+  margin-bottom: 10px;
+  border-radius: 5px;
+  position: relative; /* Allows absolute positioning inside */
+}
+
+/* Footer for Date & Status */
+.notification-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center; 
+  margin-top: 10px;
+}
+
+
+.notif-status {
+  font-weight: bold;
+  color: #421d11;
+}
+
+/* Notification Button */
+#notificationButton {
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+
+/* Notification Header */
+.notifications-header {
+  color: #663a2c;
+  text-align: left;
+  font-family: "BalooTammudu2-SemiBold", sans-serif;
+  font-size: 25px;
+  letter-spacing: 0.02em;
+  font-weight: 600;
+  text-decoration: underline;
+  position: relative;
+  width: 185px;
+  height: 19px;
+}
+
+.notif-today{
+  color: #663a2c;
+  text-align: left;
+  font-family: "BalooTammudu2-Regular", sans-serif;
+  font-size: 20px;
+  letter-spacing: 0.02em;
+  font-weight: 400;
+  text-decoration: underline;
+  position: relative;
+  width: 185px;
+  height: 19px;
+  margin-top: 17px;
+  margin-bottom: 17px;
+}
+
+.notif-service{
+  color: #663a2c;
+  text-align: left;
+  font-family: "BalooTammudu2-SemiBold", sans-serif;
+  font-size: 20px;
+  letter-spacing: 0.02em;
+  font-weight: 600;
+  position: relative;
+  height: 19px;
+  margin-bottom: 8px;
+}
+
+.notif-sub{
+  color: #663a2c;
+  font-family: "BalooTammudu2-Regular", sans-serif;
+  font-size: 16px;
+  letter-spacing: 0.02em;
+  font-weight: 400;
+}
+
+.notif-confirmed{
+  color: #796464;
+  text-align: left;
+  font-family: "BalooTammudu2-Medium", sans-serif;
+  font-size: 17px;
+  letter-spacing: 0.02em;
+  font-weight: 600;
+  position: relative;
+  width: 110px;
+  height: 19px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+}
+
+.notif-date{
+  color: #663a2c;
+  text-align: left;
+  font-family: "BalooTammudu2-Regular", sans-serif;
+  font-size: 20px;
+  letter-spacing: 0.02em;
+  font-weight: 400;
+  text-decoration: underline;
+  position: relative;
+  width: 185px;
+  height: 19px;
+  margin-top: 15px;
+  margin-bottom: 15px;
+}
+
+.notif-text{
+  color: #663a2c;
+  text-align: left;
+  font-family: "BalooTammudu2-SemiBold", sans-serif;
+  font-size: 16px;
+  letter-spacing: 0.02em;
+  font-weight: 600;
+  position: relative;
+  height: 19px;
+}
+
+.confirm-btn {
+  background: #fff4e7;
+  color: #663a2c;
+  padding: 10px 16px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 13px;
+  width: 80px;
+  height: 25px;
+  font-weight: 600;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  line-height: normal;
+}
+
+.notif-circle {
+  background: #663a2c;
+  border-radius: 50%;
+  border: 2px solid #f0f0f0;
+  width: 13px;
+  height: 13px;
+  position: absolute;
+  top: 15px;
+  right: 14px;
+}
+
+.notif-info{
+  color: #757474;
+  font-family: "BalooTammudu2-Regular", sans-serif;
+  font-size: 16px;
+  letter-spacing: 0.02em;
+  font-weight: 400;
+}
+
+.date-sec {
+  display: flex;
+  align-items: center; /* Aligns items vertically */
+  gap: 5px; /* Adds spacing between elements */
+}
+
+.notif-sec{
+  display: flex;
+  align-items: center; /* Aligns items vertically */
+  gap: 5px; /* Adds spacing between elements */
+}
+
+/* Notification Modal Styles */
+.modal-home {
+  display: none;
+  position: fixed;
+  z-index: 1000;
+  right: 60px;
+  top: 22px;
+  width: 350px;
+  max-height: 85vh;
+  border-radius: 10px;
+}
+
+.modal-content-home {
+  background: #fff4e7;
+  padding: 20px;
+  border: 2px solid #a59f9f;
+  border-radius: 30px;
+  width: 100%;
+  max-height: 80vh;
+  overflow-y: auto;
+}
+
+.modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-bottom: 10px;
+  border-bottom: 1px solid #d8c4b6;
+}
+
+.modal-logo {
+  width: 48px;
+  height: 44px;
+}
+
+.close {
+  color: #aaa;
+  font-size: 24px;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.close:hover,
+.close:focus {
+  color: #000;
+}
+
+.modal-body {
+  max-height: 60vh;
+  overflow-y: auto;
+  padding-right: 10px;
+}
+
+.notification-card {
+  background: rgba(102, 58, 44, 0.26);
+  padding: 15px;
+  margin-bottom: 10px;
+  border-radius: 5px;
+  position: relative;
+}
+
+.notification-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center; 
+  margin-top: 10px;
+}
+
+.notifications-header {
+  color: #663a2c;
+  text-align: left;
+  font-family: "BalooTammudu2-SemiBold", sans-serif;
+  font-size: 25px;
+  letter-spacing: 0.02em;
+  font-weight: 600;
+  text-decoration: underline;
+  position: relative;
+  width: 185px;
+  height: 19px;
+}
+
+.notif-today, .notif-date {
+  color: #663a2c;
+  text-align: left;
+  font-family: "BalooTammudu2-Regular", sans-serif;
+  font-size: 20px;
+  letter-spacing: 0.02em;
+  font-weight: 400;
+  text-decoration: underline;
+  position: relative;
+  width: 185px;
+  height: 19px;
+  margin-top: 17px;
+  margin-bottom: 17px;
+}
+
+.notif-service {
+  color: #663a2c;
+  text-align: left;
+  font-family: "BalooTammudu2-SemiBold", sans-serif;
+  font-size: 20px;
+  letter-spacing: 0.02em;
+  font-weight: 600;
+  position: relative;
+  height: 19px;
+  margin-bottom: 8px;
+}
+
+.notif-sub {
+  color: #663a2c;
+  font-family: "BalooTammudu2-Regular", sans-serif;
+  font-size: 16px;
+  letter-spacing: 0.02em;
+  font-weight: 400;
+}
+
+.notif-confirmed {
+  color: #796464;
+  text-align: left;
+  font-family: "BalooTammudu2-Medium", sans-serif;
+  font-size: 17px;
+  letter-spacing: 0.02em;
+  font-weight: 600;
+  position: relative;
+  width: 110px;
+  height: 19px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+}
+
+.notif-text {
+  color: #663a2c;
+  text-align: left;
+  font-family: "BalooTammudu2-SemiBold", sans-serif;
+  font-size: 16px;
+  letter-spacing: 0.02em;
+  font-weight: 600;
+  position: relative;
+  height: 19px;
+}
+
+.confirm-btn {
+  background: #fff4e7;
+  color: #663a2c;
+  padding: 10px 16px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 13px;
+  width: 80px;
+  height: 25px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: normal;
+}
+
+.notif-circle {
+  background: #663a2c;
+  border-radius: 50%;
+  border: 2px solid #f0f0f0;
+  width: 13px;
+  height: 13px;
+  position: absolute;
+  top: 15px;
+  right: 14px;
+}
+
+.notif-info {
+  color: #757474;
+  font-family: "BalooTammudu2-Regular", sans-serif;
+  font-size: 16px;
+  letter-spacing: 0.02em;
+  font-weight: 400;
+}
+
+.date-sec, .notif-sec {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}

@@ -1,0 +1,198 @@
+*{
+  padding: 0;
+  margin: 0;
+  text-decoration: none;
+  box-sizing: border-box; 
+}
+
+
+body{
+  Font-family : “BalooTammudu2-Medium” , sans-serif;
+  z-index: 10;
+}
+ 
+nav, .btn-primary{
+  background-color: #d98e62;
+  width: 100%;
+  position: relative; /* Prevent it from blocking content */
+  font-weight: bolder;
+}
+
+
+nav ul li a, .btn-primary {
+  color: #FAF1EA;
+  font-size: 17px;
+  padding: 7px 13px;
+  border-radius: 3px;
+  border: none;
+}
+
+
+nav ul li a:hover, .btn-primary:hover {
+  color: #FAF1EA;
+  font-size: 17px;
+  padding: 7px 13px;
+  border-radius: 3px;
+  border: none;
+  background-color: #421D11;
+}
+
+.lHead {
+  display: flex;
+  background-color: #faf1ea;
+  justify-content: space-between;
+  align-items: center; /* Ensure proper alignment */
+  height: auto; /* Allow it to adjust */
+  min-height: 100px;
+}
+
+.lHead img {
+  max-width: 100%;
+  height: auto; /* Adjust to content */
+  max-height: 100px; /* Prevent overflow */
+  
+}
+
+.paw2, .paw1{
+  margin-bottom: -60px;
+  max-width: 100%;
+  height: auto;
+  max-height: 300px;
+}
+
+.logos{
+  position: relative;
+  margin-left: 50px;
+}
+
+@media (max-width: 991px){
+  .sidebar{
+    background-color: #D98D62;
+    backdrop-filter: blur(10px);
+  }
+  
+  label.logo{
+    font-size: 30px;
+    padding-left: 50px;
+  }
+
+  nav ul li a{
+    font-size: 16px;
+  }
+
+  .paws1, .paws2{
+    display: none;
+  }
+
+  .lHead {
+    justify-content: center;
+  }
+
+}
+
+
+/*to remove drop down icon*/
+.nav-link.dropdown-toggle::after {
+  display: none 
+}
+
+.dropdown-menu {
+  background-color: #D98D62; 
+  border-radius: 0 ;
+  box-shadow: none ;
+  border: none;
+}
+
+.dropdown-menu .dropdown-item {
+  color: #FAF1EA;
+  width: auto;
+  padding: 10px 5px;
+  display: block;
+}
+
+.dropdown-menu .dropdown-item:hover {
+  background-color: #FAF1EA;
+  color:#D98D62;
+}
+
+.dropdown {
+  position: relative;
+}
+
+.dropdown-menu {
+  width: auto; 
+  left: 0 ; 
+  right: 0 ; 
+}
+
+.log{
+  width: 30%; 
+  height: auto;
+}
+
+.nav-item .nav-link.active {
+  color: #331C15;
+}
+
+.modal-dialog{
+  z-index: 100;
+}
+
+.modal-content{
+  background-color: #F7E2CF;
+}
+
+#login-body {
+  align-items: center;
+  text-align: center;
+  padding: 5%;
+  background-image: url(log-in-puppies.png);
+  background-repeat: no-repeat;  /* Prevents the image from repeating */
+  background-position: left bottom; /* Positions the image in the lower-left */
+  background-size: 45%; /* Keeps the image at its original size */
+  margin: 5%;
+}
+
+.modal-body h5{
+  color: #421D11;
+  margin: 2%;
+}
+
+.modal-body h2{
+  color: 967549;
+  margin: 2%;
+}
+
+.modal-header{
+  border-bottom: none;
+}
+
+input[type="email"],
+input[type="password"]{
+  color: #421D11;
+  border: solid 1px #421D11;
+  text-align: center;
+  align-items: center;
+}
+
+.btn, .btn:hover{
+  border-radius: 10px;
+  width: 100px;
+}
+
+#not-yet-register, #sign-in{
+  color: #421D11;
+}
+
+.dog-image {
+  max-width: 100%;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+hr{
+  color: #ffffff;
+  border: solid 2px #FFF;
+  opacity: 1;
+}

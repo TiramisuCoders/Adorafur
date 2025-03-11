@@ -1,0 +1,411 @@
+#header{
+  z-index: 100;
+  position:fixed;
+  width: 100%;
+  top: 0;
+}
+
+.body{
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start; /* Aligns content at the top */
+  min-height: 100vh;
+}
+
+
+.contact,
+.contact * {
+  box-sizing: border-box;
+}
+.contact {
+    background: #faf1ea;
+    min-height: 100vh;
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    align-items: center;
+    justify-content: space-between; /* Prevent unnecessary shrinking */
+  }
+  
+  /* Ensure image stays on the left */
+  .contact-us-img {
+    height: 780px;
+    object-fit: cover;
+    flex-shrink: 0; /* Prevent shrinking */
+    max-width: 40%; /* Prevent it from taking too much space */
+  }
+  
+  /* Adjust text positioning */
+  /* Adjust text positioning */
+  .contact-text1 {
+    flex-grow: 1;  /* Allow shrinking */
+    flex-basis: 50%; /* Let it take up half the space */
+    width: auto;
+    text-align: center;
+    display: flex;
+    justify-content: center;
+    padding: 20px;
+    font-size: clamp(1rem, 2vw, 2rem); /* Ensures it never goes negative */
+    margin-top: -100px; /* Adjust this value to raise it */
+  }
+  
+  /* 📱 Responsive Design: Stack elements when minimized */
+  @media (max-width: 700px) {
+    .contact {
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+    }
+  
+    .contact-us-img {
+      width: 100%;
+      height: auto;
+      max-width: 100%; /* Allow full width */
+    }
+  
+    .contact-text1 {
+      flex-basis: 100%;
+      max-width: 100%;
+      font-size: clamp(1rem, 3vw, 1.5rem); /* Shrink text earlier */
+      line-height: 1.4; /* ✅ Adjust this value for better readability */
+      padding: 10px;
+      margin-top: 0px;
+      margin-right: 0px;
+      flex-wrap: wrap;
+    }
+  }
+  
+  .contact-span1 {
+    color: #967549;
+    font-family: "BalooTammudu2-Regular", sans-serif;
+    font-size: 27.299999237060547px;
+    line-height: 45px;
+    font-weight: 400;
+  }
+  .contact-span2 {
+    color: #ab643c;
+    font-family: "BalooTammudu2-Regular", sans-serif;
+    font-size: 42px;
+    line-height: 45px;
+    font-weight: 400;
+  }
+  .contact-span3 {
+    color: #421d11;
+    font-family: "BalooTammudu2-Regular", sans-serif;
+    font-size: 26px;
+    line-height: 55px;
+    font-weight: 400;
+  }
+
+
+/* 🟢 Improved contact-text2 */
+.contact-text2 {
+  display: flex;
+  flex-direction: row; /* Default layout */
+  flex-basis: 50%; /* Ensure it takes up half the space */
+  justify-content: center; /* Align content to the left */
+  flex-wrap: wrap;
+  gap: 20px;
+  width: 100%;
+  padding: 10px;
+  text-align: center; /* Align text to the left */
+  align-items: center;
+  margin-left: 0; /* Remove any extra margin */
+  position: relative; /* Ensure it doesn't overlap */
+  margin-top: 0; /* Remove negative margin */
+}
+
+/* Styling for the Gmail and contact number sections */
+.gmail-info, .contact-num {
+  color: #967549;
+  font-family: "BalooTammudu2-Regular", sans-serif;
+  font-weight: 400;
+  font-size: 20px; /* Fixed font size */
+}
+
+/* 🟢 Fixing .gmail and .number containers */
+.gmail, .number {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 6.5px;
+  flex-shrink: 1; /* Allows elements to resize */
+}
+
+/* 🟢 Handling screens below 700px */
+@media (max-width: 700px) {
+  .contact-text2 {
+      flex-direction: column; /* Stack elements vertically */
+      gap: 20px;
+      padding: 15px;
+      text-align: center; /* Center text */
+      margin-left: 0;
+      margin-right: 0;
+  }
+
+  .gmail, .number {
+      width: 100%;
+      align-items: center;
+      justify-content: center;
+  }
+
+  .gmail-info, .contact-num {
+      font-size: 22px; /* Keep text size fixed */
+  }
+}
+
+/* Ensure the container adapts to different screen sizes */
+.g-maps-container {
+  width: 100%; /* Take full width of the parent */
+  display: flex;
+  justify-content: center; /* Center the map horizontally */
+  align-items: center;
+  padding: 20px 0; /* Add space above and below */
+}
+
+/* Make the map responsive */
+.g-maps {
+  width: 90%; /* Allow flexibility while keeping a max width */
+  max-width: 700px; /* Prevent it from becoming too large */
+  height: 345px; /* Default height */
+}
+
+/* Ensure the iframe scales properly */
+.map-iframe {
+  width: 100%; /* Make iframe fully responsive */
+  height: 100%; /* Fill the container */
+  border: none; /* Remove default border */
+}
+
+/* 🔹 Responsive adjustments for smaller screens */
+@media (max-width: 700px) {
+  .g-maps {
+      width: 100%; /* Use full width */
+      height: 250px; /* Reduce height for smaller screens */
+  }
+}
+
+.socmed-links {
+  position: absolute;
+  display: flex; /* Aligns icons in a row */
+  align-items: center;
+  justify-content: center;
+  gap: 35px;
+  width: max-content; /* Prevents unwanted shrinking */
+  padding: 10px;
+  margin-top: 525px;
+}
+
+
+.ig-icon, .fb-icon {
+    width: clamp(40px, 5vw, 60px);
+    height: auto;
+}
+
+@media (max-width: 700px) {
+    .socmed-links {
+        gap: 35px;
+        margin-top: 350px;
+    }
+
+    .ig-icon, .fb-icon {
+        width: clamp(35px, 8vw, 50px);
+    }
+}
+
+/* Wrap image and title together */
+.faqs-img-container {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%; /* Full width */
+  margin: 0 auto; /* Center horizontally */
+  margin-top: 40px;
+}
+
+/* Make image responsive and scalable */
+.faqs-img {
+  width: 90%; /* Allow it to grow */
+  max-width: 100%; /* Prevent overflow */
+  height: auto; /* Maintain aspect ratio */
+  display: block;
+  object-fit: cover; /* Ensures it fills space properly */
+  flex-grow: 1; /* Allow image to scale like other elements */
+}
+
+/* Center the title over the image */
+.faqs-title {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  color: #ffffff;
+  font-family: "BalooTammudu2-Regular", sans-serif;
+  text-align: center;
+  font-size: clamp(30px, 4vw, 60px); /* Dynamic font scaling */
+  font-weight: 500;
+  padding: 10px;
+  width: 80%; /* Prevent text from stretching too wide */
+  flex-shrink: 1;
+}
+
+/* Ensure growth along with other elements */
+.faqs {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%; /* Allow full page width */
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .faqs-img-container {
+      width: 90%; /* Slightly reduce width on smaller screens */
+  }
+
+  .faqs-title {
+      font-size: clamp(18px, 5vw, 40px); /* Shrink text for smaller screens */
+  }
+}
+
+
+section{
+    min-height: 100vh;
+    width: 80%;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    top: 900px;
+  }
+
+/*  .faqs-space{
+    height: 1200px;
+}*/
+
+.faq {
+    font-family: "BalooTammudu2-Regular", sans-serif;
+    width: 1150px;
+    margin-top: 2rem;
+    padding-bottom: 1rem;
+    border-bottom: 0.5px solid #cccccc;
+    cursor: pointer;
+}
+
+.question{
+    font-family: "BalooTammudu2-Regular", sans-serif;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.question h3{
+    width: 1000px;
+    font-family: "BalooTammudu2-Regular", sans-serif;
+    color: #ab643c;
+    font-size: 1.8rem;
+
+}
+
+.answer {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 1.4s ease;
+}
+
+.answer p{
+    font-family: "BalooTammudu2-Regular", sans-serif;
+    width: 1000px;
+    text-align: justify;
+    text-justify: inter-word;
+    color: #421d11;
+    padding-top: 1rem;
+    line-height: 1.6;
+    font-size: 1.4rem;
+}
+
+.faq.active .answer{
+    max-height: 300px;
+    animation: fade 1s ease-in-out;
+}
+
+/* Initially, show the plus sign */
+.plus {
+    opacity: 1;  /* Show the plus sign */
+    transition: opacity 0.3s ease;  /* Smooth transition */
+}
+
+/* Initially, hide the minus sign */
+.minus {
+    opacity: 0;  /* Hide the minus sign */
+    transition: opacity 0.3s ease;  /* Smooth transition */
+}
+
+/* When active, hide the plus sign and show the minus sign */
+.icon.active .plus {
+    opacity: 0;  /* Hide the plus sign */
+}
+
+.icon.active .minus {
+    opacity: 1;  /* Show the minus sign */
+}
+
+/* For tablets and smaller screens */
+@media (max-width: 1300px) {
+  /* Image container and title */
+  .faqs-img-container {
+      margin-bottom: 20px;
+  }
+
+  /* FAQ Section */
+  .faq-section {
+      width: 100%;
+      padding: 10px;
+  }
+
+  /* FAQ Item */
+  .faq {
+      width: 100%;
+      padding: 10px;
+      margin-top: 10px; /* Small margin between items */
+  }
+
+  .question h3 {
+      font-size: 1.5rem; /* Adjust question font size */
+  }
+
+  .answer p {
+      font-size: 1.2rem; /* Smaller font size for mobile */
+  }
+
+  .faqs-img {
+      width: 100%; /* Make sure the image scales down */
+      height: auto;
+  }
+}
+
+/* For extra small screens (e.g., mobile phones) */
+@media (max-width: 480px) {
+
+  /* FAQ Section */
+
+  .faq-section {
+      padding: 5px;
+  }
+
+  .faq {
+      padding: 8px;
+  }
+
+  .question h3 {
+      font-size: 1.3rem; /* Slightly smaller font for small screens */
+  }
+
+  .answer p {
+      font-size: 1.1rem; /* Even smaller font for small screens */
+  }
+}

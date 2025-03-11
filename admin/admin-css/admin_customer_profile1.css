@@ -1,0 +1,497 @@
+
+/*CUSTOMER PROFILE*/
+/* Profile Box */
+.profile-box {
+    background: #ffffff;
+    border: 2px solid #a59f9f;
+    height: 500px;
+    width: 85%;
+    position: relative;
+    top: 10px;
+    left: 20px;
+    display: flex; /* Enables side-by-side layout */
+    flex-direction: row; /* Align children horizontally */
+    justify-content: space-between; /* Spaces out elements */
+    align-items: flex-start; /* Align items at the top */
+    padding: 20px 20px 20px 1px;
+    box-sizing: border-box;
+  }
+  
+  .back-icon{
+    display: flex;
+    flex-direction: column;
+    width: 26px; /* Adjust as needed */
+    position: absolute; /* Allows 'left' to work */
+    left: 25px;
+  
+  }
+  
+  /* User Section */
+  .user-section {
+    display: flex;
+    flex-direction: column;
+    width: 30%; /* Take up less than half of the container */
+    align-items: center;
+  }
+  
+  /* Crown Image */
+  .crown-img {
+    width: 50%;
+    height: 50%;
+    object-fit: cover;
+    margin-bottom: 10px;
+    margin-top: 15px;
+  }
+  
+  /* User Name */
+  .user-name {
+    color: #663a2c;
+    text-align: center;
+    font-family: "BalooTammudu2-Bold", sans-serif;
+    font-size: 28px;
+    font-weight: 700;
+    width: 100%;
+    margin-bottom: 10px;
+  }
+  
+  /* Gold Status */
+  .gd-status {
+    background: #ffcc00;
+    border-radius: 32px;
+    width: 130px;
+    padding: 5px;
+    color: #ffffff;
+    text-align: center;
+    font-family: "BalooTammudu2-Bold", sans-serif;
+    font-size: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 15px;
+  }
+  
+  /* Pet Card */
+  .pet-card {
+    background: #ffffff;
+    border-radius: 10px;
+    border: 1px solid #a59f9f;
+    padding: 10px;
+    height: 60px;
+    width: 90%;
+    display: flex; /* Enables flexbox */
+    flex-direction: column; /* Stack child elements vertically */
+    justify-content: center; /* Centers content vertically */
+    align-items: flex-start; /* Aligns text to the left */
+  }
+  
+  /* Pet Profile */
+  .pet-profile1 {
+    color: #d48d64;
+    font-family: "BalooTammudu2-Bold", sans-serif;
+    font-size: 19px;
+    font-weight: 700;
+  }
+  
+  .pet-profile2 {
+    color: #a59f9f;
+    font-family: "BalooTammudu2-Regular", sans-serif;
+    font-size: 14px;
+    font-weight: 400;
+  }
+  
+  /* Transactions Section */
+  .transactions-box {
+    display: flex;
+    flex-direction: column;
+    width: 70%; /* Take up half of the container */
+    padding-left: 16px;
+  }
+  
+  /* Transactions Header */
+  .transac-header {
+    color: #6e6e6e;
+    font-family: "BalooTammudu2-Bold", sans-serif;
+    font-size: 42px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    margin-bottom: 20px;
+    margin-top: 20px;
+  }
+  
+  .transac-line {
+    display: flex; 
+    justify-content: space-between; /* Distributes the items evenly */
+    align-items: center; /* Aligns items vertically */
+    gap: 10px; /* Adds spacing between items */
+    font-family: "BalooTammudu2-Bold", sans-serif;
+    color: #6e6e6e;
+    font-size: 14.5px;
+    font-weight: 700;
+  }
+  
+  .transac-line div {
+    flex: 1; /* Ensures all divs take up equal space */
+    text-align: center; /* Centers text inside each div */
+  }
+  
+  .divider-line{
+    width: 1px; /* Make it span the full width */
+    height: 98%; /* Set a visible height */
+    background-color: #a59f9f; /* Choose a color */
+  }
+  
+  #dropdownMenuButton {
+    background: #c2c2c2;
+    border-color: #999999;
+    position: absolute; /* Absolute positioning */
+    right: 10px; /* Adjust to move the button to the right */
+    top: -73px; /* Adjust to align vertically with the container */
+  }
+  
+  .trans-record {
+    display: flex; 
+    justify-content: space-between; /* Distributes the items evenly */
+    align-items: center; /* Aligns items vertically */
+    gap: 10px; /* Adds spacing between items */
+    font-family: "BalooTammudu2-Bold", sans-serif;
+    color: #6e6e6e;
+    font-size: 10px; /* Ensures base font size */
+    font-weight: 500;
+    margin-top: 10px;
+  }
+  
+  .trans-record-id {
+    display: block; /* Ensure proper text rendering */
+    margin-right: 20px; /* Maintain spacing */
+    margin-left: 5px;
+    font-weight: 600;
+    font-size: 12px !important; /* Force the correct font size */
+  }
+  
+  .trans-record-service {
+    display: block;
+    font-weight: 600;
+    margin-left: 20px;
+    font-size: 12px !important;
+  }
+  
+  .trans-record-pet-name {
+    display: block; /* Ensure proper text rendering */
+    font-weight: 600;
+    margin-left: 10px;
+    font-size: 12px !important; /* Force the correct font size */
+  }
+  
+  .trans-record-amount {
+    display: block; /* Ensure proper text rendering */
+    font-weight: 600;
+    margin-left: 12px;
+    font-size: 12px !important; /* Force the correct font size */
+  }
+  
+  .trans-record-status {
+    display: block; /* Ensure proper text rendering */
+    margin-top: -5px;
+    margin-left: 12px;
+    font-size: 10px !important; /* Force the correct font size */
+  }
+  
+  .trans-record-ref {
+    display: block; /* Ensure proper text rendering */
+    font-weight: 600;
+    margin-right: -5px;
+    font-size: 12px !important; /* Force the correct font size */
+  }
+  
+  .trans-record-source {
+    display: block; /* Ensure proper text rendering */
+    margin-top: -5px;
+    margin-right: -5px;
+    font-size: 10px !important; /* Force the correct font size */
+  }
+  
+  .trans-record-date {
+    display: block;
+    margin-right: 29px;
+  }
+  
+  .trans-record-ref-number{
+    margin-right: 10px;
+  }
+  
+  .open-btn {
+    background: none;
+    border: none;
+    padding: 0;
+    margin: 0;
+    cursor: pointer;
+  }
+  
+  .edit-img {
+    width: 12px;
+    height: 12px;
+    margin-left: 7px;
+  }
+  .modal-bg{
+    background-color: rgba(184, 184, 184, 0.432);
+    width: 100%;
+    height: 100%;
+    position: absolute; 
+    top: 0;
+    left: 0;
+    backdrop-filter: blur(2px);
+    display: none; 
+  }
+  
+  .modal-bg.open {
+    display: block;
+  }
+  
+  .modal {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 50%;
+    height: 50%;
+    overflow: auto;
+    background-color: rgba(0,0,0,0.4);
+  }
+  
+  .modal-content {
+    background-color: #fbf2ec !important;
+    margin: 15% auto;
+    padding: 20px;
+    border: 1px solid #888;
+    width: 75%;
+    max-width: 800px;
+    border-radius: 8px;
+  }
+  
+  /* Membership Status Header */
+  .memb-status-header {
+    font-family: "BalooTammudu2-Bold", sans-serif; /* Match existing font style */
+    font-size: 28px; /* Adjust size as needed */
+    font-weight: 700; /* Make it bold */
+    color: #b36942;
+    text-align: center; /* Center align */
+    margin-bottom: 7x; /* Add spacing below */
+    margin-top: 7px; /* Add spacing below */
+  }
+  
+  /* Cancel & Save Buttons */
+  .modal-button {
+    background-color: #d8c4b6;
+    color: white;
+    padding: 10px 16px; /* Adjust padding for better spacing */
+    border: none;
+    border-radius: 5px; /* Rounded corners */
+    cursor: pointer;
+    font-size: 16px;
+    width: 120px;
+  }
+  
+  /* Adds spacing between buttons */
+  #cancelBtn {
+    margin-right: 10px;
+  }
+  
+  label {
+    display: inline-block;
+    margin-right: 10px;
+    font-weight: bold;
+    margin-bottom: 7px;
+    color: #421d11;
+  }
+  
+  #status-reg, #status-silver, #status-gold, #status-platinum {
+    accent-color: #b36942; /* Change radio button color */
+    width: 18px; /* Adjust size */
+    height: 18px;
+  }
+  
+  #status-reg + label, #status-silver + label, #status-gold + label, #status-platinum + label {
+    color: #d98d62;
+    font-weight: normal; /* Ensures the label is not bold */
+  }
+  
+  .input-group {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    margin-bottom: 10px;
+  }
+  
+  .input-group label {
+    width: 150px; /* Adjust label width to keep it aligned */
+    text-align: left;
+  }
+  
+  .input-group input {
+    width: auto; /* Keeps the input at its default size */
+    text-align: left; /* Aligns text inside the input field */
+    border: 1px solid; /* Adjust thickness and color */
+    border-radius: 4px; /* Optional: adds rounded corners */
+  }
+  
+  .cancel-save-btns {
+    text-align: center;
+    margin-top: 15px;
+    display: flex;
+    justify-content: center; /* Center the buttons */
+    gap: 15px; /* Add space between buttons */
+    height: 20px;
+    align-items: center;
+  }
+  
+  
+  
+  /* Modal Background Overlay */
+  .modal-overlay {
+  background-color: rgba(184, 184, 184, 0.432);
+    width: 100%;
+    height: 100%;
+    position: absolute; 
+    top: 0;
+    left: 0;
+    backdrop-filter: blur(2px);
+    display: none; 
+  }
+  
+  /* MODAL HOME */
+  .modal-home {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    right: 60px; /* Move to the upper right */
+    top: 22px; /* Position below the notification icon */
+    width: 350px; /* Set width for the modal */
+    max-height: 85vh; /* Prevent it from being too large */
+    border-radius: 10px;
+  }
+  
+  /* Modal Content */
+  .modal-content-home {
+    background: #fff4e7;
+    padding: 20px;
+    border: 2px solid #a59f9f;;
+    border-radius: 30px;
+    width: 100%;
+    max-height: 80vh; /* Prevent it from being too large */
+    overflow-y: auto; /* Enables vertical scrolling */
+  }
+  
+  /* Modal Header */
+  .modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #d8c4b6;
+  }
+  
+  .modal-logo {
+    width: 48px;
+    height: 44px;
+  }
+  
+  /* Close Button */
+  .close {
+    color: #aaa;
+    font-size: 24px;
+    font-weight: bold;
+    cursor: pointer;
+  }
+  
+  .close:hover,
+  .close:focus {
+    color: #000;
+  }
+  
+
+  .transactions-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 15px;
+}
+
+.transactions-table th, 
+.transactions-table td {
+    padding: 10px;
+    text-align: left;
+    border-bottom: 1px solid #ddd;
+}
+
+.transactions-table th {
+    background-color: #f2f2f2;
+    font-weight: bold;
+}
+
+.transactions-table tr:hover {
+    background-color: #f5f5f5;
+}
+
+.payment-status {
+    font-size: 0.8em;
+    color: #666;
+    margin-top: 3px;
+}
+
+.payment-method {
+    font-size: 0.8em;
+    color: #666;
+    margin-top: 3px;
+}
+
+ 
+.alert {
+  padding: 10px;
+  margin-bottom: 15px;
+  border-radius: 4px;
+}
+
+.alert-success {
+  background-color: #d4edda;
+  color: #155724;
+  border: 1px solid #c3e6cb;
+}
+
+.alert-danger {
+  background-color: #f8d7da;
+  color: #721c24;
+  border: 1px solid #f5c6cb;
+}
+
+.gd-status {
+  padding: 10px;
+  border-radius: 5px;
+  color: white;
+  font-weight: bold;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  max-width: 250px;
+}
+
+.regular {
+  background-color: gray;
+}
+
+.silver {
+  background-color: silver;
+  color: black;
+}
+
+.gold {
+  background-color: gold;
+  color: black;
+}
+
+.platinum {
+  background-color: #e5e4e2; /* Light gray for platinum */
+  color: black;
+}

@@ -1,0 +1,1863 @@
+body {
+  background: #e8e8e8;
+}
+
+html, body {
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    overflow-x: hidden; /* Prevents horizontal scrolling */
+}
+
+
+/* General Styles */
+.nav-bar,
+.nav-bar * {
+  box-sizing: border-box;
+}
+
+/* Sidebar Navigation */
+.nav-bar {
+  background: #faf1ea;
+  height: 100%; /* Instead of 100vh */
+  width: 200px;
+  position: fixed;
+  left: 0;
+  top: 0;
+  overflow: hidden;
+}
+
+/* Sidebar Container */
+.nav-container {
+  background: #ffffff;
+  border-right: 1.5px solid #000000;
+  width: 200px;
+  height: 100%;
+  position: absolute;
+  top: 80px; /* Aligns directly below the header */
+  left: 0;
+  overflow-y: auto; /* Allows scrolling if needed */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.5px; /* Removes space between elements */
+  padding-top: 20px;
+}
+
+/* Common Button Styles */
+.home-button,
+.book-button,
+.customer-button,
+.profile-button {
+  width: 90%;
+  background: transparent;
+  border-radius: 15px;
+  padding: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  transition: background 0.3s ease-in-out;
+}
+
+/* Button Hover Effect */
+.home-button:hover,
+.book-button:hover,
+.customer-button:hover,
+.profile-button:hover,
+.home-button.active,
+.book-button.active,
+.customer-button.active,
+.profile-button.active {
+  background: #d98d62;
+}
+
+/* Common Text Styles */
+.home-text,
+.booking-text,
+.customers-text,
+.profile-text {
+  font-family: "BalooTammudu2-Medium", sans-serif;
+  font-size: 23px;
+  line-height: 35px;
+  font-weight: 500;
+  color: #421d11;
+  text-decoration: none;
+  display: flex;
+  align-items: center;
+  width: 100%;
+  height: 30px;
+  padding-left: 15px;
+}
+
+/* Text Color on Hover & Active */
+.home-button:hover .home-text,
+.book-button:hover .booking-text,
+.customer-button:hover .customers-text,
+.profile-button:hover .profile-text,
+.home-button.active .home-text,
+.book-button.active .booking-text,
+.customer-button.active .customers-text,
+.profile-button.active .profile-text {
+  color: #ffffff;
+}
+
+/* Header Container */
+.header-img-container {
+  background: #faf1ea;
+  width: calc(100% - 195px); /* Adjust for sidebar */
+  height: 80px;
+  position: fixed;
+  left: 195px;
+  top: 0;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end; /* Push items to the right */
+  padding-right: 88px; /* Add some spacing from the right */
+}
+
+.notifications,
+.notifications * {
+  box-sizing: border-box;
+}
+.notifications {
+  width: 55px; 
+  height: 55px;
+  cursor: pointer;
+}
+
+/* Logo Styling */
+.adorafur-logo {
+  margin-left: 15px;
+  height: 80px; /* Adjust this to fit better */
+  width: auto;
+}
+
+/* BOOKING FILTER STYLING */
+.by-service-frame,
+.pet-hotel-cont,
+.pet-daycare-cont {
+  background: #ffffff;
+  border-radius: 10px;
+  width: 450px;
+  height: 48px;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  padding-left: 160px;
+  margin-top: px; /* Ensures items push each other down */
+}
+
+.by-service {
+  color: #663a2c;
+  font-family: "BalooTammudu2-Medium", sans-serif;
+  font-size: 21px;
+  font-weight: 550;
+}
+
+.pet-hotel-text,
+.pet-daycare-text {
+  color: #d48d64;
+  font-family: "BalooTammudu2-Medium", sans-serif;
+  font-size: 21px;
+  font-weight: 500;
+  margin-left: 8px;
+}
+
+
+/* Checkbox Styling */
+.pet-hotel-checkbox {
+    width: 18px;
+    height: 18px;
+    appearance: none;
+    border-radius: 5px;
+    border: 2.5px solid #184788; /* Border color */
+    background-color: #fff; /* Default background */
+    transition: background-color 0.1s ease;
+  }
+
+  .daycare-checkbox {
+    width: 18px;
+    height: 18px;
+    appearance: none;
+    border-radius: 5px;
+    border: 2.5px solid #ffcc00; /* Border color */
+    background-color: #fff; /* Default background */
+    transition: background-color 0.1s ease;
+  }
+  
+/* Style for unchecked state */
+   .pet-hotel-checkbox:checked{
+    background-color: transparent; /* Keep transparent background */
+    background-image: url('checkboxes/checkbox1-active.png'); /* Active state icon */
+    background-size: contain;
+    background-repeat: no-repeat;
+    border: none; /* Remove the border if you only want to show the icon */
+    background-color: #184788; /* Default background */
+    
+  }
+  
+   .daycare-checkbox:checked{
+    background-color: transparent; /* Keep transparent background */
+    background-image: url('checkboxes/checkbox2-active.png'); /* Active state icon */
+    background-size: contain;
+    background-repeat: no-repeat;
+    border: none; /* Remove the border if you only want to show the icon */
+    background-color: #ffcc00; /* Border color */
+  }
+  
+  /* Label Styling */
+  .pet-hotel-text,
+  .pet-daycare-text {
+    color: #d48d64;
+    font-family: "BalooTammudu2-Medium", sans-serif;
+    font-size: 17px;
+    font-weight: 500;
+    margin-left: 8px;
+    display: inline-block;
+    vertical-align: middle;
+  }
+  
+  /* Container Styling for Flex Layout */
+  .pet-hotel-cont,
+  .pet-daycare-cont {
+    background: #ffffff;
+    border-radius: 10px;
+    width: 276px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    padding-left: 70px;
+  }
+
+
+  
+  /* HOME PAGE*/
+  .panel-container {
+  background: #ffffff;
+  border-radius: 20px;
+  width: 100%;
+  max-width: 990px;
+  height: 913px;
+  position: fixed;
+  left: 220px;
+  top: 100px;
+  overflow: hidden;
+  display: flex;
+  overflow: auto; /* Allows scrolling if content exceeds height */
+}
+
+.admin-panel-text {
+  color: #663a2c;
+  text-align: left;
+  font-family: "BalooTammudu2-Bold", sans-serif;
+  font-size: 42px;
+  letter-spacing: 0.02em;
+  font-weight: 700;
+  position: absolute;
+  left: 32px;
+  top: 20px;
+  width: 512px;
+  height: 65px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+}
+.id-text {
+  color: #303030;
+  text-align: left;
+  font-family: "BalooTammudu2-SemiBold", sans-serif;
+  font-size: 19px;
+  letter-spacing: 0.02em;
+  font-weight: 500;
+  position: absolute;
+  left: 33px;
+  top: 142px;
+  width: 42px;
+  height: 71px;
+  display: flex;
+  align-items: flex-end;
+  justify-content: flex-start;
+}
+.pet-text {
+  color: #303030;
+  text-align: left;
+  font-family: "BalooTammudu2-SemiBold", sans-serif;
+  font-size: 19px;
+  letter-spacing: 0.02em;
+  font-weight: 500;
+  position: absolute;
+  left: 193px;
+  top: 142px;
+  width: 62px;
+  height: 76px;
+  display: flex;
+  align-items: flex-end;
+  justify-content: flex-start;
+}
+.service-text {
+  color: #303030;
+  text-align: left;
+  font-family: "BalooTammudu2-SemiBold", sans-serif;
+  font-size: 19px;
+  letter-spacing: 0.02em;
+  font-weight: 500;
+  position: absolute;
+  left: 328px;
+  top: 142px;
+  width: 104px;
+  height: 76px;
+  display: flex;
+  align-items: flex-end;
+  justify-content: flex-start;
+}
+.name-text {
+  color: #303030;
+  text-align: left;
+  font-family: "BalooTammudu2-SemiBold", sans-serif;
+  font-size: 19px;
+  letter-spacing: 0.02em;
+  font-weight: 500;
+  position: absolute;
+  left: 450px;
+  top: 142px;
+  width: 98px;
+  height: 76px;
+  display: flex;
+  align-items: flex-end;
+  justify-content: flex-start;
+}
+.payment-text {
+  color: #303030;
+  text-align: left;
+  font-family: "BalooTammudu2-SemiBold", sans-serif;
+  font-size: 19px;
+  letter-spacing: 0.02em;
+  font-weight: 500;
+  position: absolute;
+  left: 618px;
+  top: 142px;
+  width: 150px;
+  height: 76px;
+  display: flex;
+  align-items: flex-end;
+  justify-content: flex-start;
+}
+.date-text {
+  color: #303030;
+  text-align: left;
+  font-family: "BalooTammudu2-SemiBold", sans-serif;
+  font-size: 19px;
+  letter-spacing: 0.02em;
+  font-weight: 500;
+  position: absolute;
+  left: 805px;
+  top: 142px;
+  width: 104px;
+  height: 76px;
+  display: flex;
+  align-items: flex-end;
+  justify-content: flex-start;
+}
+
+.time-text {
+  color: #663a2c;
+  text-align: left;
+  font-family: "BarlowCondensed-Italic", sans-serif;
+  font-size: 42px;
+  letter-spacing: 0.02em;
+  font-weight: 550;
+  font-style: italic;
+  position: absolute;
+  left: 770px;
+  top: 20px;
+  width: 512px;
+  height: 65px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+}
+.date-and-day {
+  color: #000000;
+  text-align: left;
+  font-family: "BarlowCondensed-Regular", sans-serif;
+  font-size: 25px;
+  letter-spacing: -5px;
+  line-height: 4px;
+  letter-spacing: 0.06em;
+  font-weight: 400;
+  position: absolute;
+  left: 32px;
+  top: 100px;
+  height: 65px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+}
+
+.line-1 {
+  margin-top: -3px;
+  border-style: solid;
+  border-color: rgba(0, 0, 0, 0.4);
+  border-width: 2px 0 0 0;
+  width: 105%;
+  height: 0px;
+  position: absolute;
+  left: -13px;
+  top: 100px;
+  transform-origin: 0 0;
+  transform: rotate(0deg) scale(1, 1);
+}
+
+.pet-hotel-frame {
+  background: #ffffff;
+  border-style: solid;
+  border-color: rgba(0, 0, 0, 0.4);
+  border-width: 1.5px;
+  width: 925px;
+  height: 60px;
+  position: absolute;
+  left: 31px;
+  top: 225px;
+  overflow: hidden;
+}
+.pet-hotel-color {
+  background: #17488a;
+  width: 24px;
+  height: 60px;
+  position: absolute;
+  left: 1px;
+  top: 1px;
+}
+.id-1 {
+  color: #000000;
+  text-align: left;
+  font-family: "BalooTammudu2-SemiBold", sans-serif;
+  font-size: 17px;
+  line-height: 4px;
+  font-weight: 600;
+  position: absolute;
+  left: 42px;
+  width: 225px;
+  height: 65px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+}
+.group-4 {
+  position: absolute;
+  inset: 0;
+}
+.pet-name-1 {
+  color: #000000;
+  text-align: left;
+  font-family: "BalooTammudu2-Medium", sans-serif;
+  font-size: 15.5px;
+  line-height: 4px;
+  font-weight: 500;
+  position: absolute;
+  top: -6px;
+  left: 160px;
+  width: 225px;
+  height: 65px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+}
+.pet-breed-1 {
+  color: #a59f9f;
+  text-align: left;
+  font-family: "BalooTammudu2-Regular", sans-serif;
+  font-size: 12px;
+  line-height: 4px;
+  font-weight: 400;
+  position: absolute;
+  left: 160px;
+  top: 8.5px;
+  width: 272px;
+  height: 65px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+}
+.group-5 {
+  position: absolute;
+  inset: 0;
+}
+.name-1 {
+  color: #000000;
+  text-align: left;
+  font-family: "BalooTammudu2-Medium", sans-serif;
+  font-size: 15.5px;
+  line-height: 4px;
+  font-weight: 500;
+  position: absolute;
+  top: -6px;
+  left: 418px;
+  width: 311px;
+  height: 65px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+}
+.number-1 {
+  color: #a59f9f;
+  text-align: left;
+  font-family: "BalooTammudu2-Regular", sans-serif;
+  font-size: 12px;
+  line-height: 4px;
+  font-weight: 400;
+  position: absolute;
+  top: 8.5px;
+  left: 419px;
+  height: 65px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+}
+.hotel {
+  color: #000000;
+  text-align: left;
+  font-family: "BalooTammudu2-Medium", sans-serif;
+  font-size: 15.5px;
+  line-height: 4px;
+  font-weight: 500;
+  position: absolute;
+  left: 296px;
+  width: 225px;
+  height: 65px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+}
+.group-6 {
+  position: absolute;
+  inset: 0;
+}
+.dp-1 {
+  color: #000000;
+  text-align: left;
+  font-family: "BalooTammudu2-Medium", sans-serif;
+  font-size: 15.5px;
+  line-height: 4px;
+  font-weight: 500;
+  position: absolute;
+  left: 606px;
+  width: 234.24px;
+  height: 65px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+}
+.ellipse-1 {
+  background: #ff8a00;
+  border-radius: 50%;
+  width: 8px;
+  height: 8px;
+  position: absolute;
+  left: 588px;
+  top: 28px;
+}
+.group-7 {
+  position: absolute;
+  inset: 0;
+}
+.name-12 {
+  color: #a59f9f;
+  text-align: left;
+  font-family: "-", sans-serif;
+  font-size: 10px;
+  line-height: 4px;
+  font-weight: 400;
+  position: absolute;
+  left: 770px;
+  width: 331px;
+  height: 65px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  top: -7px;
+}
+.name-12-span {
+  color: #a59f9f;
+  font-family: "BalooTammudu2-Bold", sans-serif;
+  font-size: 12px;
+  line-height: 4px;
+  font-weight: 700;
+}
+.name-12-span2 {
+  color: #a59f9f;
+  font-family: "BalooTammudu2-Regular", sans-serif;
+  font-size: 12px;
+  line-height: 4px;
+  font-weight: 400;
+}
+.number-12 {
+  color: #a59f9f;
+  text-align: left;
+  font-family: "-", sans-serif;
+  font-size: 12px;
+  line-height: 4px;
+  font-weight: 400;
+  position: absolute;
+  top: 7px;
+  left: 770px;
+  width: 292px;
+  height: 65px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+}
+.number-12-span {
+  color: #a59f9f;
+  font-family: "BalooTammudu2-Bold", sans-serif;
+  font-size: 12px;
+  line-height: 4px;
+  font-weight: 700;
+}
+.number-12-span2 {
+  color: #a59f9f;
+  font-family: "BalooTammudu2-Regular", sans-serif;
+  font-size: 12px;
+  line-height: 4px;
+  font-weight: 400;
+}
+.daycare-frame {
+  background: #ffffff;
+  border-style: solid;
+  border-color: rgba(0, 0, 0, 0.4);
+  border-width: 1.5px;
+  width: 925px;
+  height: 60px;
+  position: absolute;
+  left: 31px;
+  top: 300px;
+  overflow: hidden;
+}
+.daycare-color {
+  background: #ffcc00;
+  width: 24px;
+  height: 60px;
+  position: absolute;
+  left: 1px;
+  top: 1px;
+}
+.number-13 {
+  color: #a59f9f;
+  text-align: left;
+  font-family: "BalooTammudu2-Regular", sans-serif;
+  font-size: 12px;
+  line-height: 4px;
+  font-weight: 400;
+  position: absolute;
+  left: 418px;
+  top: 8.5px;
+  width: 363px;
+  height: 65px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+}
+.ellipse-12 {
+  background: #00bf63;
+  border-radius: 50%;
+  width: 8px;
+  height: 8px;
+  position: absolute;
+  left: 588px;
+  top: 28px;
+}
+.name-13 {
+  color: #a59f9f;
+  text-align: left;
+  font-family: "-", sans-serif;
+  font-size: 12px;
+  line-height: 4px;
+  font-weight: 400;
+  position: absolute;
+  top: -7px;
+  left: 770px;
+  width: 331px;
+  height: 65px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+}
+.name-13-span {
+  color: #a59f9f;
+  font-family: "BalooTammudu2-Bold", sans-serif;
+  line-height: 4px;
+  font-weight: 700;
+  font-size: 12px;
+}
+.name-13-span2 {
+  color: #a59f9f;
+  font-family: "BalooTammudu2-Regular", sans-serif;
+  line-height: 4px;
+  font-weight: 400;
+  font-size: 12px;
+}
+.frame-13 {
+  background: #ffffff;
+  border-style: solid;
+  border-color: rgba(0, 0, 0, 0.4);
+  border-width: 2px;
+  width: 1439px;
+  height: 110px;
+  position: absolute;
+  left: 42px;
+  top: 598px;
+  overflow: hidden;
+}
+
+
+.number-14 {
+  color: #a59f9f;
+  text-align: left;
+  font-family: "-", sans-serif;
+  font-size: 12px;
+  line-height: 4px;
+  font-weight: 400;
+  position: absolute;
+  top: 8.5px;
+  left: 770px;
+  width: 292px;
+  height: 65px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+}
+.number-14-span {
+  color: #a59f9f;
+  font-family: "BalooTammudu2-Bold", sans-serif;
+  font-size: 12px;
+  line-height: 4px;
+  font-weight: 700;
+}
+.number-14-span2 {
+  color: #a59f9f;
+  font-family: "BalooTammudu2-Regular", sans-serif;
+  font-size: 12px;
+  line-height: 4px;
+  font-weight: 400;
+}
+
+/* PROFILE */
+.profile-body,
+.profile-body * {
+  box-sizing: border-box;
+}
+.profile-body {
+  display: flex;
+  flex-direction: row;
+  gap: 65px;
+  row-gap: 25px;
+  align-items: center;
+  justify-content: flex-start;
+  flex-wrap: wrap;
+  align-content: center;
+  position: relative;
+  top: 60px;
+  margin-left: 50px;
+}
+
+.profile-fixed {
+  color: #421d11;
+  text-align: left;
+  font-family: "BalooTammudu2-Medium", sans-serif;
+  font-size: 24px;
+  line-height: 19px;
+  font-weight: 500;
+  position: relative;
+  width: 250px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+}
+
+.name-cont {
+  color: #999999;
+  text-align: left;
+  font-family: "BalooTammudu2-Medium", sans-serif;
+  font-size: 20px;
+  line-height: 35px;
+  font-weight: 500;
+  position: relative;
+  height: 72px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  width: 300px;
+}
+
+.numb-cont {
+  color: #999999;
+  text-align: left;
+  font-family: "BalooTammudu2-Medium", sans-serif;
+  font-size: 20px;
+  line-height: 35px;
+  font-weight: 500;
+  position: relative;
+  height: 73px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  width: 300px;
+}
+
+.email-add-cont {
+  color: #999999;
+  text-align: left;
+  font-family: "BalooTammudu2-Medium", sans-serif;
+  font-size: 20px;
+  line-height: 35px;
+  font-weight: 500;
+  position: relative;
+  height: 72px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  width: 300px;
+}
+
+.role-cont {
+  color: #999999;
+  text-align: left;
+  font-family: "BalooTammudu2-Medium", sans-serif;
+  font-size: 20px;
+  line-height: 35px;
+  font-weight: 500;
+  position: relative;
+  height: 73px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  width: 300px;
+}
+
+.name-line {
+  background: rgba(255, 255, 255, 0);
+  padding: 6px 14px 6px 14px;
+  display: flex;
+  flex-direction: row;
+  gap: 5px;
+  align-items: center;
+  justify-content: center;
+  position: absolute;
+  left: 16px;
+  top: 49px;
+}
+
+.contact-line {
+  background: rgba(255, 255, 255, 0);
+  padding: 6px 14px 6px 14px;
+  display: flex;
+  flex-direction: row;
+  gap: 5px;
+  align-items: center;
+  justify-content: center;
+  position: absolute;
+  left: 16px;
+  top: 120px;
+}
+.email-add-line {
+  background: rgba(255, 255, 255, 0);
+  padding: 6px 14px 6px 14px;
+  display: flex;
+  flex-direction: row;
+  gap: 5px;
+  align-items: center;
+  justify-content: center;
+  position: absolute;
+  left: 16px;
+  top: 198px;
+}
+.role-line {
+  border-radius: 15px;
+  padding: 6px 14px 6px 14px;
+  display: flex;
+  flex-direction: row;
+  gap: 5px;
+  align-items: center;
+  justify-content: center;
+  position: absolute;
+  left: 16px;
+  top: 272px;
+}
+
+.line-2 {
+  margin-top: 2px;
+  border-style: solid;
+  border-color: rgba(123, 123, 123, 0.4);
+  border-width: 1px 0 0 0;
+  width: 140%;
+  height: 25px;
+  position: absolute;
+  top: 76px;
+  left: 12px;
+  transform-origin: 0 0;
+  transform: rotate(0deg) scale(1, 1);
+}
+
+.cust-header{
+  color: #000000;
+  text-align: center;
+  font-family: "BalooTammudu2-SemiBold", sans-serif;
+  font-size: 19px;
+  line-height: 4px;
+  position: absolute;
+  left: 51px;
+  top: 150px;
+  width: 320px;
+  height: 65px;
+  display: flex;
+  align-items: center;
+  justify-content: left;
+}
+
+.pet-header {
+  color: #000000;
+  text-align: center;
+  font-family: "BalooTammudu2-SemiBold", sans-serif;
+  font-size: 19px;
+  line-height: 4px;
+  position: absolute;
+  left: 280px;
+  top: 150px;
+  width: 320px;
+  height: 65px;
+  display: flex;
+  align-items: center;
+  justify-content: left;
+}
+.memb-header {
+  color: #000000;
+  text-align: center;
+  font-family: "BalooTammudu2-SemiBold", sans-serif;
+  font-size: 19px;
+  line-height: 4px;
+  position: absolute;
+  left: 460px;
+  top: 150px;
+  width: 300px;
+  height: 65px;
+  display: flex;
+  align-items: center;
+  justify-content: left;
+}
+.date-header {
+  color: #000000;
+  text-align: center;
+  font-family: "BalooTammudu2-SemiBold", sans-serif;
+  font-size: 19px;
+  line-height: 4px;
+  position: absolute;
+  left: 700px;
+  top: 150px;
+  width: 320px;
+  height: 65px;
+  display: flex;
+  align-items: center;
+  justify-content: left;
+}
+
+.profile-frame,
+.profile-frame * {
+  box-sizing: border-box;
+}
+.profile-frame {
+  background: #ffffff;
+  border-style: solid;
+  border-color: rgba(0, 0, 0, 0.4);
+  border-width: 1.5px;
+  width: 925px;
+  height: 60px;
+  position: absolute;
+  left: 31px;
+  top: 210px;
+  overflow: hidden;
+}
+.profile-name1 {
+  color: #000000;
+  text-align: left;
+  font-family: "BalooTammudu2-SemiBold", sans-serif;
+  font-size: 17px;
+  top:-5px;
+  line-height: 4px;
+  font-weight: 600;
+  text-decoration: underline;
+  position: absolute;
+  left: 23px;
+  width: 320px;
+  height: 65px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+}
+.pet-name1 {
+  color: #000000;
+  text-align: center;
+  font-family: "BalooTammudu2-Regular", sans-serif;
+  font-size: 17px;
+  line-height: 4px;
+  font-weight: 400;
+  position: absolute;
+  left: 127px;
+  top: -5px;
+  width: 319px;
+  height: 65px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.memb-status1 {
+  color: #000000;
+  text-align: center;
+  font-family: "BalooTammudu2-Regular", sans-serif;
+  font-size: 17px;
+  line-height: 4px;
+  font-weight: 400;
+  position: absolute;
+  left: 343px;
+  top: -5px;
+  width: 321px;
+  height: 65px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.profile-date-container {
+  color: #a59f9f;
+  text-align: left;
+  font-family: "-", sans-serif;
+  font-size: 14px;
+  line-height: 25px;
+  font-weight: 400;
+  position: absolute;
+  left: 668px;
+  top: 2px;
+  width: 458px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+}
+.registered-date {
+  color: #a59f9f;
+  font-family: "BalooTammudu2-Bold", sans-serif;
+  font-size: 14px;
+  line-height: 25px;
+  font-weight: 700;
+  left: 668px;
+  top: -5px;
+}
+.registered-date-holder {
+  color: #a59f9f;
+  font-family: "BalooTammudu2-Regular", sans-serif;
+  font-size: 14px;
+  line-height: 25px;
+  font-weight: 400;
+  left: 668px;
+  top: -5px;
+}
+.expired-date {
+  color: #a59f9f;
+  font-family: "BalooTammudu2-Bold", sans-serif;
+  font-size: 14px;
+  line-height: 25px;
+  font-weight: 700;
+  left: 668px;
+  top: 10px;
+}
+.expired-date-holder {
+  color: #a59f9f;
+  font-family: "BalooTammudu2-Regular", sans-serif;
+  font-size: 14px;
+  line-height: 25px;
+  font-weight: 400;
+  left: 668px;
+  top: 10px;
+}
+
+.search-bar {
+  background: #ffffff;
+  border-radius: 50px;
+  border-style: solid;
+  border-color: #a59f9f;
+  border-width: 1.5px;
+  padding: 10px;
+  display: flex;
+  flex-direction: row;
+  gap: 10px;
+  align-items: center;
+  justify-content: center;
+  height: 16px;
+  width: 400px;
+  position: relative;
+  top: 118px;
+  left: 29px;
+}
+
+.search {
+  color: #a59f9f;
+  text-align: left;
+  font-family: "BalooTammudu2-Regular", sans-serif;
+  font-size: 20px;
+  line-height: 4px;
+  font-weight: 400;
+  position: relative;
+  width: 503px;
+  height: 50px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+}
+
+.search-img {
+  flex-shrink: 0;
+  width: 20px;
+  height: 20px;
+  position: relative;
+  overflow: visible;
+  right: 10px;
+}
+
+/*CUSTOMER PROFILE*/
+/* Profile Box */
+.profile-box {
+  background: #ffffff;
+  border: 2px solid #a59f9f;
+  height: 500px;
+  width: 970px;
+  position: relative;
+  top: 110px;
+  left: 8px;
+  display: flex; /* Enables side-by-side layout */
+  flex-direction: row; /* Align children horizontally */
+  justify-content: space-between; /* Spaces out elements */
+  align-items: flex-start; /* Align items at the top */
+  padding: 20px 20px 20px 1px;
+  box-sizing: border-box;
+}
+
+.back-icon{
+  display: flex;
+  flex-direction: column;
+  width: 26px; /* Adjust as needed */
+  position: absolute; /* Allows 'left' to work */
+  left: 25px;
+
+}
+
+/* User Section */
+.user-section {
+  display: flex;
+  flex-direction: column;
+  width: 30%; /* Take up less than half of the container */
+  align-items: center;
+}
+
+/* Crown Image */
+.crown-img {
+  width: 50%;
+  height: 50%;
+  object-fit: cover;
+  margin-bottom: 10px;
+  margin-top: 15px;
+}
+
+/* User Name */
+.user-name {
+  color: #663a2c;
+  text-align: center;
+  font-family: "BalooTammudu2-Bold", sans-serif;
+  font-size: 28px;
+  font-weight: 700;
+  width: 100%;
+  margin-bottom: 10px;
+}
+
+/* Gold Status */
+.gd-status {
+  background: #ffcc00;
+  border-radius: 32px;
+  width: 130px;
+  padding: 5px;
+  color: #ffffff;
+  text-align: center;
+  font-family: "BalooTammudu2-Bold", sans-serif;
+  font-size: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 15px;
+}
+
+/* Pet Card */
+.pet-card {
+  background: #ffffff;
+  border-radius: 10px;
+  border: 1px solid #a59f9f;
+  padding: 10px;
+  height: 60px;
+  width: 240px;
+  
+  display: flex; /* Enables flexbox */
+  flex-direction: column; /* Stack child elements vertically */
+  justify-content: center; /* Centers content vertically */
+  align-items: flex-start; /* Aligns text to the left */
+}
+
+/* Pet Profile */
+.pet-profile1 {
+  color: #d48d64;
+  font-family: "BalooTammudu2-Bold", sans-serif;
+  font-size: 19px;
+  font-weight: 700;
+}
+
+.pet-profile2 {
+  color: #a59f9f;
+  font-family: "BalooTammudu2-Regular", sans-serif;
+  font-size: 14px;
+  font-weight: 400;
+}
+
+/* Transactions Section */
+.transactions-box {
+  display: flex;
+  flex-direction: column;
+  width: 70%; /* Take up half of the container */
+  padding-left: 16px;
+}
+
+/* Transactions Header */
+.transac-header {
+  color: #6e6e6e;
+  font-family: "BalooTammudu2-Bold", sans-serif;
+  font-size: 42px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  margin-bottom: 20px;
+  margin-top: 20px;
+}
+
+.transac-line {
+  display: flex; 
+  justify-content: space-between; /* Distributes the items evenly */
+  align-items: center; /* Aligns items vertically */
+  gap: 10px; /* Adds spacing between items */
+  font-family: "BalooTammudu2-Bold", sans-serif;
+  color: #6e6e6e;
+  font-size: 14.5px;
+  font-weight: 500;
+}
+
+.transac-line div {
+  flex: 1; /* Ensures all divs take up equal space */
+  text-align: center; /* Centers text inside each div */
+}
+
+.divider-line{
+  width: 1px; /* Make it span the full width */
+  height: 98%; /* Set a visible height */
+  background-color: #a59f9f; /* Choose a color */
+}
+
+#dropdownMenuButton {
+  background: #c2c2c2;
+  border-color: #999999;
+  position: absolute; /* Absolute positioning */
+  right: 10px; /* Adjust to move the button to the right */
+  top: -73px; /* Adjust to align vertically with the container */
+}
+
+.trans-record {
+  display: flex; 
+  justify-content: space-between; /* Distributes the items evenly */
+  align-items: center; /* Aligns items vertically */
+  gap: 10px; /* Adds spacing between items */
+  font-family: "BalooTammudu2-Bold", sans-serif;
+  color: #6e6e6e;
+  font-size: 10px; /* Ensures base font size */
+  font-weight: 500;
+  margin-top: 10px;
+}
+
+.trans-record-id {
+  display: block; /* Ensure proper text rendering */
+  margin-right: 20px; /* Maintain spacing */
+  margin-left: 5px;
+  font-weight: 600;
+  font-size: 12px !important; /* Force the correct font size */
+}
+
+.trans-record-service {
+  display: block;
+  font-weight: 600;
+  margin-left: 20px;
+  font-size: 12px !important;
+}
+
+.trans-record-pet-name {
+  display: block; /* Ensure proper text rendering */
+  font-weight: 600;
+  margin-left: 10px;
+  font-size: 12px !important; /* Force the correct font size */
+}
+
+.trans-record-amount {
+  display: block; /* Ensure proper text rendering */
+  font-weight: 600;
+  margin-left: 12px;
+  font-size: 12px !important; /* Force the correct font size */
+}
+
+.trans-record-status {
+  display: block; /* Ensure proper text rendering */
+  margin-top: -5px;
+  margin-left: 12px;
+  font-size: 10px !important; /* Force the correct font size */
+}
+
+.trans-record-ref {
+  display: block; /* Ensure proper text rendering */
+  font-weight: 600;
+  margin-right: -5px;
+  font-size: 12px !important; /* Force the correct font size */
+}
+
+.trans-record-source {
+  display: block; /* Ensure proper text rendering */
+  margin-top: -5px;
+  margin-right: -5px;
+  font-size: 10px !important; /* Force the correct font size */
+}
+
+.trans-record-date {
+  display: block;
+  margin-right: 29px;
+}
+
+.trans-record-ref-number{
+  margin-right: 10px;
+}
+
+.open-btn {
+  background: none;
+  border: none;
+  padding: 0;
+  margin: 0;
+  cursor: pointer;
+}
+
+.edit-img {
+  width: 12px;
+  height: 12px;
+  margin-left: 7px;
+}
+.modal-bg{
+  background-color: rgba(184, 184, 184, 0.432);
+  width: 100%;
+  height: 100%;
+  position: absolute; 
+  top: 0;
+  left: 0;
+  backdrop-filter: blur(2px);
+  display: none; 
+}
+
+.modal-bg.open {
+  display: block;
+}
+
+.modal {
+  display: none;
+  position: fixed;
+  z-index: 1000;
+  left: 0;
+  top: 0;
+  width: 50%;
+  height: 50%;
+  overflow: auto;
+  background-color: rgba(0,0,0,0.4);
+}
+
+.modal-content {
+  background-color: #fbf2ec !important;
+  margin: 15% auto;
+  padding: 20px;
+  border: 1px solid #888;
+  width: 75%;
+  max-width: 800px;
+  border-radius: 8px;
+}
+
+/* Membership Status Header */
+.memb-status-header {
+  font-family: "BalooTammudu2-Bold", sans-serif; /* Match existing font style */
+  font-size: 28px; /* Adjust size as needed */
+  font-weight: 700; /* Make it bold */
+  color: #b36942;
+  text-align: center; /* Center align */
+  margin-bottom: 7x; /* Add spacing below */
+  margin-top: 7px; /* Add spacing below */
+}
+
+/* Cancel & Save Buttons */
+.modal-button {
+  background-color: #d8c4b6;
+  color: white;
+  padding: 10px 16px; /* Adjust padding for better spacing */
+  border: none;
+  border-radius: 5px; /* Rounded corners */
+  cursor: pointer;
+  font-size: 16px;
+  width: 120px;
+}
+
+/* Adds spacing between buttons */
+#cancelBtn {
+  margin-right: 10px;
+}
+
+label {
+  display: inline-block;
+  margin-right: 10px;
+  font-weight: bold;
+  margin-bottom: 7px;
+  color: #421d11;
+}
+
+#status-reg, #status-silver, #status-gold, #status-platinum {
+  accent-color: #b36942; /* Change radio button color */
+  width: 18px; /* Adjust size */
+  height: 18px;
+}
+
+#status-reg + label, #status-silver + label, #status-gold + label, #status-platinum + label {
+  color: #d98d62;
+  font-weight: normal; /* Ensures the label is not bold */
+}
+
+.input-group {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  margin-bottom: 10px;
+}
+
+.input-group label {
+  width: 150px; /* Adjust label width to keep it aligned */
+  text-align: left;
+}
+
+.input-group input {
+  width: auto; /* Keeps the input at its default size */
+  text-align: left; /* Aligns text inside the input field */
+  border: 1px solid; /* Adjust thickness and color */
+  border-radius: 4px; /* Optional: adds rounded corners */
+}
+
+.cancel-save-btns {
+  text-align: center;
+  margin-top: 15px;
+  display: flex;
+  justify-content: center; /* Center the buttons */
+  gap: 15px; /* Add space between buttons */
+  height: 20px;
+  align-items: center;
+}
+
+
+
+/* Modal Background Overlay */
+.modal-overlay {
+background-color: rgba(184, 184, 184, 0.432);
+  width: 100%;
+  height: 100%;
+  position: absolute; 
+  top: 0;
+  left: 0;
+  backdrop-filter: blur(2px);
+  display: none; 
+}
+
+/* MODAL HOME */
+.modal-home {
+  display: none;
+  position: fixed;
+  z-index: 1000;
+  right: 60px; /* Move to the upper right */
+  top: 22px; /* Position below the notification icon */
+  width: 350px; /* Set width for the modal */
+  max-height: 85vh; /* Prevent it from being too large */
+  border-radius: 10px;
+}
+
+/* Modal Content */
+.modal-content-home {
+  background: #fff4e7;
+  padding: 20px;
+  border: 2px solid #a59f9f;;
+  border-radius: 30px;
+  width: 100%;
+  max-height: 80vh; /* Prevent it from being too large */
+  overflow-y: auto; /* Enables vertical scrolling */
+}
+
+/* Modal Header */
+.modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-bottom: 10px;
+  border-bottom: 1px solid #d8c4b6;
+}
+
+.modal-logo {
+  width: 48px;
+  height: 44px;
+}
+
+/* Close Button */
+.close {
+  color: #aaa;
+  font-size: 24px;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.close:hover,
+.close:focus {
+  color: #000;
+}
+
+/* Scrollable Notification List */
+.modal-body {
+  max-height: 60vh; /* Limits height to enable scrolling */
+  overflow-y: auto; /* Enables scrolling */
+  padding-right: 10px; /* Prevents text from touching the edge */
+}
+
+/* Notification Cards */
+.notification-card {
+  background: rgba(102, 58, 44, 0.26);
+  padding: 15px;
+  margin-bottom: 10px;
+  border-radius: 5px;
+  position: relative; /* Allows absolute positioning inside */
+}
+
+/* Footer for Date & Status */
+.notification-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center; 
+  margin-top: 10px;
+}
+
+
+.notif-status {
+  font-weight: bold;
+  color: #421d11;
+}
+
+/* Notification Button */
+#notificationButton {
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+
+/* Notification Header */
+.notifications-header {
+  color: #663a2c;
+  text-align: left;
+  font-family: "BalooTammudu2-SemiBold", sans-serif;
+  font-size: 25px;
+  letter-spacing: 0.02em;
+  font-weight: 600;
+  text-decoration: underline;
+  position: relative;
+  width: 185px;
+  height: 19px;
+}
+
+.notif-today{
+  color: #663a2c;
+  text-align: left;
+  font-family: "BalooTammudu2-Regular", sans-serif;
+  font-size: 20px;
+  letter-spacing: 0.02em;
+  font-weight: 400;
+  text-decoration: underline;
+  position: relative;
+  width: 185px;
+  height: 19px;
+  margin-top: 17px;
+  margin-bottom: 17px;
+}
+
+.notif-service{
+  color: #663a2c;
+  text-align: left;
+  font-family: "BalooTammudu2-SemiBold", sans-serif;
+  font-size: 20px;
+  letter-spacing: 0.02em;
+  font-weight: 600;
+  position: relative;
+  height: 19px;
+  margin-bottom: 8px;
+}
+
+.notif-sub{
+  color: #663a2c;
+  font-family: "BalooTammudu2-Regular", sans-serif;
+  font-size: 16px;
+  letter-spacing: 0.02em;
+  font-weight: 400;
+}
+
+.notif-confirmed{
+  color: #796464;
+  text-align: left;
+  font-family: "BalooTammudu2-Medium", sans-serif;
+  font-size: 17px;
+  letter-spacing: 0.02em;
+  font-weight: 600;
+  position: relative;
+  width: 110px;
+  height: 19px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+}
+
+.notif-date{
+  color: #663a2c;
+  text-align: left;
+  font-family: "BalooTammudu2-Regular", sans-serif;
+  font-size: 20px;
+  letter-spacing: 0.02em;
+  font-weight: 400;
+  text-decoration: underline;
+  position: relative;
+  width: 185px;
+  height: 19px;
+  margin-top: 15px;
+  margin-bottom: 15px;
+}
+
+.notif-text{
+  color: #663a2c;
+  text-align: left;
+  font-family: "BalooTammudu2-SemiBold", sans-serif;
+  font-size: 16px;
+  letter-spacing: 0.02em;
+  font-weight: 600;
+  position: relative;
+  height: 19px;
+}
+
+.confirm-btn {
+  background: #fff4e7;
+  color: #663a2c;
+  padding: 10px 16px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 13px;
+  width: 80px;
+  height: 25px;
+  font-weight: 600;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  line-height: normal;
+}
+
+.notif-circle {
+  background: #663a2c;
+  border-radius: 50%;
+  border: 2px solid #f0f0f0;
+  width: 13px;
+  height: 13px;
+  position: absolute;
+  top: 15px;
+  right: 14px;
+}
+
+.notif-info{
+  color: #757474;
+  font-family: "BalooTammudu2-Regular", sans-serif;
+  font-size: 16px;
+  letter-spacing: 0.02em;
+  font-weight: 400;
+}
+
+.date-sec {
+  display: flex;
+  align-items: center; /* Aligns items vertically */
+  gap: 5px; /* Adds spacing between elements */
+}
+
+.notif-sec{
+  display: flex;
+  align-items: center; /* Aligns items vertically */
+  gap: 5px; /* Adds spacing between elements */
+}
+
+/*BOOKINGS*/
+
+.bookings-weekly {
+  display: flex;
+  flex-direction: column;
+  width: 70%;
+  margin-top: 105px;
+  margin-left: 10px;
+  margin-right: 10px;
+}
+
+.side-bar {
+  border-radius: 15px;
+  border: 2.5px solid #a59f9f;
+  width: 30%;
+  max-width: 448px;
+  height: 337px; /* Keeps the height fixed */
+  overflow-y: auto; /* Enables vertical scrolling */
+  overflow-x: hidden; /* Prevents horizontal scrolling */
+  display: flex;
+  flex-direction: column;
+  margin-top: 105px;
+  margin-left: 10px;
+  margin-right: 10px;
+  background-color: #f9f9f9;
+  box-shadow: 2px 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+
+.reminders-section, .tasks-section{
+  width: 100%;
+  padding: 12px;
+}
+
+.sidebar-title {
+  color: #663a2c;
+  text-align: left;
+  font-family: "Baloo Tammudu 2", sans-serif;
+  font-size: 22px;
+  letter-spacing: 0.02em;
+  font-weight: 600;
+  text-decoration: underline;
+  margin-bottom: 7px;
+  margin-top: 7px;
+}
+
+.sidebar-subtitle{
+  color: #000000;
+  text-align: left;
+  font-family: "BalooTammudu2-SemiBold", sans-serif;
+  font-size: 16px;
+  letter-spacing: 0.02em;
+  font-weight: 600;
+  position: relative;
+}
+
+.sidebar-desc{
+  color: #a59f9f;
+  text-align: left;
+  font-family: "BalooTammudu2-SemiBold", sans-serif;
+  font-size: 13.5px;
+  letter-spacing: 0.02em;
+  position: relative;
+  margin-top: 2px;
+  margin-bottom: 2px;
+}
+
+.sidebar-bdesc{
+  color: #a59f9f;
+  text-align: left;
+  font-family: "BalooTammudu2-SemiBold", sans-serif;
+  font-size: 13.5px;
+  letter-spacing: 0.02em;
+  position: relative;
+  margin-top: 2px;
+  margin-bottom: 2px;
+  font-weight: 600;
+}
+
+.sidebar-line{
+  border-style: solid;
+  border-color: rgba(0, 0, 0, 0.3);
+  border-width: 1px 1px 1px 1px;
+  height: 0px;
+  position: relative;
+  width: 90%;
+  margin-top: 6px;
+  margin-bottom: 6px;
+}
+
+.add-sidebar {
+  color: #a59f9f;
+  font-family: "BalooTammudu2-SemiBold", sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  text-align: center;
+  margin-top: 7px;
+  margin-bottom: 7px;
+}
+
+
+.view-task, .view-rem{
+  color: #000000;
+  text-align: left;
+  font-family: "BalooTammudu2-SemiBold", sans-serif;
+  font-size: 12px;
+  letter-spacing: 0.02em;
+  font-weight: 600;
+  text-decoration: underline;
+  position: relative;
+  height: 14px;
+  margin-top: 25px;
+}
+
+.view-task:hover, .view-rem:hover {
+  color: #d98d62;
+  text-decoration: none;
+}
+
+.add-sidebar:hover{
+  color: #585858;
+  text-decoration: none;
+}
+
+/*calendar*/
+.calendar {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 10px;
+  padding: 20px;
+  min-height: 150px; /* Prevent collapse */
+}
+
+.day {
+  border: 1px solid #ccc;
+  padding: 10px;
+  text-align: center;
+  min-height: 80px; /* Ensures visibility */
+  background: #fff; /* Ensures it's not blending into the background */
+}
+
+.controls {
+  text-align: center;
+  margin-bottom: 10px;
+  min-height: 40px;
+}
