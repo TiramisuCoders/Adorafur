@@ -1,6 +1,5 @@
 // Add jQuery import
 const $ = jQuery
-
 // Declare variables
 const currentDate = new Date()
 let startDate = null
