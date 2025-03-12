@@ -1,12 +1,12 @@
 <?php
 session_start();
-
 // Check if user is logged in
 if (!isset($_SESSION['c_id'])) {
     // Redirect to login page if not logged in
     header("Location: home.php");
     exit;
-}
+    }
+
 
 include ('connect.php');
 
@@ -201,6 +201,32 @@ function outputBookingCalendar() {
     $year = date('Y');
     echo generateCalendar($month, $year);
 }
+
+
+// Get service details
+$stmt = $conn->prepare("SELECT * FROM service 
+                        WHERE LOWER(service_name) = LOWER('pet daycare')
+                        AND LOWER(service_variant) = LOWER('small dog')");
+$stmt->execute();                        
+$smallDaycare = $stmt->fetch(PDO::FETCH_ASSOC);
+
+$stmt = $conn->prepare("SELECT * FROM service 
+                        WHERE LOWER(service_name) = LOWER('pet daycare')
+                        AND LOWER(service_variant) = LOWER('medium dog')");
+$stmt->execute();                        
+$medDaycare = $stmt->fetch(PDO::FETCH_ASSOC);
+
+$stmt = $conn->prepare("SELECT * FROM service 
+                        WHERE LOWER(service_name) = LOWER('pet daycare')
+                        AND LOWER(service_variant) = LOWER('large dog')");
+$stmt->execute();                        
+$largeDaycare = $stmt->fetch(PDO::FETCH_ASSOC);
+
+$stmt = $conn->prepare("SELECT * FROM service 
+                        WHERE LOWER(service_name) = LOWER('pet daycare')
+                        AND LOWER(service_variant) = LOWER('cats')");
+$stmt->execute();                        
+$catDaycare = $stmt->fetch(PDO::FETCH_ASSOC);
 ?>
 
 
@@ -282,32 +308,32 @@ function outputBookingCalendar() {
                         <div class="pet-information-dog">
                             <div class="pet-info dog-info">
                                 <img src="Booking/small_dog.png" alt="Small Dog" class="small-dog" data-selected-src="Booking/small_dog(selected).png">
-                                <h3>Small Dog</h3>
+                                <h3><?php echo $smallDaycare['service_variant']; ?></h3>
                                 <h6>Weight: 10kg<br>
-                                    ₱ 450</h6>
+                                    ₱ <?php echo $smallDaycare['service_rate']; ?></h6>
                             </div>
 
                             <div class="pet-info dog-info">
                                 <img src="Booking/reg_dog.png" alt="Regular Dog" class="reg-dog" data-selected-src="Booking/reg_dog(selected).png">
-                                <h3>Regular Dog</h3>
+                                <h3><?php echo $medDaycare['service_variant']; ?></h3>
                                 <h6>Weight: 26 - 40 lbs<br>
-                                    ₱ 550</h6>
+                                    ₱ <?php echo $medDaycare['service_rate']; ?></h6>
                             </div>
 
                             <div class="pet-info dog-info">
                                 <img src="Booking/large_dog.png" alt="Large Dog" class="large-dog" data-selected-src="Booking/large_dog(selected).png">
-                                <h3>Large Dog</h3>
+                                <h3><?php echo $largeDaycare['service_variant']; ?></h3>
                                 <h6>Weight: 40 lbs and above<br>
-                                    ₱ 650</h6>
+                                    ₱ <?php echo $largeDaycare['service_rate']; ?></h6>
                             </div>
                         </div>
 
                         <div class="pet-information-cat">
                             <div class="pet-info cat-info">
                                 <img src="Booking/reg_cat.png" alt="Cat" class="cat" data-selected-src="Booking/reg_cat(selected).png">
-                                <h3>Cat</h3>
+                                <h3><?php echo $catDaycare['service_variant']; ?></h3>
                                 <h6>Weight: 4 - 5kg<br>
-                                    ₱ 400</h6>
+                                    ₱ <?php echo $catDaycare['service_rate']; ?></h6>
                             </div>
                         </div>
                     </div>
@@ -343,7 +369,12 @@ function outputBookingCalendar() {
                             </div>
                         </div>
 
-                        <div class="book">BOOK</div>
+                        <?php if (isset($_SESSION['c_id'])): ?>
+                            <div class="book" onclick="yourFunction()">BOOK</div>
+                        <?php else: ?>
+                            <!-- You can display a non-clickable version or a message here -->
+                            <div class="book" style="pointer-events: none;">BOOK</div>
+                        <?php endif; ?>
 
                     </div>
                 </div>
