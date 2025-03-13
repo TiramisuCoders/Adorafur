@@ -175,6 +175,7 @@ $profile_picture = isset($fetch_cust_info['profile_picture']) && !empty($fetch_c
                     <h6 class="cusID">CUSTOMER ID</h6>
                     <h6 class="cusNum">NO. <?php echo $fetch_cust_info['c_id']; ?></h6>
                     <h6 class="cusMem"><?php echo $fetch_cust_info['membership_status']; ?> Member</h6>
+                    <a href="logout.php" class="btn btn-primary">LOG OUT</a>
                 </div>
 
                 <div class="deets">

@@ -1,18 +1,12 @@
 <?php
-session_start();
-// Check if user is logged in
-if (!isset($_SESSION['c_id'])) {
-    // Redirect to login page if not logged in
-    header("Location: home.php");
-    exit;
-    }
+session_start();    
 
-
-include ('connect.php');
+require_once ('connect.php');
 
 $petSelected = false;
 $dateSelected = false;
 $timeSelected = false;
+$isLoggedIn = isset($_SESSION['c_id']);
 
 // Handle AJAX requests
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -101,33 +95,42 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         exit;
     }
     
-    if (isset($_POST['get_pets'])) {
-        // Get pets for the logged-in user
-        $userId = $_SESSION['c_id'];
-        $stmt = $conn->prepare("SELECT pet_id, pet_name, pet_breed, pet_age, pet_gender, pet_size FROM pet WHERE customer_id = :customer_id");
-        $stmt->execute(['customer_id' => $userId]);
-        $pets = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    // These requests require authentication
+    if (isset($_POST['get_pets']) || isset($_POST['selected_pet'])) {
+        if (!$isLoggedIn) {
+            echo json_encode(['success' => false, 'requireLogin' => true, 'message' => 'Login required']);
+            exit;
+        }
         
-        echo json_encode(['success' => true, 'pets' => $pets]);
-        exit;
-    }
-    
-    if (isset($_POST['selected_pet'])) {
-        // Get pet details
-        $petId = $_POST['selected_pet'];
-        $stmt = $conn->prepare("
-            SELECT p.pet_id, p.pet_name, p.pet_breed, p.pet_age, p.pet_gender, p.pet_size, s.service_rate 
-            FROM pet p
-            JOIN service s ON p.pet_size = s.service_variant OR (p.pet_size = 'Cat' AND s.service_variant = 'Cats')
-            WHERE p.pet_id = :pet_id AND s.service_name = 'Pet Daycare'
-        ");
-        $stmt->execute(['pet_id' => $petId]);
-        $petDetails = $stmt->fetch(PDO::FETCH_ASSOC);
+        if (isset($_POST['get_pets'])) {
+            // Get pets for the logged-in user
+            $userId = $_SESSION['c_id'];
+            $stmt = $conn->prepare("SELECT pet_id, pet_name, pet_breed, pet_age, pet_gender, pet_size FROM pet WHERE customer_id = :customer_id");
+            $stmt->execute(['customer_id' => $userId]);
+            $pets = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            
+            echo json_encode(['success' => true, 'pets' => $pets]);
+            exit;
+        }
         
-        echo json_encode(['success' => true, 'petDetails' => $petDetails]);
-        exit;
+        if (isset($_POST['selected_pet'])) {
+            // Get pet details
+            $petId = $_POST['selected_pet'];
+            $stmt = $conn->prepare("
+                SELECT p.pet_id, p.pet_name, p.pet_breed, p.pet_age, p.pet_gender, p.pet_size, s.service_rate 
+                FROM pet p
+                JOIN service s ON p.pet_size = s.service_variant OR (p.pet_size = 'Cat' AND s.service_variant = 'Cats')
+                WHERE p.pet_id = :pet_id AND s.service_name = 'Pet Daycare'
+            ");
+            $stmt->execute(['pet_id' => $petId]);
+            $petDetails = $stmt->fetch(PDO::FETCH_ASSOC);
+            
+            echo json_encode(['success' => true, 'petDetails' => $petDetails]);
+            exit;
+        }
     }
 }
+
 
 // Set variables based on session
 if (isset($_SESSION['pet_type'])) $petSelected = true;
@@ -135,10 +138,13 @@ if (isset($_SESSION['selected_date'])) $dateSelected = true;
 if (isset($_SESSION['check_in_time']) && isset($_SESSION['check_out_time'])) $timeSelected = true;
 
 // Get user details
-$userId = $_SESSION['c_id'];
-$stmt = $conn->prepare("SELECT c_first_name, c_last_name, c_email FROM customer WHERE c_id = :user_id");
-$stmt->execute(['user_id' => $userId]);
-$userDetails = $stmt->fetch(PDO::FETCH_ASSOC);
+$userDetails = null;
+if($isLoggedIn){
+    $userId = $_SESSION['c_id'];
+    $stmt = $conn->prepare("SELECT c_first_name, c_last_name, c_email FROM customer WHERE c_id = :user_id");
+    $stmt->execute(['user_id' => $userId]);
+    $userDetails = $stmt->fetch(PDO::FETCH_ASSOC);
+}
 
 function generateCalendar($month, $year) {
     $firstDayOfMonth = mktime(0, 0, 0, $month, 1, $year);
@@ -227,6 +233,7 @@ $stmt = $conn->prepare("SELECT * FROM service
                         AND LOWER(service_variant) = LOWER('cats')");
 $stmt->execute();                        
 $catDaycare = $stmt->fetch(PDO::FETCH_ASSOC);
+
 ?>
 
 
@@ -369,15 +376,11 @@ $catDaycare = $stmt->fetch(PDO::FETCH_ASSOC);
                             </div>
                         </div>
 
-                        <?php if (isset($_SESSION['c_id'])): ?>
-                            <div class="book" onclick="yourFunction()">BOOK</div>
-                        <?php else: ?>
-                            <!-- You can display a non-clickable version or a message here -->
-                            <div class="book" style="pointer-events: none;">BOOK</div>
-                        <?php endif; ?>
+                            <div class="book">BOOK</div>
 
-                    </div>
+                    </div>  
                 </div>
+                <?php if ($isLoggedIn): ?>
                 <div class="book-1">
                     <div class="book-label">
                         <div class="client">
@@ -669,6 +672,7 @@ $catDaycare = $stmt->fetch(PDO::FETCH_ASSOC);
                         </div>
                     </div>
                 </div><!-- /.main-container -->
+                <?php endif; ?>
             </div><!-- /.main -->
         </div>
     </div>
