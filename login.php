@@ -85,6 +85,27 @@ function handleRegister($conn) {
         $hasError = true;
     }
 
+    if (!preg_match('/^(?=.*[A-Z])(?=.*\d)(?=.*[\W_]).+$/', $contactNumber)) {
+        $password_error  = 'Pasword must contain atleast 1 special character, 1 uppercase and 1 number';
+        $hasError = true;
+    }
+
+    if (!preg_match('/[A-Z]/', $password)) {
+        die("Password must contain at least 1 uppercase letter.");
+        $password_error  = 'Pasword must contain atleast 1 uppercase';
+        $hasError = true;
+    }
+
+    if (!preg_match('/\d/', $password)) {
+        $password_error  = 'Pasword must contain atleast 1 number';
+        $hasError = true;
+    }
+
+    if (!preg_match('/[\W_]/', $password)) {
+        $password_error  = 'Pasword must contain atleast 1 special character';
+        $hasError = true;
+    }
+
     if ($password !== $repeatPassword) {
         $password_error= 'Passwords do not match.';
         $hasError = true;
@@ -192,13 +213,6 @@ function handleForgotPassword($conn) {
         <?php if ($contact_error): ?> .contact-error { display: block; } <?php endif; ?>
         <?php if ($password_error): ?> .password-error { display: block; } <?php endif; ?>
 
-        
-            .error {
-            color: #dc3545;
-            font-size: 0.875rem;
-            margin-top: 0.25rem;
-        }
-        
         .password-input {
             position: relative;
         }
@@ -319,7 +333,7 @@ function handleForgotPassword($conn) {
                                                 <label for="password">Password <span class="text-danger">*</span></label>
                                                 <input type="password" class="form-control" id="password" name="password" placeholder="Password" required>  
                                                 <i class="fas fa-eye password-toggle" id="passwordToggle"></i>
-                                                <div class="password-requirements">Password must be 8-12 characters long</div>
+                                                <div class="password-requirements">Password must be 8-12 characters, containing a 1 special character, 1 uppercase and 1 number.</div>
                                                 <?php if ($password_error): ?>
                                                 <p class="error password-error"><?php echo $password_error; ?></p>
                                             <?php endif; ?>
