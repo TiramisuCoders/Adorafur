@@ -7,7 +7,7 @@
     background-color: #F7E2CF;
   }
   
-  #login-body {
+  #login-body{
     align-items: center;
     text-align: center;
     padding: 5%;
@@ -15,6 +15,17 @@
     background-repeat: no-repeat;  /* Prevents the image from repeating */
     background-position: left bottom; /* Positions the image in the lower-left */
     background-size: 45%; /* Keeps the image at its original size */
+    margin: 5%;
+  }
+
+  #congrats-body {
+    align-items: center;
+    text-align: center;
+    padding: 2%;
+    /* background-image: url(log-in-puppies.png);
+    background-repeat: no-repeat;  /* Prevents the image from repeating */
+    /* background-position: left bottom; /* Positions the image in the lower-left */
+    /* background-size: 45%; Keeps the image at its original size */ 
     margin: 5%;
   }
   

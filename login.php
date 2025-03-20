@@ -66,7 +66,7 @@ function handleRegister($conn) {
     $stmt->bindParam(':password', $hashedPassword);
 
     if ($stmt->execute()) {
-        echo "Registration successful!";
+        $_SESSION['registration_success'] = true; // Store success in session
     } else {
         echo "Error during registration.";
     }
@@ -133,7 +133,7 @@ function handleForgotPassword($conn) {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>LOG IN PAGE</title>
-    <link rel="stylesheet" href="login99.css">
+    <link rel="stylesheet" href="login1.css">
 </head>
 <body>
 
@@ -247,6 +247,62 @@ function handleForgotPassword($conn) {
             </div>
         </div>
     </div>
+
+
+    <!-- Bootstrap Congrats Modal -->
+<div class="modal fade" id="congratsModal" tabindex="-1" aria-labelledby="congratsModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-body" id="congrats-body">
+                <h5 class="modal-title">Congratulations!</h5>
+                <h2 class="modal-title">You are now a certified member of Adorafur!</h2>
+                <p>
+                To complete your registration, please fill out your account 
+                details in the Profile tab once you log in. Additionally, a confirmation 
+                message will be sent to your email shortly. Thank you!
+                </p>
+
+                <button type="button" class="btn btn-primary" id="returnToLogin">Return</button>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- JavaScript to Auto-Show the Modal If Registration Was Successful -->
+<?php if (isset($_SESSION['registration_success'])): ?>
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            var congratsModal = new bootstrap.Modal(document.getElementById('congratsModal'));
+            congratsModal.show();
+        });
+    </script>
+    <?php unset($_SESSION['registration_success']); // Remove session variable after showing modal ?>
+<?php endif; ?>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        // Check if registration was successful
+        <?php if (isset($_SESSION['registration_success'])): ?>
+            var congratsModal = new bootstrap.Modal(document.getElementById('congratsModal'));
+            congratsModal.show();
+        <?php unset($_SESSION['registration_success']); // Clear session after showing modal ?>
+        <?php endif; ?>
+
+        // When the return button is clicked, close congratsModal and open loginModal
+        document.getElementById("returnToLogin").addEventListener("click", function() {
+            var congratsModalEl = document.getElementById('congratsModal');
+            var congratsModal = bootstrap.Modal.getInstance(congratsModalEl);
+            congratsModal.hide(); // Hide Congrats Modal
+
+            var loginModal = new bootstrap.Modal(document.getElementById('loginModal'));
+            setTimeout(function() {
+                loginModal.show(); // Show Login Modal after a slight delay
+            }, 500);
+        });
+    });
+</script>
+
 
 </body>
 </html>
