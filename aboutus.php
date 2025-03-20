@@ -44,7 +44,7 @@
             </div>
         </div>
     </div>
-
+        <div id = rule-section></div>
     
     <div class="hr">
         <h1>HOUSE RULES</h1>
