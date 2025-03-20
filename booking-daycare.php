@@ -226,7 +226,7 @@ function outputBookingCalendar() {
 
     <!-- Your custom JavaScript -->
     <script src="booking-daycare.js" defer></script>
-
+    <link rel="icon" type="image/png" href="Header-Pics/logo.png">
 
 </head>
 

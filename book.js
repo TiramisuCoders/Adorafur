@@ -27,7 +27,7 @@ window.selectedDates = {
   checkOut: null,
 }
 
-// Function to check if user is logged in
+// Update the isUserLoggedIn function to check for both session variables
 function isUserLoggedIn() {
   // Check if the PHP session has customer_id set
   // This is a client-side approximation - the actual check happens server-side
@@ -35,7 +35,8 @@ function isUserLoggedIn() {
     (document.cookie.includes("PHPSESSID=") &&
       typeof window.isLoggedIn !== "undefined" &&
       window.isLoggedIn === true) ||
-    (typeof window.customerId !== "undefined" && window.customerId > 0)
+    (typeof window.customerId !== "undefined" && window.customerId > 0) ||
+    (typeof window.customer_id !== "undefined" && window.customer_id > 0)
   )
 }
 
@@ -99,6 +100,7 @@ function handleDateClick(date, element) {
     // Update booking data
     window.bookingData.checkInDate = date.toLocaleDateString("en-US", {
       month: "long",
+      day: "numeric",
       day: "numeric",
     })
   } else {
@@ -380,11 +382,11 @@ function calculateTotalPrice() {
       // Set price based on pet size
       if (pet.size === "Cat") {
         petPrice = 500
-      } else if (pet.size === "Small Dog") {
+      } else if (pet.size === "Small") {
         petPrice = 700
-      } else if (pet.size === "Regular Dog") {
+      } else if (pet.size === "Regular") {
         petPrice = 800
-      } else if (pet.size === "Large Dog") {
+      } else if (pet.size === "Large") {
         petPrice = 900
       }
 
@@ -628,7 +630,6 @@ function updateBookingDatesFromCalendar() {
 
       const formattedCheckOutDate = checkOutDate.toLocaleDateString("en-US", {
         month: "long",
-        day: "numeric",
       })
 
       // Initialize bookingData if it doesn't exist
@@ -661,22 +662,22 @@ function updateBookingDatesFromCalendar() {
 // Add a function to update the pet prices in the table based on size
 function updatePetPricesInTable() {
   // Get all rows in the pet table
-  $(".pet-table tr:not(:first-child)").each(function () {
-    const sizeCell = $(this).find("td:nth-child(5)") // Size is in the 5th column
-    const priceCell = $(this).find("td:nth-child(6)") // Price is in the 6th column
+  $("table tr:not(:first-child)").each(function () {
+    const sizeCell = $(this).find("td[data-label='Size']") // Size column
+    const priceCell = $(this).find("td[data-label='Price']") // Price column
 
     if (sizeCell.length && priceCell.length) {
       const petSize = sizeCell.text().trim()
       let price = 0
 
       // Set price based on pet size
-      if (petSize.includes("Cat")) {
+      if (petSize === "Cat") {
         price = 500
-      } else if (petSize.includes("Small")) {
+      } else if (petSize === "Small") {
         price = 700
-      } else if (petSize.includes("Regular") && !petSize.includes("Cat")) {
+      } else if (petSize === "Regular") {
         price = 800
-      } else if (petSize.includes("Large")) {
+      } else if (petSize === "Large") {
         price = 900
       }
 
@@ -685,7 +686,7 @@ function updatePetPricesInTable() {
 
       // Also update the pet object in bookingData if it exists
       if (window.bookingData && window.bookingData.pets) {
-        const petName = $(this).find("td:nth-child(1)").text().trim()
+        const petName = $(this).find("td[data-label='Name']").text().trim()
         const existingPetIndex = window.bookingData.pets.findIndex((p) => p.name === petName)
 
         if (existingPetIndex >= 0) {
@@ -699,22 +700,13 @@ function updatePetPricesInTable() {
   calculateTotalPrice()
 }
 
-// Function to fetch pets for the logged-in customer
+// Update the fetchCustomerPets function to get the customer ID from session
 function fetchCustomerPets() {
-  // Get the customer ID from the window object or session
-  const customerId =
-    window.customerId || (typeof sessionStorage !== "undefined" ? sessionStorage.getItem("customer_id") : null)
-
-  if (!customerId) {
-    console.error("Customer ID not found")
-    return
-  }
-
-  // Make an AJAX request to get pets for this customer
+  // Make an AJAX request to get pets for the logged-in customer
   $.ajax({
     type: "POST",
-    url: "fetch-customer-pets.php", // Create this PHP file to handle the request
-    data: { customer_id: customerId },
+    url: window.location.href,
+    data: { fetch_customer_pets: true },
     dataType: "json",
     success: (response) => {
       if (response.success && response.pets) {
@@ -734,12 +726,18 @@ function fetchCustomerPets() {
           const option = $("<option>").val(JSON.stringify(petData)).text(pet.pet_name)
           petSelect.append(option)
         })
+
+        // Update prices after loading pets
+        updatePetPricesInTable()
       } else {
         console.error("Failed to fetch pets:", response.message || "Unknown error")
+        // Show a message to the user that they need to register a pet first
+        alert("You don't have any pets registered. Please register a pet first.")
       }
     },
     error: (xhr, status, error) => {
       console.error("AJAX Error:", error)
+      alert("Error loading your pets. Please try again later.")
     },
   })
 }
@@ -771,6 +769,20 @@ $(document).ready(() => {
     renderCalendar()
   })
 
+  // Check login status on page load
+  if (isUserLoggedIn()) {
+    // If user is logged in, fetch their pets for the dropdown
+    fetchCustomerPets()
+
+    // Update client info in the UI
+    updateClientInfo()
+  } else {
+    // Disable booking sections if not logged in
+    $(".calendar").addClass("disabled-section")
+    $(".checkin-out").addClass("disabled-section")
+    $(".book").addClass("disabled-section")
+  }
+
   // Handle BOOK button click - Check if user is logged in
   $(".book").on("click", (e) => {
     if (!isUserLoggedIn()) {
@@ -787,9 +799,6 @@ $(document).ready(() => {
     // If user is logged in, proceed to next section
     $(".main-schedule-options").fadeOut(() => {
       $(".book-1").fadeIn()
-
-      // Fetch pets for the logged-in customer
-      fetchCustomerPets()
     })
   })
 
@@ -944,12 +953,25 @@ $(document).ready(() => {
     updateBookingSummary()
   })
 
-  // Check login status on page load
-  if (!isUserLoggedIn()) {
-    // Disable booking sections if not logged in
-    $(".calendar").addClass("disabled-section")
-    $(".checkin-out").addClass("disabled-section")
-    $(".book").addClass("disabled-section")
+  // Add a function to update client info in the UI
+  function updateClientInfo() {
+    // Try to get client info from PHP session via AJAX
+    $.ajax({
+      type: "POST",
+      url: window.location.href,
+      data: { get_client_info: true },
+      dataType: "json",
+      success: (response) => {
+        if (response.success) {
+          // Update client name and email in the UI
+          $(".client b").text(response.client_name || "Client name")
+          $(".client-email").text(response.client_email || "Client Email")
+        }
+      },
+      error: (xhr, status, error) => {
+        console.error("Error fetching client info:", error)
+      },
+    })
   }
 })
 
