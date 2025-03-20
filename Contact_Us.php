@@ -10,7 +10,9 @@
 
 <body>
 
-<?php include 'header.php'; ?>
+<?php 
+$activePage = 'contact';
+include 'header.php'; ?>
 
 
 <div class = "main">

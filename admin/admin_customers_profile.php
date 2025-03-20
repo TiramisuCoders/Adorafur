@@ -151,7 +151,7 @@ if (empty($transactions)) {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin Customer Profile</title>
-    <link rel="stylesheet" href="admin-css/admin_header2.css">
+    <link rel="stylesheet" href="admin-css/admin_header1.css">
     <link rel="stylesheet" href="admin-css/admin_customer_profile1.css">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
@@ -178,6 +178,10 @@ if (empty($transactions)) {
 
           <div class="profile-button">
             <a href="admin_profile.php" class="profile-text">Profile</a>
+          </div>
+
+          <div class="logout-button">
+            <a href="../logout.php" class="logout-text">Logout</i></a>
           </div>
 
       </div>
