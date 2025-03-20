@@ -196,3 +196,7 @@ hr{
   border: solid 2px #FFF;
   opacity: 1;
 }
+
+.nav-item.dropdown:hover .dropdown-menu {
+  display: block;
+}

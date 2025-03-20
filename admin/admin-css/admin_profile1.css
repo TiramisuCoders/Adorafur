@@ -42,11 +42,3 @@
     color: #666;
     font-size: 20px;
 }
-
-.logout-container {
-  font-family: "BalooTammudu2-Medium", sans-serif;
-  display: flex;
-  width: 80%;
-  justify-content: center;
-  margin: 5px;
-}
