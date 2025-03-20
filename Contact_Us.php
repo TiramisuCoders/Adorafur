@@ -5,7 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="Contact.css">
     <!--<script src="script.js" defer></script>-->
-    <title>Adorafur Happy Stay</title>
+    <title>Contact Adorafur</title>
+    <link rel="icon" type="image/png" href="Header-Pics/logo.png">
 </head> 
 
 <body>

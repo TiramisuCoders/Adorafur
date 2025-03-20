@@ -6,7 +6,8 @@
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 
     <link rel="stylesheet" href="aboutss.css">
-    <title>Joanne Joaquin</title>
+    <link rel="icon" type="image/png" href="Header-Pics/logo.png">
+    <title>About Adorafur</title>
 </head>
 <body>
 
@@ -46,7 +47,7 @@ include 'header.php'; ?>
             </div>
         </div>
     </div>
-
+        <div id = rule-section></div>
     
     <div class="hr">
         <h1>HOUSE RULES</h1>

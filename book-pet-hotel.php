@@ -1,6 +1,112 @@
 <?php
 require_once 'connect.php'; // Include database connection
 
+// Add these two PHP files at the beginning of book-pet-hotel.php, right after the require_once 'connect.php'; line
+
+// File 1: fetch-customer-pets.php - Add this as a separate endpoint
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['fetch_customer_pets'])) {
+    // Start session if not already started
+    if (session_status() == PHP_SESSION_NONE) {
+        session_start();
+    }
+
+    // Check if user is logged in
+    if (!isset($_SESSION['customer_id']) && !isset($_SESSION['c_id'])) {
+        echo json_encode([
+            'success' => false,
+            'message' => 'User not logged in'
+        ]);
+        exit;
+    }
+
+    // Get customer ID (support both session variable names)
+    $customerId = isset($_SESSION['customer_id']) ? $_SESSION['customer_id'] : $_SESSION['c_id'];
+
+    try {
+        // Prepare query to fetch pets for this customer
+        $stmt = $conn->prepare("SELECT pet_id, pet_name, pet_breed, pet_age, pet_gender, pet_size 
+                               FROM pet 
+                               WHERE customer_id = :customer_id");
+        $stmt->bindParam(':customer_id', $customerId, PDO::PARAM_INT);
+        $stmt->execute();
+        
+        // Fetch all pets
+        $pets = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        
+        if (count($pets) > 0) {
+            echo json_encode([
+                'success' => true,
+                'pets' => $pets
+            ]);
+        } else {
+            echo json_encode([
+                'success' => false,
+                'message' => 'No pets found for this customer',
+                'pets' => []
+            ]);
+        }
+        exit;
+    } catch (PDOException $e) {
+        echo json_encode([
+            'success' => false,
+            'message' => 'Database error: ' . $e->getMessage()
+        ]);
+        exit;
+    }
+}
+
+// File 2: get-client-info.php - Add this as a separate endpoint
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['get_client_info'])) {
+    // Start session if not already started
+    if (session_status() == PHP_SESSION_NONE) {
+        session_start();
+    }
+
+    // Check if user is logged in
+    if (!isset($_SESSION['customer_id']) && !isset($_SESSION['c_id'])) {
+        echo json_encode([
+            'success' => false,
+            'message' => 'User not logged in'
+        ]);
+        exit;
+    }
+
+    // Get customer ID (support both session variable names)
+    $customerId = isset($_SESSION['customer_id']) ? $_SESSION['customer_id'] : $_SESSION['c_id'];
+
+    try {
+        // Prepare query to fetch customer info
+        $stmt = $conn->prepare("SELECT c_first_name, c_last_name, c_email 
+                               FROM customer 
+                               WHERE c_id = :customer_id");
+        $stmt->bindParam(':customer_id', $customerId, PDO::PARAM_INT);
+        $stmt->execute();
+        
+        // Fetch customer data
+        $customer = $stmt->fetch(PDO::FETCH_ASSOC);
+        
+        if ($customer) {
+            echo json_encode([
+                'success' => true,
+                'client_name' => $customer['c_first_name'] . ' ' . $customer['c_last_name'],
+                'client_email' => $customer['c_email']
+            ]);
+        } else {
+            echo json_encode([
+                'success' => false,
+                'message' => 'Customer not found'
+            ]);
+        }
+        exit;
+    } catch (PDOException $e) {
+        echo json_encode([
+            'success' => false,
+            'message' => 'Database error: ' . $e->getMessage()
+        ]);
+        exit;
+    }
+}
+
 // Initialize session variables for booking flow
 if (!isset($_SESSION)) {
     session_start();
@@ -82,7 +188,7 @@ $transactionNo = 'TRX'.time().rand(1000, 9999);
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Adorafu Happy Stay/Book/Pet Hotel</title>
+    <title>Book with Adorafur</title>
 
     <!-- Bootstrap CSS -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.0/dist/css/bootstrap.min.css">
@@ -98,6 +204,7 @@ $transactionNo = 'TRX'.time().rand(1000, 9999);
 
     <!-- Your custom JavaScript -->
     <script src="book.js"></script>
+    <link rel="icon" type="image/png" href="Header-Pics/logo.png">
 
 
 </head>
@@ -283,40 +390,39 @@ $transactionNo = 'TRX'.time().rand(1000, 9999);
 </table>
 
 <script>
-    function updatePetDetails(selectElement) {
-        let selectedPet = selectElement.value ? JSON.parse(selectElement.value) : null;
-        let row = selectElement.closest("tr");
+    // Find the updatePetDetails function in the JavaScript section and update it to correctly set prices based on pet size
+function updatePetDetails(selectElement) {
+    let selectedPet = selectElement.value ? JSON.parse(selectElement.value) : null;
+    let row = selectElement.closest("tr");
 
-        row.querySelector("[data-label='Breed']").textContent = selectedPet ? selectedPet.pet_breed : "";
-        row.querySelector("[data-label='Age']").textContent = selectedPet ? selectedPet.pet_age + " years" : "";
-        row.querySelector("[data-label='Gender']").textContent = selectedPet ? selectedPet.pet_gender : "";
-        row.querySelector("[data-label='Size']").textContent = selectedPet ? selectedPet.pet_size : "";
-        
-        // Set price based on pet size
-        let price = "₱0.00";
-        if (selectedPet) {
-            switch(selectedPet.pet_size) {
-                case 'Cat':
-                    price = "₱500.00";
-                    break;
-                case 'Small':
-                    price = "₱700.00";
-                    break;
-                case 'Medium':
-                    price = "₱800.00";
-                    break;
-                case 'Large':
-                case 'XL':
-                case 'XXL':
-                    price = "₱900.00";
-                    break;
-            }
+    row.querySelector("[data-label='Breed']").textContent = selectedPet ? selectedPet.pet_breed : "";
+    row.querySelector("[data-label='Age']").textContent = selectedPet ? selectedPet.pet_age + " years" : "";
+    row.querySelector("[data-label='Gender']").textContent = selectedPet ? selectedPet.pet_gender : "";
+    row.querySelector("[data-label='Size']").textContent = selectedPet ? selectedPet.pet_size : "";
+    
+    // Set price based on pet size
+    let price = "₱0.00";
+    if (selectedPet) {
+        switch(selectedPet.pet_size) {
+            case 'Cat':
+                price = "₱500.00";
+                break;
+            case 'Small':
+                price = "₱700.00";
+                break;
+            case 'Regular':
+                price = "₱800.00";
+                break;
+            case 'Large':
+                price = "₱900.00";
+                break;
         }
-        row.querySelector("[data-label='Price']").textContent = price;
-        
-        // Update total price
-        calculateTotalPrice();
     }
+    row.querySelector("[data-label='Price']").textContent = price;
+    
+    // Update total price
+    calculateTotalPrice();
+}
 
     function addPetRow() {
         let tableBody = document.getElementById("petTableBody");
@@ -723,452 +829,453 @@ $transactionNo = 'TRX'.time().rand(1000, 9999);
             </div><!-- /.main -->
 
             <script>
-                $(document).ready(function() {
-                    // Initially hide pet information and headings
-                    $(".pet-information-dog, .pet-information-cat").hide();
-                    $(".pet-info h3, .pet-info h6").hide();
-
-                    // Handle pet selection from dropdown menu
-                    $("#petSelectionMenu + .dropdown-menu .dropdown-item").click(function() {
-                        var selectedPet = $(this).text();
-                        $("#petSelectionMenu").text(selectedPet);
-                        $(".pet-information-dog, .pet-information-cat").hide();
-                        if (selectedPet === "Dog") $(".pet-information-dog").fadeIn();
-                        else if (selectedPet === "Cat") $(".pet-information-cat").fadeIn();
-                    });
-
-                    let selectedPet = null;
-
-                    // Handle hover effect for pet info
-                    $(".pet-info").hover(
-                        function() {
-                            $(this).find("h3, h6").fadeIn();
-                        },
-                        function() {
-                            if (!$(this).hasClass("selected")) $(this).find("h3, h6").fadeOut();
-                        }
-                    );
-
-                    // Handle click event for pet info
-                    $(".pet-info").click(function() {
-                        const img = $(this).find("img");
-                        if (selectedPet === this) {
-                            $(this).removeClass("selected");
-                            swapImage(img);
-                            $(this).find("h3, h6").fadeOut();
-                            selectedPet = null;
-                        } else {
-                            if (selectedPet) {
-                                swapImage($(selectedPet).find("img"));
-                                $(selectedPet).removeClass("selected");
-                                $(selectedPet).find("h3, h6").fadeOut();
-                            }
-                            $(this).addClass("selected");
-                            swapImage(img);
-                            $(this).find("h3, h6").fadeIn();
-                            selectedPet = this;
-                        }
-                    });
-
-                    // Function to swap images
-                    function swapImage(img) {
-                        let tempSrc = img.attr("src");
-                        img.attr("src", img.attr("data-selected-src"));
-                        img.attr("data-selected-src", tempSrc);
-                    }
-
-                    // Handle check-in and check-out time selection
-                    $(".check-in-time").click(function() {
-                        $("#checkInMenu").text($(this).text());
-                    });
-                    $(".check-out-time").click(function() {
-                        $("#checkOutMenu").text($(this).text());
-                    });
-
-                    // Handle Book button click
-                    $(".book").click(function() {
-                        $(".main-schedule-options").fadeOut(function() {
-                            $(".book-1").fadeIn();
-                        });
-                    });
-
-                    // Ensure book-1 is initially hidden
-                    $(".book-1").hide();
-                });
-            </script>
-
-            <script>
-            $(document).ready(function() {
-                // Initially disable calendar, time selection, and book button
-                $(".calendar").addClass("disabled-section");
-                $(".checkin-out").addClass("disabled-section");
-                $(".book").addClass("disabled-section");
-
-                // Pet selection logic
-                $("#petSelectionMenu + .dropdown-menu .dropdown-item").click(function() {
-                    var selectedPet = $(this).text();
-                    $("#petSelectionMenu").text(selectedPet);
-                    $(".pet-information-dog, .pet-information-cat").hide();
-                    if (selectedPet === "Dog") $(".pet-information-dog").fadeIn();
-                    else if (selectedPet === "Cat") $(".pet-information-cat").fadeIn();
-
-                    // Enable calendar after pet selection
-                    $(".calendar").removeClass("disabled-section");
-
-                    // Store the selection via AJAX
-                    $.ajax({
-                        type: "POST",
-                        url: window.location.href,
-                        data: { pet_type: selectedPet },
-                        dataType: 'json',
-                        success: function(response) {
-                            if (response.success) {
-                                console.log(response.message);
-                            }
-                        }
-                    });
-                });
-
-                // Calendar date selection
-                $(document).on("click", ".days-grid .day:not(.disabled)", function() {
-                    if ($(".calendar").hasClass("disabled-section")) return;
-
-                    $(".days-grid .day").removeClass("selected");
-                    $(this).addClass("selected");
-
-                    // Enable time selection after date selection
-                    $(".checkin-out").removeClass("disabled-section");
-
-                    // Store the selected date via AJAX
-                    var selectedDate = $(this).data("date");
-                    $.ajax({
-                        type: "POST",
-                        url: window.location.href,
-                        data: { selected_date: selectedDate },
-                        dataType: 'json',
-                        success: function(response) {
-                            if (response.success) {
-                                console.log(response.message);
-                            }
-                        }
-                    });
-                });
-
-                // Time selection logic
-                let checkInSelected = false;
-                let checkOutSelected = false;
-
-                $(".check-in-time").click(function() {
-                    if ($(".checkin-out").hasClass("disabled-section")) return;
-
-                    $("#checkInMenu").text($(this).text());
-                    checkInSelected = true;
-                    updateBookButton();
-
-                    // Store check-in time
-                    $.ajax({
-                        type: "POST",
-                        url: window.location.href,
-                        data: { check_in_time: $(this).text() },
-                        dataType: 'json',
-                        success: function(response) {
-                            if (response.success) {
-                                console.log(response.message);
-                            }
-                        }
-                    });
-                });
-
-                $(".check-out-time").click(function() {
-                    if ($(".checkin-out").hasClass("disabled-section")) return;
-
-                    $("#checkOutMenu").text($(this).text());
-                    checkOutSelected = true;
-                    updateBookButton();
-
-                    // Store check-out time
-                    $.ajax({
-                        type: "POST",
-                        url: window.location.href,
-                        data: { check_out_time: $(this).text() },
-                        dataType: 'json',
-                        success: function(response) {
-                            if (response.success) {
-                                console.log(response.message);
-                            }
-                        }
-                    });
-                });
-
-                function updateBookButton() {
-                    if (checkInSelected && checkOutSelected) {
-                        $(".book").removeClass("disabled-section");
-                    }
-                }
-
-                // Initialize based on PHP variables
-                <?php if ($petSelected): ?>
-                    $(".calendar").removeClass("disabled-section");
-                <?php endif; ?>
-
-                <?php if ($dateSelected): ?>
-                    $(".checkin-out").removeClass("disabled-section");
-                <?php endif; ?>
-
-                <?php if ($timeSelected): ?>
-                    $(".book").removeClass("disabled-section");
-                <?php endif; ?>
-            });
-            </script>
-
-            <script>
-                    $("#complete-booking").click(function() {
-                    // Debug: Log the state of checkboxes
-                    console.log("Checkbox 1 state:", $("#waiverForm-checkbox1").is(":checked"));
-                    console.log("Checkbox 2 state:", $("#waiverForm-checkbox2").is(":checked"));
-
-                    // Check if waiver checkboxes are checked
-                    if (!$("#waiverForm-checkbox1").prop("checked") || !$("#waiverForm-checkbox2").prop("checked")) {
-                        alert("You must agree to the terms and conditions to complete your booking.");
-                        return;
-                    }
-                    
-                    // Show processing notification
-                    alert("Your booking is being processed. Please wait...");
-                    
-                    // Disable the button to prevent multiple submissions
-                    $(this).prop('disabled', true).text('Processing...');
-                    
-                    // Get the payment form
-                    var paymentForm = $("#petPaymentModal form");
-                    var formData = new FormData(paymentForm[0]);
-                    
-                    $.ajax({
-                        type: "POST",
-                        url: "book-pet-daycare.php",
-                        data: formData,
-                        processData: false,
-                        contentType: false,
-                        dataType: 'json',
-                        success: function(response) {
-                            if (response.success) {
-                                alert("Booking completed successfully!");
-                                $("#waiverForm").modal("hide");
-                                // Redirect to confirmation page or update UI
-                                window.location.href = "booking-confirmation.php";
-                            } else {
-                                alert("Error: " + response.error);
-                                // Re-enable the button if there's an error
-                                $("#complete-booking").prop('disabled', false).text('Complete Booking');
-                            }
-                        },
-                        error: function() {
-                            alert("An error occurred while processing your payment.");
-                            // Re-enable the button if there's an error
-                            $("#complete-booking").prop('disabled', false).text('Complete Booking');
-                        }
-                    });
-                });
-            </script>
-
-<script>
-    $(document).ready(function () {
-        <?php if ($petSelected): ?>
-            $(".calendar").removeClass("disabled-section");
-        <?php endif; ?>
-
-        <?php if ($dateSelected): ?>
-            $(".checkin-out").removeClass("disabled-section");
-        <?php endif; ?>
-
-        <?php if ($timeSelected): ?>
-            $(".book").removeClass("disabled-section");
-        <?php endif; ?>
-    });
-</script>
-
-<script>
     $(document).ready(function() {
-        // Store booking data globally
-        window.bookingData = {
-            pets: [], // Array to store multiple pets
-            checkInDate: "",
-            checkInTime: "",
-            checkOutDate: "",
-            checkOutTime: ""
-        };
+        // Initially hide pet information and headings
+        $(".pet-information-dog, .pet-information-cat").hide();
+        $(".pet-info h3, .pet-info h6").hide();
 
-        // Function to update the booking summary in the payment modal
-        function updateBookingSummary() {
-            // Update pet details
-            if (bookingData.pets.length > 0) {
-                // If there's only one pet
-                if (bookingData.pets.length === 1) {
-                    const pet = bookingData.pets[0];
-                    $('#summaryPetName').text(pet.name);
-                    
-                    // Update the pet details section
-                    $('#petSummaryDetails').html(`
-                        <div class="info-row"><span class="label">Breed:</span><span class="value">${pet.breed}</span></div>
-                        <div class="info-row"><span class="label">Gender:</span><span class="value">${pet.gender}</span></div>
-                        <div class="info-row"><span class="label">Age:</span><span class="value">${pet.age} years old</span></div>
-                    `);
-                } 
-                // If there are multiple pets
-                else {
-                    // Update the pet name to show count
-                    $('#summaryPetName').text(`${bookingData.pets.length} Pets`);
-                    
-                    // Create a list of all pets with their details
-                    let petDetailsHtml = '';
-                    bookingData.pets.forEach((pet, index) => {
-                        petDetailsHtml += `
-                            <div class="pet-summary-item">
-                                <h4>${pet.name}</h4>
-                                <div class="info-row"><span class="label">Breed:</span><span class="value">${pet.breed}</span></div>
-                                <div class="info-row"><span class="label">Gender:</span><span class="value">${pet.gender}</span></div>
-                                <div class="info-row"><span class="label">Age:</span><span class="value">${pet.age} years old</span></div>
-                                ${index < bookingData.pets.length - 1 ? '<hr>' : ''}
-                            </div>
-                        `;
-                    });
-                    
-                    // Update the pet details section
-                    $('#petSummaryDetails').html(petDetailsHtml);
-                }
-            }
+        // Handle pet selection from dropdown menu
+        $("#petSelectionMenu + .dropdown-menu .dropdown-item").click(function() {
+            var selectedPet = $(this).text();
+            $("#petSelectionMenu").text(selectedPet);
+            $(".pet-information-dog, .pet-information-cat").hide();
+            if (selectedPet === "Dog") $(".pet-information-dog").fadeIn();
+            else if (selectedPet === "Cat") $(".pet-information-cat").fadeIn();
+        });
 
-            // Update dates if available
-            if (bookingData.checkInDate && bookingData.checkInTime) {
-                $('#summaryCheckIn').text(`${bookingData.checkInDate}, ${bookingData.checkInTime}`);
-            } else {
-                // Set default values if not available
-                if (!$('#summaryCheckIn').text()) {
-                    $('#summaryCheckIn').text("Not selected");
-                }
+        let selectedPet = null;
+
+        // Handle hover effect for pet info
+        $(".pet-info").hover(
+            function() {
+                $(this).find("h3, h6").fadeIn();
+            },
+            function() {
+                if (!$(this).hasClass("selected")) $(this).find("h3, h6").fadeOut();
             }
-            
-            if (bookingData.checkOutDate && bookingData.checkOutTime) {
-                $('#summaryCheckOut').text(`${bookingData.checkOutDate}, ${bookingData.checkOutTime}`);
+        );
+
+        // Handle click event for pet info
+        $(".pet-info").click(function() {
+            const img = $(this).find("img");
+            if (selectedPet === this) {
+                $(this).removeClass("selected");
+                swapImage(img);
+                $(this).find("h3, h6").fadeOut();
+                selectedPet = null;
             } else {
-                // Set default values if not available
-                if (!$('#summaryCheckOut').text()) {
-                    $('#summaryCheckOut').text("Not selected");
+                if (selectedPet) {
+                    swapImage($(selectedPet).find("img"));
+                    $(selectedPet).removeClass("selected");
+                    $(selectedPet).find("h3, h6").fadeOut();
                 }
+                $(this).addClass("selected");
+                swapImage(img);
+                $(this).find("h3, h6").fadeIn();
+                selectedPet = this;
             }
-            
-            // Update total price
-            calculateTotalPrice();
+        });
+
+        // Function to swap images
+        function swapImage(img) {
+            let tempSrc = img.attr("src");
+            img.attr("src", img.attr("data-selected-src"));
+            img.attr("data-selected-src", tempSrc);
         }
 
-        // Update pet details when a pet is selected from dropdown
-        $(document).on('change', '.petSelect', function() {
-            const selectedOption = $(this).find('option:selected');
-            const petName = selectedOption.text();
-            
-            if (petName && petName !== "Choose Pet") {
-                // Get pet details from the JSON
-                const petDetails = JSON.parse($(this).val());
-                
-                // Create pet object
-                const pet = {
-                    name: petName,
-                    breed: petDetails.pet_breed,
-                    gender: petDetails.pet_gender,
-                    age: petDetails.pet_age
-                };
-                
-                // Check if this pet is already in the array
-                const existingPetIndex = bookingData.pets.findIndex(p => p.name === petName);
-                
-                if (existingPetIndex >= 0) {
-                    // Update existing pet
-                    bookingData.pets[existingPetIndex] = pet;
-                } else {
-                    // Add new pet
-                    bookingData.pets.push(pet);
-                }
-                
-                // Update summary
-                updateBookingSummary();
-            }
+        // Handle check-in and check-out time selection
+        $(".check-in-time").click(function() {
+            $("#checkInMenu").text($(this).text());
+        });
+        $(".check-out-time").click(function() {
+            $("#checkOutMenu").text($(this).text());
         });
 
-        // Initialize the payment modal when it's opened
-        $('#petPaymentModal').on('show.bs.modal', function() {
-            // Set default values for check-in and check-out if they're empty
-            if (!bookingData.checkInDate || !bookingData.checkInTime) {
-                // Try to get values from the UI
-                const checkInDate = $('.days-grid .day.selected').first().data('date');
-                const checkInTime = $('#checkInMenu').text();
-                
-                if (checkInDate && checkInTime && checkInTime !== "Choose Time") {
-                    const formattedDate = new Date(checkInDate).toLocaleDateString('en-US', {
-                        month: 'long',
-                        day: 'numeric'
-                    });
-                    bookingData.checkInDate = formattedDate;
-                    bookingData.checkInTime = checkInTime;
-                } else {
-                    $('#summaryCheckIn').text("Not selected");
-                }
-            }
-            
-            if (!bookingData.checkOutDate || !bookingData.checkOutTime) {
-                // Try to get values from the UI
-                const checkOutDate = $('.days-grid .day.selected').last().data('date');
-                const checkOutTime = $('#checkOutMenu').text();
-                
-                if (checkOutDate && checkOutTime && checkOutTime !== "Choose Time") {
-                    const formattedDate = new Date(checkOutDate).toLocaleDateString('en-US', {
-                        month: 'long',
-                        day: 'numeric'
-                    });
-                    bookingData.checkOutDate = formattedDate;
-                    bookingData.checkOutTime = checkOutTime;
-                } else {
-                    $('#summaryCheckOut').text("Not selected");
-                }
-            }
-            
-            // If no pets are selected, try to get from the table
-            if (bookingData.pets.length === 0) {
-                $('.petSelect').each(function() {
-                    const select = $(this);
-                    const selectedOption = select.find('option:selected');
-                    const petName = selectedOption.text();
-                    
-                    if (petName && petName !== "Choose Pet") {
-                        try {
-                            const petDetails = JSON.parse(select.val());
-                            
-                            // Create pet object
-                            const pet = {
-                                name: petName,
-                                breed: petDetails.pet_breed,
-                                gender: petDetails.pet_gender,
-                                age: petDetails.pet_age
-                            };
-                            
-                            // Add to pets array
-                            bookingData.pets.push(pet);
-                        } catch (e) {
-                            console.error("Error parsing pet details:", e);
-                        }
-                    }
-                });
-            }
-            
-            // Update the summary with all available data
-            updateBookingSummary();
+        // Handle Book button click
+        $(".book").click(function() {
+            $(".main-schedule-options").fadeOut(function() {
+                $(".book-1").fadeIn();
+            });
         });
 
-        // Update summary when payment modal is opened
-        $('#petPaymentModal').on('shown.bs.modal', function() {
-            updateBookingSummary();
+        // Ensure book-1 is initially hidden
+        $(".book-1").hide();
+    });
+</script>
+
+<script>
+$(document).ready(function() {
+    // Initially disable calendar, time selection, and book button
+    $(".calendar").addClass("disabled-section");
+    $(".checkin-out").addClass("disabled-section");
+    $(".book").addClass("disabled-section");
+
+    // Pet selection logic
+    $("#petSelectionMenu + .dropdown-menu .dropdown-item").click(function() {
+        var selectedPet = $(this).text();
+        $("#petSelectionMenu").text(selectedPet);
+        $(".pet-information-dog, .pet-information-cat").hide();
+        if (selectedPet === "Dog") $(".pet-information-dog").fadeIn();
+        else if (selectedPet === "Cat") $(".pet-information-cat").fadeIn();
+
+        // Enable calendar after pet selection
+        $(".calendar").removeClass("disabled-section");
+
+        // Store the selection via AJAX
+        $.ajax({
+            type: "POST",
+            url: window.location.href,
+            data: { pet_type: selectedPet },
+            dataType: 'json',
+            success: function(response) {
+                if (response.success) {
+                    console.log(response.message);
+                }
+            }
+        });
+    });
+
+    // Calendar date selection
+    $(document).on("click", ".days-grid .day:not(.disabled)", function() {
+        if ($(".calendar").hasClass("disabled-section")) return;
+
+        $(".days-grid .day").removeClass("selected");
+        $(this).addClass("selected");
+
+        // Enable time selection after date selection
+        $(".checkin-out").removeClass("disabled-section");
+
+        // Store the selected date via AJAX
+        var selectedDate = $(this).data("date");
+        $.ajax({
+            type: "POST",
+            url: window.location.href,
+            data: { selected_date: selectedDate },
+            dataType: 'json',
+            success: function(response) {
+                if (response.success) {
+                    console.log(response.message);
+                }
+            }
+        });
+    });
+
+    // Time selection logic
+    let checkInSelected = false;
+    let checkOutSelected = false;
+
+    $(".check-in-time").click(function() {
+        if ($(".checkin-out").hasClass("disabled-section")) return;
+
+        $("#checkInMenu").text($(this).text());
+        checkInSelected = true;
+        updateBookButton();
+
+        // Store check-in time
+        $.ajax({
+            type: "POST",
+            url: window.location.href,
+            data: { check_in_time: $(this).text() },
+            dataType: 'json',
+            success: function(response) {
+                if (response.success) {
+                    console.log(response.message);
+                }
+            }
+        });
+    });
+
+    $(".check-out-time").click(function() {
+        if ($(".checkin-out").hasClass("disabled-section")) return;
+
+        $("#checkOutMenu").text($(this).text());
+        checkOutSelected = true;
+        updateBookButton();
+
+        // Store check-out time
+        $.ajax({
+            type: "POST",
+            url: window.location.href,
+            data: { check_out_time: $(this).text() },
+            dataType: 'json',
+            success: function(response) {
+                if (response.success) {
+                    console.log(response.message);
+                }
+            }
+        });
+    });
+
+    function updateBookButton() {
+        if (checkInSelected && checkOutSelected) {
+            $(".book").removeClass("disabled-section");
+        }
+    }
+
+    // Initialize based on PHP variables
+    <?php if ($petSelected): ?>
+        $(".calendar").removeClass("disabled-section");
+    <?php endif; ?>
+
+    <?php if ($dateSelected): ?>
+        $(".checkin-out").removeClass("disabled-section");
+    <?php endif; ?>
+
+    <?php if ($timeSelected): ?>
+        $(".book").removeClass("disabled-section");
+    <?php endif; ?>
+});
+</script>
+
+<script>
+        $("#complete-booking").click(function() {
+        // Debug: Log the state of checkboxes
+        console.log("Checkbox 1 state:", $("#waiverForm-checkbox1").is(":checked"));
+        console.log("Checkbox 2 state:", $("#waiverForm-checkbox2").is(":checked"));
+
+        // Check if waiver checkboxes are checked
+        if (!$("#waiverForm-checkbox1").prop("checked") || !$("#waiverForm-checkbox2").prop("checked")) {
+            alert("You must agree to the terms and conditions to complete your booking.");
+            return;
+        }
+        
+        // Show processing notification
+        alert("Your booking is being processed. Please wait...");
+        
+        // Disable the button to prevent multiple submissions
+        $(this).prop('disabled', true).text('Processing...');
+        
+        // Get the payment form
+        var paymentForm = $("#petPaymentModal form");
+        var formData = new FormData(paymentForm[0]);
+        
+        $.ajax({
+            type: "POST",
+            url: "book-pet-daycare.php",
+            data: formData,
+            processData: false,
+            contentType: false,
+            dataType: 'json',
+            success: function(response) {
+                if (response.success) {
+                    alert("Booking completed successfully!");
+                    $("#waiverForm").modal("hide");
+                    // Redirect to confirmation page or update UI
+                    window.location.href = "booking-confirmation.php";
+                } else {
+                    alert("Error: " + response.error);
+                    // Re-enable the button if there's an error
+                    $("#complete-booking").prop('disabled', false).text('Complete Booking');
+                }
+            },
+            error: function() {
+                alert("An error occurred while processing your payment.");
+                // Re-enable the button if there's an error
+                $("#complete-booking").prop('disabled', false).text('Complete Booking');
+            }
         });
     });
 </script>
+
+<script>
+$(document).ready(function () {
+    <?php if ($petSelected): ?>
+        $(".calendar").removeClass("disabled-section");
+    <?php endif; ?>
+
+    <?php if ($dateSelected): ?>
+        $(".checkin-out").removeClass("disabled-section");
+    <?php endif; ?>
+
+    <?php if ($timeSelected): ?>
+        $(".book").removeClass("disabled-section");
+    <?php endif; ?>
+});
+</script>
+
+<script>
+$(document).ready(function() {
+    // Store booking data globally
+    window.bookingData = {
+        pets: [], // Array to store multiple pets
+        checkInDate: "",
+        checkInTime: "",
+        checkOutDate: "",
+        checkOutTime: ""
+    };
+
+    // Function to update the booking summary in the payment modal
+    function updateBookingSummary() {
+        // Update pet details
+        if (bookingData.pets.length > 0) {
+            // If there's only one pet
+            if (bookingData.pets.length === 1) {
+                const pet = bookingData.pets[0];
+                $('#summaryPetName').text(pet.name);
+                
+                // Update the pet details section
+                $('#petSummaryDetails').html(`
+                    <div class="info-row"><span class="label">Breed:</span><span class="value">${pet.breed}</span></div>
+                    <div class="info-row"><span class="label">Gender:</span><span class="value">${pet.gender}</span></div>
+                    <div class="info-row"><span class="label">Age:</span><span class="value">${pet.age} years old</span></div>
+                `);
+            } 
+            // If there are multiple pets
+            else {
+                // Update the pet name to show count
+                $('#summaryPetName').text(`${bookingData.pets.length} Pets`);
+                
+                // Create a list of all pets with their details
+                let petDetailsHtml = '';
+                bookingData.pets.forEach((pet, index) => {
+                    petDetailsHtml += `
+                        <div class="pet-summary-item">
+                            <h4>${pet.name}</h4>
+                            <div class="info-row"><span class="label">Breed:</span><span class="value">${pet.breed}</span></div>
+                            <div class="info-row"><span class="label">Gender:</span><span class="value">${pet.gender}</span></div>
+                            <div class="info-row"><span class="label">Age:</span><span class="value">${pet.age} years old</span></div>
+                            ${index < bookingData.pets.length - 1 ? '<hr>' : ''}
+                        </div>
+                    `;
+                });
+                
+                // Update the pet details section
+                $('#petSummaryDetails').html(petDetailsHtml);
+            }
+        }
+
+        // Update dates if available
+        if (bookingData.checkInDate && bookingData.checkInTime) {
+            $('#summaryCheckIn').text(`${bookingData.checkInDate}, ${bookingData.checkInTime}`);
+        } else {
+            // Set default values if not available
+            if (!$('#summaryCheckIn').text()) {
+                $('#summaryCheckIn').text("Not selected");
+            }
+        }
+        
+        if (bookingData.checkOutDate && bookingData.checkOutTime) {
+            $('#summaryCheckOut').text(`${bookingData.checkOutDate}, ${bookingData.checkOutTime}`);
+        } else {
+            // Set default values if not available
+            if (!$('#summaryCheckOut').text()) {
+                $('#summaryCheckOut').text("Not selected");
+            }
+        }
+        
+        // Update total price
+        calculateTotalPrice();
+    }
+
+    // Update pet details when a pet is selected from dropdown
+    $(document).on('change', '.petSelect', function() {
+        const selectedOption = $(this).find('option:selected');
+        const petName = selectedOption.text();
+        
+        if (petName && petName !== "Choose Pet") {
+            // Get pet details from the JSON
+            const petDetails = JSON.parse($(this).val());
+            
+            // Create pet object
+            const pet = {
+                name: petName,
+                breed: petDetails.pet_breed,
+                gender: petDetails.pet_gender,
+                age: petDetails.pet_age
+            };
+            
+            // Check if this pet is already in the array
+            const existingPetIndex = bookingData.pets.findIndex(p => p.name === petName);
+            
+            if (existingPetIndex >= 0) {
+                // Update existing pet
+                bookingData.pets[existingPetIndex] = pet;
+            } else {
+                // Add new pet
+                bookingData.pets.push(pet);
+            }
+            
+            // Update summary
+            updateBookingSummary();
+        }
+    });
+
+    // Initialize the payment modal when it's opened
+    $('#petPaymentModal').on('show.bs.modal', function() {
+        // Set default values for check-in and check-out if they're empty
+        if (!bookingData.checkInDate || !bookingData.checkInTime) {
+            // Try to get values from the UI
+            const checkInDate = $('.days-grid .day.selected').first().data('date');
+            const checkInTime = $('#checkInMenu').text();
+            
+            if (checkInDate && checkInTime && checkInTime !== "Choose Time") {
+                const formattedDate = new Date(checkInDate).toLocaleDateString('en-US', {
+                    month: 'long',
+                    day: 'numeric'
+                });
+                bookingData.checkInDate = formattedDate;
+                bookingData.checkInTime = checkInTime;
+            } else {
+                $('#summaryCheckIn').text("Not selected");
+            }
+        }
+        
+        if (!bookingData.checkOutDate || !bookingData.checkOutTime) {
+            // Try to get values from the UI
+            const checkOutDate = $('.days-grid .day.selected').last().data('date');
+            const checkOutTime = $('#checkOutMenu').text();
+            
+            if (checkOutDate && checkOutTime && checkOutTime !== "Choose Time") {
+                const formattedDate = new Date(checkOutDate).toLocaleDateString('en-US', {
+                    month: 'long',
+                    day: 'numeric'
+                });
+                bookingData.checkOutDate = formattedDate;
+                bookingData.checkOutTime = checkOutTime;
+            } else {
+                $('#summaryCheckOut').text("Not selected");
+            }
+        }
+        
+        // If no pets are selected, try to get from the table
+        if (bookingData.pets.length === 0) {
+            $('.petSelect').each(function() {
+                const select = $(this);
+                const selectedOption = select.find('option:selected');
+                const petName = selectedOption.text();
+                
+                if (petName && petName !== "Choose Pet") {
+                    try {
+                        const petDetails = JSON.parse(select.val());
+                        
+                        // Create pet object
+                        const pet = {
+                            name: petName,
+                            breed: petDetails.pet_breed,
+                            gender: petDetails.pet_gender,
+                            age: petDetails.pet_age
+                        };
+                        
+                        // Add to pets array
+                        bookingData.pets.push(pet);
+                    } catch (e) {
+                        console.error("Error parsing pet details:", e);
+                    }
+                }
+            });
+        }
+        
+        // Update the summary with all available data
+        updateBookingSummary();
+    });
+
+    // Update summary when payment modal is opened
+    $('#petPaymentModal').on('shown.bs.modal', function() {
+        updateBookingSummary();
+    });
+});
+</script>
+
 
 </body>
 </html>
