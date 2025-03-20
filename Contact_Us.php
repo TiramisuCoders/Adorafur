@@ -6,6 +6,7 @@
     <link rel="stylesheet" href="Contact.css">
     <!--<script src="script.js" defer></script>-->
     <title>Contact Adorafur</title>
+    <link rel="icon" type="image/png" href="Header-Pics/logo.png">
 </head> 
 
 <body>
