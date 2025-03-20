@@ -32,7 +32,10 @@ function isUserLoggedIn() {
   // Check if the PHP session has customer_id set
   // This is a client-side approximation - the actual check happens server-side
   return (
-    document.cookie.includes("PHPSESSID=") && typeof window.isLoggedIn !== "undefined" && window.isLoggedIn === true
+    (document.cookie.includes("PHPSESSID=") &&
+      typeof window.isLoggedIn !== "undefined" &&
+      window.isLoggedIn === true) ||
+    (typeof window.customerId !== "undefined" && window.customerId > 0)
   )
 }
 
@@ -51,25 +54,93 @@ function resetHighlights() {
   console.log("resetHighlights function called")
   const days = document.querySelectorAll(".day")
   days.forEach((day) => {
-    day.classList.remove("selected-date", "range-date")
+    day.classList.remove("selected-date", "range-date", "highlighted")
   })
 }
 
+// Update the highlightDateRange function to use the same logic
 function highlightDateRange() {
   if (!window.selectedDates.checkIn || !window.selectedDates.checkOut) return
 
+  // First clear all highlights
+  document.querySelectorAll(".day").forEach((dayElement) => {
+    dayElement.classList.remove("selected-date", "highlighted")
+  })
+
+  // Then apply the correct classes
   document.querySelectorAll(".day").forEach((dayElement) => {
     const dateStr = dayElement.getAttribute("data-date")
     if (!dateStr) return
 
     const date = new Date(dateStr)
-    if (date > window.selectedDates.checkIn && date < window.selectedDates.checkOut) {
+
+    // Check if this is the start or end date - both should have selected-date class
+    if (
+      (window.selectedDates.checkIn && date.getTime() === window.selectedDates.checkIn.getTime()) ||
+      (window.selectedDates.checkOut && date.getTime() === window.selectedDates.checkOut.getTime())
+    ) {
+      dayElement.classList.add("selected-date")
+    }
+    // Check if this is a date in between
+    else if (date > window.selectedDates.checkIn && date < window.selectedDates.checkOut) {
       dayElement.classList.add("highlighted")
     }
   })
 }
 
-// Function to generate and render the calendar
+// Update the handleDateClick function to ensure proper highlighting
+function handleDateClick(date, element) {
+  if (!window.selectedDates.checkIn || (window.selectedDates.checkIn && window.selectedDates.checkOut)) {
+    // Start new selection
+    clearDateSelection()
+    window.selectedDates.checkIn = date
+    element.classList.add("selected-date")
+
+    // Update booking data
+    window.bookingData.checkInDate = date.toLocaleDateString("en-US", {
+      month: "long",
+      day: "numeric",
+    })
+  } else {
+    // Complete selection
+    if (date > window.selectedDates.checkIn) {
+      window.selectedDates.checkOut = date
+
+      // Clear all highlights first
+      document.querySelectorAll(".day").forEach((day) => {
+        day.classList.remove("selected-date", "highlighted")
+      })
+
+      // Find and highlight the first date
+      document.querySelectorAll(".day").forEach((dayElement) => {
+        const dateStr = dayElement.getAttribute("data-date")
+        if (!dateStr) return
+
+        const currentDate = new Date(dateStr)
+        if (currentDate.getTime() === window.selectedDates.checkIn.getTime()) {
+          dayElement.classList.add("selected-date")
+        }
+      })
+
+      // Highlight the last date (current selection)
+      element.classList.add("selected-date")
+
+      // Update booking data
+      window.bookingData.checkOutDate = date.toLocaleDateString("en-US", {
+        month: "long",
+        day: "numeric",
+      })
+
+      // Highlight dates in between
+      highlightDateRange()
+    }
+  }
+
+  // Update summary
+  updateBookingSummary()
+}
+
+// Update the renderCalendar function to handle current date highlighting and disable past dates
 function renderCalendar() {
   const year = currentDate.getFullYear()
   const month = currentDate.getMonth()
@@ -108,6 +179,17 @@ function renderCalendar() {
     const formattedDate = thisDate.toISOString().split("T")[0]
     dayElement.setAttribute("data-date", formattedDate)
 
+    // Check if this date is today or in the past
+    if (thisDate.getTime() === today.getTime()) {
+      // Current date - add underline
+      dayElement.classList.add("current-day")
+      // Also make it non-selectable
+      dayElement.classList.add("past-day")
+    } else if (thisDate < today) {
+      // Past date - make it gray and non-selectable
+      dayElement.classList.add("past-day")
+    }
+
     // Check if this date is selected
     if (window.selectedDates.checkIn && formattedDate === window.selectedDates.checkIn.toISOString().split("T")[0]) {
       dayElement.classList.add("selected-date")
@@ -116,45 +198,13 @@ function renderCalendar() {
       dayElement.classList.add("selected-date")
     }
 
-    // Add click handler
-    dayElement.addEventListener("click", () => handleDateClick(thisDate, dayElement))
+    // Add click handler only for future dates
+    if (!dayElement.classList.contains("past-day")) {
+      dayElement.addEventListener("click", () => handleDateClick(thisDate, dayElement))
+    }
 
     daysContainer.appendChild(dayElement)
   }
-}
-
-// Function to handle date clicks
-function handleDateClick(date, element) {
-  if (!window.selectedDates.checkIn || (window.selectedDates.checkIn && window.selectedDates.checkOut)) {
-    // Start new selection
-    clearDateSelection()
-    window.selectedDates.checkIn = date
-    element.classList.add("selected-date")
-
-    // Update booking data
-    window.bookingData.checkInDate = date.toLocaleDateString("en-US", {
-      month: "long",
-      day: "numeric",
-    })
-  } else {
-    // Complete selection
-    if (date > window.selectedDates.checkIn) {
-      window.selectedDates.checkOut = date
-      element.classList.add("selected-date")
-
-      // Update booking data
-      window.bookingData.checkOutDate = date.toLocaleDateString("en-US", {
-        month: "long",
-        day: "numeric",
-      })
-
-      // Highlight dates in between
-      highlightDateRange()
-    }
-  }
-
-  // Update summary
-  updateBookingSummary()
 }
 
 // Function to clear date selection
@@ -190,7 +240,16 @@ function handleDateSelection(day, dayElement) {
   } else if (day > startDate) {
     // Set endDate and highlight range
     endDate = day
-    highlightDateRange()
+
+    // Find the end date element and add selected-date class
+    $(".day").each(function () {
+      const currentDay = Number.parseInt($(this).text())
+      if (currentDay === endDate) {
+        $(this).addClass("selected-date")
+      } else if (currentDay > startDate && currentDay < endDate) {
+        $(this).addClass("highlighted")
+      }
+    })
 
     // Update the booking data with check-out date
     const checkOutDate = new Date(currentDate.getFullYear(), currentDate.getMonth(), day)
@@ -298,7 +357,7 @@ $("#petPaymentModal").on("show.bs.modal", () => {
   updateBookingSummary()
 })
 
-// Example calculateTotalPrice function (replace with your actual implementation)
+// Update the calculateTotalPrice function to calculate based on pet size and number of days
 function calculateTotalPrice() {
   let totalPrice = 0
 
@@ -321,11 +380,11 @@ function calculateTotalPrice() {
       // Set price based on pet size
       if (pet.size === "Cat") {
         petPrice = 500
-      } else if (pet.size === "Small") {
+      } else if (pet.size === "Small Dog") {
         petPrice = 700
-      } else if (pet.size === "Medium" || pet.size === "Regular") {
+      } else if (pet.size === "Regular Dog") {
         petPrice = 800
-      } else if (pet.size === "Large" || pet.size === "XL" || pet.size === "XXL") {
+      } else if (pet.size === "Large Dog") {
         petPrice = 900
       }
 
@@ -341,7 +400,7 @@ function calculateTotalPrice() {
   return totalPrice
 }
 
-// Add this function to properly handle date selection from the calendar
+// Update the initializeCalendarSelection function to properly handle date selection
 function initializeCalendarSelection() {
   // When the calendar is rendered, attach click handlers to the days
   $(document).on("click", ".day:not(.past-day)", function () {
@@ -355,38 +414,194 @@ function initializeCalendarSelection() {
       endDate = null
       $(".day").removeClass("selected-date highlighted")
       $(this).addClass("selected-date")
+
+      // Set as check-in date
+      if (dateAttr) {
+        const selectedDate = new Date(dateAttr)
+        window.selectedDates.checkIn = selectedDate
+        window.selectedDates.checkOut = null
+
+        // Format for display
+        const formattedDate = selectedDate.toLocaleDateString("en-US", {
+          month: "long",
+          day: "numeric",
+        })
+
+        // Update booking data
+        if (!window.bookingData) {
+          window.bookingData = {
+            pets: [],
+            checkInDate: "",
+            checkInTime: "",
+            checkOutDate: "",
+            checkOutTime: "",
+          }
+        }
+
+        window.bookingData.checkInDate = formattedDate
+
+        // Update display in summary
+        if (window.bookingData.checkInTime) {
+          $("#summaryCheckIn").text(`${formattedDate}, ${window.bookingData.checkInTime}`)
+        } else {
+          $("#summaryCheckIn").text(formattedDate)
+        }
+      }
     }
     // If only start date is selected and clicked day is after start date
     else if (day > startDate) {
       // Set end date
       endDate = day
 
-      // Highlight the range
+      // First clear all highlights
+      $(".day").removeClass("selected-date highlighted")
+
+      // Find the first date (start date) and last date (end date) elements
+      let firstDateElement = null
+      let lastDateElement = null
+
       $(".day").each(function () {
         const currentDay = Number.parseInt($(this).text())
-        if (currentDay >= startDate && currentDay <= endDate) {
-          if (currentDay === startDate || currentDay === endDate) {
-            $(this).addClass("selected-date")
-          } else {
-            $(this).addClass("highlighted")
-          }
+        if (currentDay === startDate) {
+          firstDateElement = $(this)
+        }
+        if (currentDay === endDate) {
+          lastDateElement = $(this)
         }
       })
+
+      // Apply selected-date class to first and last date only
+      if (firstDateElement) firstDateElement.addClass("selected-date")
+      if (lastDateElement) lastDateElement.addClass("selected-date")
+
+      // Apply highlighted class to dates in between
+      $(".day").each(function () {
+        const currentDay = Number.parseInt($(this).text())
+        if (currentDay > startDate && currentDay < endDate) {
+          $(this).addClass("highlighted")
+        }
+      })
+
+      // Set as check-out date
+      if (dateAttr) {
+        const selectedDate = new Date(dateAttr)
+        window.selectedDates.checkOut = selectedDate
+
+        // Format for display
+        const formattedDate = selectedDate.toLocaleDateString("en-US", {
+          month: "long",
+          day: "numeric",
+        })
+
+        // Update booking data
+        window.bookingData.checkOutDate = formattedDate
+
+        // Update display in summary
+        if (window.bookingData.checkOutTime) {
+          $("#summaryCheckOut").text(`${formattedDate}, ${window.bookingData.checkOutTime}`)
+        } else {
+          $("#summaryCheckOut").text(formattedDate)
+        }
+
+        // Calculate and update price
+        calculateTotalPrice()
+      }
     }
 
     // Update booking data with selected dates
     updateBookingDatesFromCalendar()
   })
+
+  // Handle check-in time selection
+  $(document).on("click", ".check-in-time", function () {
+    const selectedTime = $(this).text()
+    $("#checkInMenu").text(selectedTime)
+
+    // Update booking data
+    if (window.bookingData) {
+      window.bookingData.checkInTime = selectedTime
+
+      // Update display in summary if check-in date is selected
+      if (window.bookingData.checkInDate) {
+        $("#summaryCheckIn").text(`${window.bookingData.checkInDate}, ${selectedTime}`)
+      }
+    }
+  })
+
+  // Handle check-out time selection
+  $(document).on("click", ".check-out-time", function () {
+    const selectedTime = $(this).text()
+    $("#checkOutMenu").text(selectedTime)
+
+    // Update booking data
+    if (window.bookingData) {
+      window.bookingData.checkOutTime = selectedTime
+
+      // Update display in summary if check-out date is selected
+      if (window.bookingData.checkOutDate) {
+        $("#summaryCheckOut").text(`${window.bookingData.checkOutDate}, ${selectedTime}`)
+      }
+    }
+  })
+
+  // Handle pet selection
+  $(document).on("click", ".pet-info", function () {
+    const petType = $(this).find("h3").text()
+    const petPrice = $(this)
+      .find("h6")
+      .text()
+      .match(/₱\s*(\d+)/)[1]
+
+    // Create pet object
+    const pet = {
+      name: petType,
+      size: petType,
+      price: Number.parseInt(petPrice),
+    }
+
+    // Check if this pet is already selected
+    const existingPetIndex = window.bookingData.pets.findIndex((p) => p.name === petType)
+
+    if (existingPetIndex >= 0) {
+      // Remove pet if already selected
+      window.bookingData.pets.splice(existingPetIndex, 1)
+    } else {
+      // Add pet if not selected
+      window.bookingData.pets.push(pet)
+    }
+
+    // Update summary
+    updateBookingSummary()
+  })
 }
+
+// Add CSS for current day and past days
+$(document).ready(() => {
+  // Add CSS for current day and past days
+  const style = document.createElement("style")
+  style.textContent = `
+    .day.current-day {
+      text-decoration: underline;
+      color: #999;
+      cursor: not-allowed;
+    }
+    .day.past-day {
+      color: #999;
+      cursor: not-allowed;
+    }
+  `
+  document.head.appendChild(style)
+})
 
 // Function to update booking dates based on calendar selection
 function updateBookingDatesFromCalendar() {
-  const selectedDays = $(".day.selected-date, .day.highlighted")
+  // Get specifically selected dates (not highlighted ones)
+  const selectedStartEnd = $(".day.selected-date")
 
-  if (selectedDays.length > 0) {
+  if (selectedStartEnd.length > 0) {
     // Get all selected dates and sort them
     const dates = []
-    selectedDays.each(function () {
+    selectedStartEnd.each(function () {
       const dateAttr = $(this).attr("data-date")
       if (dateAttr) {
         dates.push(new Date(dateAttr))
@@ -399,7 +614,11 @@ function updateBookingDatesFromCalendar() {
     // First date is check-in, last date is check-out
     if (dates.length > 0) {
       const checkInDate = dates[0]
-      const checkOutDate = dates[dates.length - 1]
+      const checkOutDate = dates[dates.length - 1] || checkInDate
+
+      // Update window.selectedDates object
+      window.selectedDates.checkIn = checkInDate
+      window.selectedDates.checkOut = checkOutDate
 
       // Format dates for display
       const formattedCheckInDate = checkInDate.toLocaleDateString("en-US", {
@@ -439,6 +658,92 @@ function updateBookingDatesFromCalendar() {
   }
 }
 
+// Add a function to update the pet prices in the table based on size
+function updatePetPricesInTable() {
+  // Get all rows in the pet table
+  $(".pet-table tr:not(:first-child)").each(function () {
+    const sizeCell = $(this).find("td:nth-child(5)") // Size is in the 5th column
+    const priceCell = $(this).find("td:nth-child(6)") // Price is in the 6th column
+
+    if (sizeCell.length && priceCell.length) {
+      const petSize = sizeCell.text().trim()
+      let price = 0
+
+      // Set price based on pet size
+      if (petSize.includes("Cat")) {
+        price = 500
+      } else if (petSize.includes("Small")) {
+        price = 700
+      } else if (petSize.includes("Regular") && !petSize.includes("Cat")) {
+        price = 800
+      } else if (petSize.includes("Large")) {
+        price = 900
+      }
+
+      // Update the price cell
+      priceCell.text(`₱${price.toFixed(2)}`)
+
+      // Also update the pet object in bookingData if it exists
+      if (window.bookingData && window.bookingData.pets) {
+        const petName = $(this).find("td:nth-child(1)").text().trim()
+        const existingPetIndex = window.bookingData.pets.findIndex((p) => p.name === petName)
+
+        if (existingPetIndex >= 0) {
+          window.bookingData.pets[existingPetIndex].price = price
+        }
+      }
+    }
+  })
+
+  // Recalculate total price
+  calculateTotalPrice()
+}
+
+// Function to fetch pets for the logged-in customer
+function fetchCustomerPets() {
+  // Get the customer ID from the window object or session
+  const customerId =
+    window.customerId || (typeof sessionStorage !== "undefined" ? sessionStorage.getItem("customer_id") : null)
+
+  if (!customerId) {
+    console.error("Customer ID not found")
+    return
+  }
+
+  // Make an AJAX request to get pets for this customer
+  $.ajax({
+    type: "POST",
+    url: "fetch-customer-pets.php", // Create this PHP file to handle the request
+    data: { customer_id: customerId },
+    dataType: "json",
+    success: (response) => {
+      if (response.success && response.pets) {
+        // Clear existing options except the first one
+        const petSelect = $(".petSelect")
+        petSelect.find("option:not(:first)").remove()
+
+        // Add the customer's pets to the dropdown
+        response.pets.forEach((pet) => {
+          const petData = {
+            pet_breed: pet.pet_breed,
+            pet_age: pet.pet_age,
+            pet_gender: pet.pet_gender,
+            pet_size: pet.pet_size,
+          }
+
+          const option = $("<option>").val(JSON.stringify(petData)).text(pet.pet_name)
+          petSelect.append(option)
+        })
+      } else {
+        console.error("Failed to fetch pets:", response.message || "Unknown error")
+      }
+    },
+    error: (xhr, status, error) => {
+      console.error("AJAX Error:", error)
+    },
+  })
+}
+
 // Add month navigation handlers
 $(document).ready(() => {
   // Initialize bookingData if it doesn't exist
@@ -466,16 +771,25 @@ $(document).ready(() => {
     renderCalendar()
   })
 
-  // Handle BOOK button click
+  // Handle BOOK button click - Check if user is logged in
   $(".book").on("click", (e) => {
     if (!isUserLoggedIn()) {
       e.preventDefault()
       alert("Please log in first to continue booking.")
+
+      // Optionally, show login modal if available
+      if ($("#loginModal").length) {
+        $("#loginModal").modal("show")
+      }
       return
     }
 
+    // If user is logged in, proceed to next section
     $(".main-schedule-options").fadeOut(() => {
       $(".book-1").fadeIn()
+
+      // Fetch pets for the logged-in customer
+      fetchCustomerPets()
     })
   })
 
@@ -578,5 +892,64 @@ $(document).ready(() => {
       $("#waiverForm").modal("show")
     }, 500) // Small delay to ensure first modal is closed
   })
+
+  // Initialize calendar selection
+  initializeCalendarSelection()
+
+  // Call the function to update pet prices when the page loads
+  updatePetPricesInTable()
+
+  // Also update prices when a pet is selected from dropdown
+  $(document).on("change", ".petSelect", () => {
+    // Give the DOM time to update with the new pet info
+    setTimeout(updatePetPricesInTable, 100)
+  })
+
+  // Add event handler for the checkboxes in the Action column
+  $(document).on("change", ".pet-checkbox", function () {
+    const row = $(this).closest("tr")
+    const petName = row.find("td:nth-child(1)").text().trim()
+    const petBreed = row.find("td:nth-child(2)").text().trim()
+    const petAge = row.find("td:nth-child(3)").text().trim()
+    const petGender = row.find("td:nth-child(4)").text().trim()
+    const petSize = row.find("td:nth-child(5)").text().trim()
+    const petPrice = Number.parseFloat(row.find("td:nth-child(6)").text().replace("₱", "").trim())
+
+    // Create pet object
+    const pet = {
+      name: petName,
+      breed: petBreed,
+      age: petAge,
+      gender: petGender,
+      size: petSize,
+      price: petPrice,
+    }
+
+    // Check if this pet is already in the bookingData
+    const existingPetIndex = window.bookingData.pets.findIndex((p) => p.name === petName)
+
+    if ($(this).is(":checked")) {
+      // Add pet if not already in the array
+      if (existingPetIndex === -1) {
+        window.bookingData.pets.push(pet)
+      }
+    } else {
+      // Remove pet if in the array
+      if (existingPetIndex >= 0) {
+        window.bookingData.pets.splice(existingPetIndex, 1)
+      }
+    }
+
+    // Update summary
+    updateBookingSummary()
+  })
+
+  // Check login status on page load
+  if (!isUserLoggedIn()) {
+    // Disable booking sections if not logged in
+    $(".calendar").addClass("disabled-section")
+    $(".checkin-out").addClass("disabled-section")
+    $(".book").addClass("disabled-section")
+  }
 })
 
