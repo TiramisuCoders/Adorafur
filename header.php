@@ -44,7 +44,7 @@
                 ABOUT US
               </button>
               <ul class="dropdown-menu" aria-labelledby="aboutUsDropdown">
-                <li><a class="dropdown-item" href="aboutus.php#house-rules">House Rules</a></li>
+                <li><a class="dropdown-item" href="aboutus.php#rule-section">House Rules</a></li>
                 <li><a class="dropdown-item" href="aboutus.php#ourstory">Our Story</a></li>
                 <li><a class="dropdown-item" href="aboutus.php#time">Opening Hours</a></li>
               </ul>
