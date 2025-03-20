@@ -38,8 +38,8 @@ try {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="admin-css/admin_header2.css">
-    <link rel="stylesheet" href="admin-css/admin_profile.css">
+    <link rel="stylesheet" href="admin-css/admin_header1.css">
+    <link rel="stylesheet" href="admin-css/admin_profile1.css">
     <script src="admin.js"></script>
 
     <title>Admin Profile</title>
@@ -67,6 +67,10 @@ try {
             <a href="admin_profile.php" class="profile-text">Profile</a>
           </div>
 
+          <div class="logout-button">
+            <a href="../logout.php" class="logout-text">Logout</i></a>
+          </div>
+
       </div>
 
       <!-- HEADER -->
@@ -85,7 +89,6 @@ try {
         <div class="time-text" id="real-time-clock">Loading...</div>
       </div>
       
-      <div class="date-and-day">Loading date...</div>
 
       <div class="profile-content">
         <?php if (isset($error_message)): ?>
@@ -94,11 +97,6 @@ try {
             <div class="profile-field">
               <div class="field-label">Name:</div>
               <div class="field-value"><?php echo htmlspecialchars($admin['admin_name']); ?></div>
-            </div>
-            
-            <div class="profile-field">
-              <div class="field-label">Contact No:</div>
-              <div class="field-value"><?php echo htmlspecialchars($admin['contact_number']); ?></div>
             </div>
             
             <div class="profile-field">
@@ -112,9 +110,7 @@ try {
             </div>
         <?php endif; ?>
         
-        <div class="logout-container">
-          <a href="../logout.php" class="logout-btn">Logout</a>
-        </div>
+        
       </div>
     </div>
     

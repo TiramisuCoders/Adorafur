@@ -84,7 +84,7 @@ function handleLogin($conn) {
 
         if ($admin && $password === $admin['admin_password']) {
             $_SESSION['admin_id'] = $admin['admin_id'];
-            header("Location: admin_navbar/admin_home.php");
+            header("Location: admin/admin_home.php");
             exit();
         } else {
             // Handle invalid credentials
