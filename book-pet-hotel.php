@@ -188,7 +188,7 @@ $transactionNo = 'TRX'.time().rand(1000, 9999);
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Adorafu Happy Stay/Book/Pet Hotel</title>
+    <title>Book with Adorafur</title>
 
     <!-- Bootstrap CSS -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.0/dist/css/bootstrap.min.css">
