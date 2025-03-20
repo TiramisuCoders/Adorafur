@@ -72,7 +72,7 @@ $profile_picture = isset($fetch_cust_info['profile_picture']) && !empty($fetch_c
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>User Profile</title>
+    <title>Profile</title>
     <link rel="stylesheet" href="Profile.css">
     <link rel="stylesheet" href="headers.css">
     <link rel="icon" type="image/png" href="Header-Pics/logo.png">
