@@ -64,6 +64,12 @@ function handleRegister($conn) {
         $hasError = true;
     }
 
+    $domain = substr(strrchr($email, "@"), 1);
+    if (!checkdnsrr($domain, "MX")) {
+        $email_error = 'Invalid email format.';
+        $hasError = true;
+    }
+
     if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
         $email_error = 'Invalid email format.';
         $hasError = true;
@@ -71,6 +77,11 @@ function handleRegister($conn) {
     
     if (!preg_match('/^09[0-9]{9}$/', $contactNumber)) {
         $contact_error = "Invalid Philippine phone number format.";
+        $hasError = true;
+    }
+
+    if (strlen($password) < 8 || strlen($password) > 12) {
+        $password_error = 'Password must be between 8 and 12 characters.';
         $hasError = true;
     }
 
@@ -180,6 +191,35 @@ function handleForgotPassword($conn) {
         <?php if ($email_error): ?> .email-error { display: block; } <?php endif; ?>
         <?php if ($contact_error): ?> .contact-error { display: block; } <?php endif; ?>
         <?php if ($password_error): ?> .password-error { display: block; } <?php endif; ?>
+
+        
+            .error {
+            color: #dc3545;
+            font-size: 0.875rem;
+            margin-top: 0.25rem;
+        }
+        
+        .password-input {
+            position: relative;
+        }
+        
+        .password-toggle {
+            position: absolute;
+            right: 10px;
+            top: 38px;
+            cursor: pointer;
+            color: #6c757d;
+        }
+        
+        .password-toggle:hover {
+            color: #495057;
+        }
+        
+        .password-requirements {
+            font-size: 0.75rem;
+            color: #6c757d;
+            margin-top: 0.25rem;
+        }
     </style>
 </head>
 <body>
@@ -200,8 +240,9 @@ function handleForgotPassword($conn) {
                         <div class="mb-3 d-flex justify-content-center">
                             <input type="email" class="form-control w-50" name="email" required placeholder="Enter Email">
                         </div>
-                        <div class="mb-3 d-flex justify-content-center">
-                            <input type="password" class="form-control w-50" name="password" required placeholder="Enter Password">
+                        <div class="mb-3 d-flex justify-content-center position-relative">
+                            <input type="password" class="form-control w-50" id="loginPassword" name="password" required placeholder="Enter Password">
+                            <i class="fas fa-eye password-toggle" id="loginPasswordToggle" style="right: 26%; top: 10px;"></i>
                         </div>
                         <?php if (isset($_SESSION['login_error'])): ?>
                             <div class="alert alert-danger text-center w-50 mx-auto">
@@ -277,7 +318,8 @@ function handleForgotPassword($conn) {
                                             <div class="mb-3 password-input">
                                                 <label for="password">Password <span class="text-danger">*</span></label>
                                                 <input type="password" class="form-control" id="password" name="password" placeholder="Password" required>  
-                                                <span class="validation-icon"></span>
+                                                <i class="fas fa-eye password-toggle" id="passwordToggle"></i>
+                                                <div class="password-requirements">Password must be 8-12 characters long</div>
                                                 <?php if ($password_error): ?>
                                                 <p class="error password-error"><?php echo $password_error; ?></p>
                                             <?php endif; ?>
@@ -288,7 +330,7 @@ function handleForgotPassword($conn) {
                                             <div class="mb-3 password-input">
                                                 <label for="repeatPassword">Repeat Password <span class="text-danger">*</span></label>
                                                 <input type="password" class="form-control" id="repeatPassword" name="repeatPassword" placeholder="Repeat Password" required>
-                                                <span class="validation-icon"></span>
+                                                <i class="fas fa-eye password-toggle" id="passwordToggle"></i>
                                             </div>
                                         </div>
                                         
@@ -355,6 +397,74 @@ function handleForgotPassword($conn) {
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script>
     document.addEventListener("DOMContentLoaded", function() {
+           // Password toggle functionality
+           const passwordToggle = document.getElementById('passwordToggle');
+        const repeatPasswordToggle = document.getElementById('repeatPasswordToggle');
+        const loginPasswordToggle = document.getElementById('loginPasswordToggle');
+        const passwordField = document.getElementById('password');
+        const repeatPasswordField = document.getElementById('repeatPassword');
+        const loginPasswordField = document.getElementById('loginPassword');
+        
+        // Function to toggle password visibility
+        function togglePasswordVisibility(passwordField, toggleIcon) {
+            if (passwordField.type === 'password') {
+                passwordField.type = 'text';
+                toggleIcon.classList.remove('fa-eye');
+                toggleIcon.classList.add('fa-eye-slash');
+            } else {
+                passwordField.type = 'password';
+                toggleIcon.classList.remove('fa-eye-slash');
+                toggleIcon.classList.add('fa-eye');
+            }
+        }
+        
+        // Toggle both password fields in registration form simultaneously
+        if (passwordToggle) {
+            passwordToggle.addEventListener('click', function() {
+                togglePasswordVisibility(passwordField, passwordToggle);
+                togglePasswordVisibility(repeatPasswordField, repeatPasswordToggle);
+            });
+        }
+        
+        if (repeatPasswordToggle) {
+            repeatPasswordToggle.addEventListener('click', function() {
+                togglePasswordVisibility(passwordField, passwordToggle);
+                togglePasswordVisibility(repeatPasswordField, repeatPasswordToggle);
+            });
+        }
+        
+        // Toggle login password field
+        if (loginPasswordToggle) {
+            loginPasswordToggle.addEventListener('click', function() {
+                togglePasswordVisibility(loginPasswordField, loginPasswordToggle);
+            });
+        }
+        
+        // Password validation
+        if (passwordField) {
+            passwordField.addEventListener('input', function() {
+                const password = this.value;
+                const isValidLength = password.length >= 8 && password.length <= 12;
+                
+                if (!isValidLength) {
+                    this.setCustomValidity('Password must be between 8 and 12 characters');
+                } else {
+                    this.setCustomValidity('');
+                }
+            });
+        }
+        
+        // Password matching validation
+        if (repeatPasswordField) {
+            repeatPasswordField.addEventListener('input', function() {
+                if (this.value !== passwordField.value) {
+                    this.setCustomValidity('Passwords do not match');
+                } else {
+                    this.setCustomValidity('');
+                }
+            });
+        }
+        
         // Check if registration was successful
         <?php if (isset($_SESSION['registration_success'])): ?>
             var congratsModal = new bootstrap.Modal(document.getElementById('congratsModal'));
