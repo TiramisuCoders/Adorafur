@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="admin-css/admin_header2.css">
+    <link rel="stylesheet" href="admin-css/admin_header1.css">
     <link rel="stylesheet" href="admin-css/admin_bookings.css">
     <title>Admin Bookings</title>
 </head> 
@@ -40,6 +40,10 @@
 
             <div class="profile-button">
                 <a href="admin_profile.php" class="profile-text">Profile</a>
+            </div>
+
+            <div class="logout-button">
+                <a href="../logout.php" class="logout-text">Logout</i></a>
             </div>
         </div>
 

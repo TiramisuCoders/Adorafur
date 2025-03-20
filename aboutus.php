@@ -12,7 +12,9 @@
 <body>
 
 
-        <?php include 'header.php'; ?>
+<?php 
+$activePage = 'about';
+include 'header.php'; ?>
     
 <div class = about>
 <div class="mvg">
