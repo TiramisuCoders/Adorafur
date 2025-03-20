@@ -46,7 +46,8 @@ body {
   .home-button,
   .book-button,
   .customer-button,
-  .profile-button {
+  .profile-button,  
+  .logout-button{
     width: 90%;
     background: transparent;
     border-radius: 15px;
@@ -62,6 +63,7 @@ body {
   .book-button:hover,
   .customer-button:hover,
   .profile-button:hover,
+  .logout-button:hover,
   .home-button.active,
   .book-button.active,
   .customer-button.active,
@@ -73,7 +75,8 @@ body {
   .home-text,
   .booking-text,
   .customers-text,
-  .profile-text {
+  .profile-text,
+  .logout-text {
     font-family: "BalooTammudu2-Medium", sans-serif;
     font-size: 23px;
     line-height: 35px;
@@ -92,10 +95,11 @@ body {
   .book-button:hover .booking-text,
   .customer-button:hover .customers-text,
   .profile-button:hover .profile-text,
+  .logout-button:hover .logout-text,
   .home-button.active .home-text,
   .book-button.active .booking-text,
   .customer-button.active .customers-text,
-  .profile-button.active .profile-text {
+  .profile-button.active .profile-text{
     color: #ffffff;
   }
   

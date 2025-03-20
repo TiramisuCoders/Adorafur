@@ -3,15 +3,17 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="header1.css">
     <link rel="stylesheet" href="home.css">
     <script src="script.js" defer></script>
+    <link rel="icon" type="image/png" href="Header-Pics/logo.png">
     <title>Adorafur Home</title>
 </head>
 <body>
-    
-        <?php include 'header.php'; ?>
-   
 
+<?php 
+$activePage = 'home';
+include 'header.php'; ?>
 
     <div class="home">
     <div class="gradient">

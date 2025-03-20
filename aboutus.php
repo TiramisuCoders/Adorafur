@@ -6,12 +6,15 @@
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 
     <link rel="stylesheet" href="aboutss.css">
+    <link rel="icon" type="image/png" href="Header-Pics/logo.png">
     <title>About Adorafur</title>
 </head>
 <body>
 
 
-        <?php include 'header.php'; ?>
+<?php 
+$activePage = 'about';
+include 'header.php'; ?>
     
 <div class = about>
 <div class="mvg">
