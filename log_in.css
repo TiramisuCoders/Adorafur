@@ -3,7 +3,9 @@
     z-index: 1050;
   }
   
-  .modal-content{
+  #loginModal .modal-content,
+  #registerModal .modal-content,
+  #congratsModal .modal-content {
     background-color: #F7E2CF;
   }
   
@@ -51,9 +53,10 @@
   }
 
  
-  .btn, .btn:hover{
+  button{
     border-radius: 10px;
     width: 100px;
+    background-color: #421D11;
   }
   
   #not-yet-register, #sign-in{
@@ -73,3 +76,24 @@
     opacity: 1;
   }
   
+  .btn-close{
+    top: 10px; 
+    right: 10px; 
+    z-index: 10; 
+    padding: 10px; 
+    border-radius: 50%;
+    background-color: #ffffff;
+    opacity: 1;
+
+  }
+
+  .error{
+    color: #af4242;
+    background-color: #fde8ec;
+    padding: 10px;
+    display: none;
+    transform: translateY(-20px);
+    margin-bottom: 10px;
+    font-size: 14px;
+    margin-top: 22px;
+  }
