@@ -32,14 +32,14 @@
     border-bottom: none;
   }
   
-  input[type="email"],
-  input[type="password"]{
+  #loginModal .form-control w-50,
+  #loginModal .form-control w-50{
     color: #421D11;
     border: solid 1px #421D11;
     text-align: center;
-    align-items: center;
   }
-  
+
+ 
   .btn, .btn:hover{
     border-radius: 10px;
     width: 100px;

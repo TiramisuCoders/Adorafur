@@ -133,7 +133,7 @@ function handleForgotPassword($conn) {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>LOG IN PAGE</title>
-    <link rel="stylesheet" href="login.css">
+    <link rel="stylesheet" href="login99.css">
 </head>
 <body>
 
@@ -231,8 +231,9 @@ function handleForgotPassword($conn) {
                                     
                                     <p class="text-center mt-4 mb-0">
                                         Already have an account? 
-                                        <a href="#" class="sign-in-link" id="sign-in">Sign in</a>
+                                        <a href="#" class="sign-in-link" id="sign-in" data-bs-target="#loginModal" data-bs-toggle="modal">Sign in</a>
                                     </p>  
+
                                 </form>
                             </div>
                         </div>

@@ -167,8 +167,8 @@ nav ul li a:hover, .btn-primary:hover {
   border-bottom: none;
 }
 
-input[type="email"],
-input[type="password"]{
+#loginModal .form-control input[type="email"],
+#loginModal .form-control input[type="password"]{
   color: #421D11;
   border: solid 1px #421D11;
   text-align: center;
@@ -180,9 +180,6 @@ input[type="password"]{
   width: 100px;
 }
 
-#not-yet-register, #sign-in{
-  color: #421D11;
-}
 
 .dog-image {
   max-width: 100%;
@@ -195,6 +192,9 @@ hr{
   color: #ffffff;
   border: solid 2px #FFF;
   opacity: 1;
+}
+#not-yet-register, #sign-in{
+  color: #421D11;
 }
 
 .nav-item.dropdown:hover .dropdown-menu {
