@@ -87,13 +87,24 @@
 
   }
 
-  .error{
-    color: #af4242;
-    background-color: #fde8ec;
-    padding: 10px;
-    display: none;
-    transform: translateY(-20px);
-    margin-bottom: 10px;
-    font-size: 14px;
-    margin-top: 22px;
-  }
+  .password-input {
+    position: relative;
+}
+
+.password-toggle {
+    position: absolute;
+    right: 10px;
+    top: 38px;
+    cursor: pointer;
+    color: #6c757d;
+}
+
+.password-toggle:hover {
+    color: #495057;
+}
+
+input[type="password"]::-ms-reveal,
+input[type="password"]::-webkit-credentials-auto-fill-button,
+input[type="password"]::-webkit-textfield-decoration-container {
+    display: none !important;
+}
