@@ -11,6 +11,10 @@
     $contact_error = null;
     $password_error = null;
 
+    // Login form variables
+    $login_email_error = null;
+    $login_password_error = null;
+
 // Start session at the very beginning
 if (session_status() == PHP_SESSION_NONE) {
     session_start();
@@ -85,6 +89,22 @@ function handleRegister($conn) {
         $hasError = true;
     }
 
+    if (!preg_match('/[A-Z]/', $password)) {
+        die("Password must contain at least 1 uppercase letter.");
+        $password_error  = 'Pasword must contain atleast 1 uppercase';
+        $hasError = true;
+    }
+
+    if (!preg_match('/\d/', $password)) {
+        $password_error  = 'Pasword must contain atleast 1 number';
+        $hasError = true;
+    }
+
+    if (!preg_match('/[\W_]/', $password)) {
+        $password_error  = 'Pasword must contain atleast 1 special character';
+        $hasError = true;
+    }
+
     if ($password !== $repeatPassword) {
         $password_error= 'Passwords do not match.';
         $hasError = true;
@@ -126,47 +146,60 @@ function handleRegister($conn) {
 }
 
 function handleLogin($conn) {
-    try {
-        $email = $_POST['email'] ?? '';
-        $password = $_POST['password'] ?? '';
+    
+    global $login_email_error, $login_password_error;
+    $hasError = false;
+
+
+    $email = $_POST['email'] ?? '';
+    $password = $_POST['password'] ?? '';
 
         // Check if user is an admin
-        $stmt = $conn->prepare("SELECT admin_id, admin_password FROM admin WHERE admin_email = ?");
-        $stmt->execute([$email]);
-        $admin = $stmt->fetch(PDO::FETCH_ASSOC);
+    $stmt = $conn->prepare("SELECT admin_id, admin_password FROM admin WHERE admin_email = ?");
+    $stmt->execute([$email]);
+    $admin = $stmt->fetch(PDO::FETCH_ASSOC);
 
-        if ($admin && $password === $admin['admin_password']) {
+        // If not an admin, check customer login
+    $stmt = $conn->prepare("SELECT c_id, c_password FROM customer WHERE c_email = ?");
+    $stmt->execute([$email]);
+    $customer = $stmt->fetch(PDO::FETCH_ASSOC);
+
+    // If email doesn't exist in either table
+    if (!$admin && !$customer) {
+        $login_email_error = 'Unregistered User';
+        $hasError = true;
+    } 
+    // If admin exists, check admin password
+    else if ($admin) {
+        if ($password === $admin['admin_password']) {
             $_SESSION['admin_id'] = $admin['admin_id'];
             header("Location: admin/admin_home.php");
             exit();
+        } else {
+            $login_password_error = 'Wrong password';
+            $hasError = true;
         }
-
-        // If not an admin, check customer login
-        $stmt = $conn->prepare("SELECT c_id, c_password FROM customer WHERE c_email = ?");
-        $stmt->execute([$email]);
-        $customer = $stmt->fetch(PDO::FETCH_ASSOC);
-
-        if ($customer && password_verify($password, $customer['c_password'])) {
-            // Set both session variables for compatibility
+    } 
+    // If customer exists, check customer password
+    else if ($customer) {
+        if (password_verify($password, $customer['c_password'])) {
             $_SESSION['c_id'] = $customer['c_id'];
             $_SESSION['customer_id'] = $customer['c_id'];
             
-            // For debugging (optional - you can remove this later)
             $_SESSION['login_time'] = date('Y-m-d H:i:s');
             $_SESSION['login_email'] = $email;
             
-            // Redirect to profile page
             header("Location: profile.php");
             exit();
+        } else {
+            $login_password_error = 'Wrong password';
+            $hasError = true;
         }
-
-        // If we get here, login failed - set error but don't redirect
-        $_SESSION['login_error'] = "Invalid email or password.";
-        return false;
-    } catch (PDOException $e) {
-        $_SESSION['login_error'] = "Database error: " . $e->getMessage();
-        return false;
     }
+
+    $_SESSION['login_error'] = true; // Flag to show the login modal with errors
+    return false;
+        
 }
 
 function handleForgotPassword($conn) {
@@ -182,8 +215,9 @@ function handleForgotPassword($conn) {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>LOG IN PAGE</title>
-    <link rel="stylesheet" href="log_in.css">
+    <link rel="stylesheet" href="log_in1.css">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 
     <style>
         <?php if ($firstname_error): ?> .firstname-error { display: block; } <?php endif; ?>
@@ -191,14 +225,20 @@ function handleForgotPassword($conn) {
         <?php if ($email_error): ?> .email-error { display: block; } <?php endif; ?>
         <?php if ($contact_error): ?> .contact-error { display: block; } <?php endif; ?>
         <?php if ($password_error): ?> .password-error { display: block; } <?php endif; ?>
+        <?php if ($login_email_error): ?> .login-email-error { display: block; } <?php endif; ?>
+        <?php if ($login_password_error): ?> .login-password-error { display: block; } <?php endif; ?>
 
-        
-            .error {
-            color: #dc3545;
-            font-size: 0.875rem;
-            margin-top: 0.25rem;
+
+        .error{
+        color: #af4242;
+        background-color: #fde8ec;
+        padding: 10px;
+        display: block; /* Always display errors when they exist */
+        transform: translateY(-20px);
+        margin-bottom: 10px;
+        font-size: 14px;
+        margin-top: 22px;
         }
-        
         .password-input {
             position: relative;
         }
@@ -237,18 +277,24 @@ function handleForgotPassword($conn) {
 
                     <form id="loginForm" action="" method="POST">
                         <input type="hidden" name="action" value="login">
-                        <div class="mb-3 d-flex justify-content-center">
-                            <input type="email" class="form-control w-50" name="email" required placeholder="Enter Email">
+                        <div class="mb-3 d-flex flex-column justify-content-center">
+                                <input type="email" class="form-control mx-auto w-50 text-center" name="email" required placeholder="Enter Email">
+                                <?php if ($login_email_error): ?>
+                                    <p class="error login-email-error mt-4 mb-0 mx-auto w-50"><?php echo $login_email_error; ?></p>
+                                <?php endif; ?>
                         </div>
-                        <div class="mb-3 d-flex justify-content-center position-relative">
-                            <input type="password" class="form-control w-50" id="loginPassword" name="password" required placeholder="Enter Password">
-                            <i class="fas fa-eye password-toggle" id="loginPasswordToggle" style="right: 26%; top: 10px;"></i>
-                        </div>
-                        <?php if (isset($_SESSION['login_error'])): ?>
-                            <div class="alert alert-danger text-center w-50 mx-auto">
-                                <?php echo $_SESSION['login_error']; unset($_SESSION['login_error']); ?>
+                        <div class="mb-3 d-flex flex-column align-items-center">
+                            <div class="position-relative w-50">
+                                <input type="password" class="form-control text-center pr-5" id="loginPassword" name="password" required placeholder="Enter Password">
+                                
+                                <i class="fas fa-eye password-toggle position-absolute" id="loginPasswordToggle" style="right: 15px; top: 50%; transform: translateY(-50%); cursor: pointer;"></i>
                             </div>
-                        <?php endif; ?>
+                            
+                            <?php if (!empty($login_password_error)): ?>
+                                <p class="error login-password-error mt-4 w-50 text-center"><?php echo $login_password_error; ?></p>
+                            <?php endif; ?>
+                        </div>
+
                         <button type="submit" id="loginbut" class="btn btn-primary">Login</button>
                         <p class="mt-3 text-center"><a href="#" data-bs-toggle="modal" data-bs-target="#registerModal" id="not-yet-register">Not yet registered?</a></p>
                     </form>
@@ -319,10 +365,10 @@ function handleForgotPassword($conn) {
                                                 <label for="password">Password <span class="text-danger">*</span></label>
                                                 <input type="password" class="form-control" id="password" name="password" placeholder="Password" required>  
                                                 <i class="fas fa-eye password-toggle" id="passwordToggle"></i>
-                                                <div class="password-requirements">Password must be 8-12 characters long</div>
+                                                <div class="password-requirements">Password must be 8-12 characters, containing a 1 special character, 1 uppercase and 1 number.</div>
                                                 <?php if ($password_error): ?>
-                                                <p class="error password-error"><?php echo $password_error; ?></p>
-                                            <?php endif; ?>
+                                                    <p class="error password-error"><?php echo $password_error; ?></p>
+                                                <?php endif; ?>
                                             </div>
                                         </div>
                                         
@@ -473,9 +519,12 @@ function handleForgotPassword($conn) {
         <?php endif; ?>
 
         // Show login modal if there's a login error
-        <?php if (isset($_SESSION['login_error'])): ?>
+        <?php if (isset($_SESSION['login_error']) || isset($login_email_error) || isset($login_password_error)): ?>
             var loginModal = new bootstrap.Modal(document.getElementById('loginModal'));
             loginModal.show();
+            <?php if (isset($_SESSION['login_error'])): ?>
+                <?php unset($_SESSION['login_error']); ?>
+            <?php endif; ?>
         <?php endif; ?>
 
         // Show register modal if there are registration errors
