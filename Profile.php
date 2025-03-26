@@ -110,7 +110,7 @@ include 'header.php'; ?>
                     <img src="<?php echo $profile_picture; ?>" alt="Profile Picture" class="profile-icon">
                     <h6 class="cusID">CUSTOMER ID</h6>
                     <h6 class="cusNum">NO. <?php echo $fetch_cust_info['c_id']; ?></h6>
-                    <h6 class="cusMem"><?php echo $fetch_cust_info['membership_status']; ?> Member</h6>s
+                    <h6 class="cusMem"><?php echo $fetch_cust_info['membership_status']; ?> Member</h6>
                 </div>
 
                 <div class="deets">
@@ -158,27 +158,27 @@ include 'header.php'; ?>
                                     <tr>
                                         <td class="crBody">
                                             <div class="tDeets">
-                                                <h6 class="tStatus"><?php echo $reservation['b_status']; ?></h6>
+                                                <h6 class="tStatus"><?php echo $reservation['booking_status']; ?></h6>
 
                                                 <div class="tDeets1">
                                                     <div class="tDeets1-1">
-                                                        <p class="tpetname"><?php echo $reservation['b_pet']; ?></p>
+                                                        <p class="tpetname"><?php echo $reservation['pet_name']; ?></p>
                                                     </div>
 
                                                     <div class="tDeets1-2">
-                                                        <p class="price"><?php echo $reservation['b_payment']; ?></p>
+                                                        <p class="price"><?php echo $reservation['booking_payment_amount']; ?></p>
                                                     </div>
                                                 </div>
 
                                                 <div class="tDeets2">
                                                     <div class="tDeets2-1">
-                                                        <p class="tservice"><?php echo $reservation['b_service']; ?></p>
-                                                        <p class="tId">Transaction ID NO <?php echo $reservation['b_id']; ?></p>
-                                                        <p class="tDate"><?php echo $reservation['b_date']; ?></p>
+                                                        <p class="tservice"><?php echo $reservation['service_name']; ?></p>
+                                                        <p class="tId">Transaction ID NO <?php echo $reservation['booking_id']; ?></p>
+                                                        <p class="tDate"><?php echo $reservation['booking_check_in']; ?></p>
                                                     </div>
 
                                                     <div class="tDeets2-2">
-                                                        <button class="btn" data-bs-target="#req-to-cancel-modal" data-bs-toggle="modal" id="reqtoCancel-but" data-booking-id="<?php echo $reservation['b_id']; ?>">Request to Cancel</button>
+                                                        <button class="btn" data-bs-target="#req-to-cancel-modal" data-bs-toggle="modal" id="reqtoCancel-but" data-booking-id="<?php echo $reservation['booking_id']; ?>">Request to Cancel</button>
                                                     </div>
                                                 </div>
                                             </div>
@@ -210,23 +210,23 @@ include 'header.php'; ?>
                                     <tr>
                                         <td class="crBody">
                                             <div class="tDeets">
-                                                <h6 class="tStatus"><?php echo $history['b_status']; ?></h6>
+                                                <h6 class="tStatus"><?php echo $history['booking_status']; ?></h6>
 
                                                 <div class="tDeets1">
                                                     <div class="tDeets1-1">
-                                                        <p class="tpetname"><?php echo $history['b_pet']; ?></p>
+                                                        <p class="tpetname"><?php echo $history['pet_name']; ?></p>
                                                     </div>
 
                                                     <div class="tDeets1-2">
-                                                        <p class="price"><?php echo $history['b_payment']; ?></p>
+                                                        <p class="price"><?php echo $history['booking_payment_amount']; ?></p>
                                                     </div>
                                                 </div>
 
                                                 <div class="tDeets2">
                                                     <div class="tDeets2-1">
-                                                        <p class="tservice"><?php echo $history['b_service']; ?></p>
-                                                        <p class="tId">Transaction ID NO <?php echo $history['b_id']; ?></p>
-                                                        <p class="tDate"><?php echo $history['b_date']; ?></p>
+                                                        <p class="tservice"><?php echo $history['service_name']; ?></p>
+                                                        <p class="tId">Transaction ID NO <?php echo $history['booking_id']; ?></p>
+                                                        <p class="tDate"><?php echo $history['booking_check_in']; ?></p>
                                                     </div>
                                                 </div>
                                             </div>
@@ -340,8 +340,8 @@ include 'header.php'; ?>
                             <div class="mb-3">
                                 <label class="form-label">GENDER</label>
                                 <select class="form-select" name="gender" id="gender-dropdown">
-                                    <option value="Male" <?php echo ($pet['pet_gender'] == 'Male') ? 'selected' : ''; ?>>Male</option>
-                                    <option value="Female" <?php echo ($pet['pet_gender'] == 'Female') ? 'selected' : ''; ?>>Female</option>
+                                    <option value="Male">Male</option>
+                                    <option value="Female">Female</option>
                                 </select>
                             </div>
 
@@ -546,7 +546,6 @@ include 'header.php'; ?>
         <div class="modal-content" id="req-to-cancel">
             
             <form action="cancel_booking.php" method="POST">
-                <input type="hidden" name="booking_id" id="cancel  method="POST">
                 <input type="hidden" name="booking_id" id="cancel_booking_id">
                 
                 <div class="modal-header" id="mheader">
@@ -584,6 +583,7 @@ include 'header.php'; ?>
 
                             <div class="d-flex align-items-center">
                                 <input type="radio" name="reason" value="Other" id="Others">
+                                <label for="Others" class="me-  value="Other" id="Others">
                                 <label for="Others" class="me-2">Other Specify:</label>
                                 <textarea class="form-control" id="message-text" name="other_reason"></textarea>
                             </div>
