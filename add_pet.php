@@ -29,6 +29,20 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $date_administered = $_POST['date_administered'];
     $expiry_date = $_POST['expiry_date'];
     
+    // Map pet size values to database values
+    $petSizeMap = [
+        'small_dog' => 'Small',
+        'regular_dog' => 'Regular',
+        'large_dog' => 'Large',
+        'regular_cat' => 'Cat'
+    ];
+    
+    // Convert pet size to database format
+    $dbPetSize = isset($petSizeMap[$pet_size]) ? $petSizeMap[$pet_size] : $pet_size;
+    
+    // Log the conversion for debugging
+    error_log("Original pet size: " . $pet_size . ", Converted to: " . $dbPetSize);
+    
     // Handle pet photo upload
     $image_path = "";
     if (isset($_FILES['pet_photo']) && $_FILES['pet_photo']['error'] == 0) {
@@ -72,6 +86,15 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     // Convert gender to proper case if needed
     $gender = ucfirst(strtolower($_POST['gender']));
     
+    // Map vaccination status values
+    $vaccinationMap = [
+        'vaccinated' => 'Vaccinated',
+        'not_vaccinated' => 'Not Vaccinated'
+    ];
+    
+    // Convert vaccination status to database format
+    $dbVaccinationStatus = isset($vaccinationMap[$vaccination_status]) ? $vaccinationMap[$vaccination_status] : $vaccination_status;
+    
     // Insert new pet
     $insert_query = "INSERT INTO pet (customer_id, pet_name, pet_size, pet_breed, pet_age, pet_gender, pet_description, 
                     pet_special_instruction, pet_vaccination_status, pet_vaccination_date_administered, pet_vaccination_date_expiry, pet_picture, pet_vaccination_card) 
@@ -81,13 +104,13 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     error_log("Attempting to insert new pet with data: " . print_r([
         'c_id' => $user_id,
         'pet_name' => $pet_name,
-        'pet_size' => $pet_size,
+        'pet_size' => $dbPetSize, // Use the mapped size value
         'breed' => $breed,
         'age' => $age,
         'gender' => $gender,
         'description' => $description,
         'special_instructions' => $special_instructions,
-        'vaccination_status' => $vaccination_status,
+        'vaccination_status' => $dbVaccinationStatus,
         'date_administered' => $date_administered,
         'expiry_date' => $expiry_date,
         'image_path' => $image_path,
@@ -98,13 +121,13 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $stmt = $conn->prepare($insert_query);
         $stmt->bindParam(':c_id', $user_id);
         $stmt->bindParam(':pet_name', $pet_name);
-        $stmt->bindParam(':pet_size', $pet_size);
+        $stmt->bindParam(':pet_size', $dbPetSize); // Use the mapped size value
         $stmt->bindParam(':breed', $breed);
         $stmt->bindParam(':age', $age);
         $stmt->bindParam(':gender', $gender);
         $stmt->bindParam(':description', $description);
         $stmt->bindParam(':special_instructions', $special_instructions);
-        $stmt->bindParam(':vaccination_status', $vaccination_status);
+        $stmt->bindParam(':vaccination_status', $dbVaccinationStatus);
         $stmt->bindParam(':date_administered', $date_administered);
         $stmt->bindParam(':expiry_date', $expiry_date);
         $stmt->bindParam(':image_path', $image_path);
