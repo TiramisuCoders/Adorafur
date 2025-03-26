@@ -1,0 +1,110 @@
+
+.modal-dialog{
+    z-index: 1050;
+  }
+  
+  #loginModal .modal-content,
+  #registerModal .modal-content,
+  #congratsModal .modal-content {
+    background-color: #F7E2CF;
+  }
+  
+  #login-body{
+    align-items: center;
+    text-align: center;
+    padding: 5%;
+    background-image: url(log-in-puppies.png);
+    background-repeat: no-repeat;  /* Prevents the image from repeating */
+    background-position: left bottom; /* Positions the image in the lower-left */
+    background-size: 45%; /* Keeps the image at its original size */
+    margin: 5%;
+  }
+
+  #congrats-body {
+    align-items: center;
+    text-align: center;
+    padding: 2%;
+    /* background-image: url(log-in-puppies.png);
+    background-repeat: no-repeat;  /* Prevents the image from repeating */
+    /* background-position: left bottom; /* Positions the image in the lower-left */
+    /* background-size: 45%; Keeps the image at its original size */ 
+    margin: 5%;
+  }
+  
+  .modal-body h5{
+    color: #421D11;
+    margin: 2%;
+  }
+  
+  .modal-body h2{
+    color: 967549;
+    margin: 2%;
+  }
+  
+  .modal-header{
+    border-bottom: none;
+  }
+  
+  #loginModal .form-control w-50,
+  #loginModal .form-control w-50{
+    color: #421D11;
+    border: solid 1px #421D11;
+    text-align: center;
+  }
+
+ 
+  button{
+    border-radius: 10px;
+    width: 100px;
+    background-color: #421D11;
+  }
+  
+  #not-yet-register, #sign-in{
+    color: #421D11;
+  }
+  
+  .dog-image {
+    max-width: 100%;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  
+  hr{
+    color: #ffffff;
+    border: solid 2px #FFF;
+    opacity: 1;
+  }
+  
+  .btn-close{
+    top: 10px; 
+    right: 10px; 
+    z-index: 10; 
+    padding: 10px; 
+    border-radius: 50%;
+    background-color: #ffffff;
+    opacity: 1;
+
+  }
+
+  .password-input {
+    position: relative;
+}
+
+.password-toggle {
+    position: absolute;
+    right: 10px;
+    top: 38px;
+    cursor: pointer;
+    color: #6c757d;
+}
+
+.password-toggle:hover {
+    color: #495057;
+}
+
+input[type="password"]::-ms-reveal,
+input[type="password"]::-webkit-credentials-auto-fill-button,
+input[type="password"]::-webkit-textfield-decoration-container {
+    display: none !important;
+}

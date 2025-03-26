@@ -42,25 +42,3 @@
     color: #666;
     font-size: 20px;
 }
-
-.logout-container {
-    font-family: "BalooTammudu2-Medium", sans-serif;
-    display: flex;
-    width: 80%;
-    justify-content: center;
-    margin-top: 40px;
-}
-
-.logout-btn {
-    background-color: #ccc;
-    color: white;
-    padding: 10px 30px;
-    border-radius: 20px;
-    text-decoration: none;
-    font-weight: 500;
-    transition: background-color 0.3s;
-}
-
-.logout-btn:hover {
-    background-color: #b3b3b3;
-}

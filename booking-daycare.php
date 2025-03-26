@@ -1,18 +1,12 @@
 <?php
-session_start();
+session_start();    
 
-// Check if user is logged in
-if (!isset($_SESSION['c_id'])) {
-    // Redirect to login page if not logged in
-    header("Location: home.php");
-    exit;
-}
-
-include ('connect.php');
+require_once ('connect.php');
 
 $petSelected = false;
 $dateSelected = false;
 $timeSelected = false;
+$isLoggedIn = isset($_SESSION['c_id']);
 
 // Handle AJAX requests
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -101,33 +95,42 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         exit;
     }
     
-    if (isset($_POST['get_pets'])) {
-        // Get pets for the logged-in user
-        $userId = $_SESSION['c_id'];
-        $stmt = $conn->prepare("SELECT pet_id, pet_name, pet_breed, pet_age, pet_gender, pet_size FROM pet WHERE customer_id = :customer_id");
-        $stmt->execute(['customer_id' => $userId]);
-        $pets = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    // These requests require authentication
+    if (isset($_POST['get_pets']) || isset($_POST['selected_pet'])) {
+        if (!$isLoggedIn) {
+            echo json_encode(['success' => false, 'requireLogin' => true, 'message' => 'Login required']);
+            exit;
+        }
         
-        echo json_encode(['success' => true, 'pets' => $pets]);
-        exit;
-    }
-    
-    if (isset($_POST['selected_pet'])) {
-        // Get pet details
-        $petId = $_POST['selected_pet'];
-        $stmt = $conn->prepare("
-            SELECT p.pet_id, p.pet_name, p.pet_breed, p.pet_age, p.pet_gender, p.pet_size, s.service_rate 
-            FROM pet p
-            JOIN service s ON p.pet_size = s.service_variant OR (p.pet_size = 'Cat' AND s.service_variant = 'Cats')
-            WHERE p.pet_id = :pet_id AND s.service_name = 'Pet Daycare'
-        ");
-        $stmt->execute(['pet_id' => $petId]);
-        $petDetails = $stmt->fetch(PDO::FETCH_ASSOC);
+        if (isset($_POST['get_pets'])) {
+            // Get pets for the logged-in user
+            $userId = $_SESSION['c_id'];
+            $stmt = $conn->prepare("SELECT pet_id, pet_name, pet_breed, pet_age, pet_gender, pet_size FROM pet WHERE customer_id = :customer_id");
+            $stmt->execute(['customer_id' => $userId]);
+            $pets = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            
+            echo json_encode(['success' => true, 'pets' => $pets]);
+            exit;
+        }
         
-        echo json_encode(['success' => true, 'petDetails' => $petDetails]);
-        exit;
+        if (isset($_POST['selected_pet'])) {
+            // Get pet details
+            $petId = $_POST['selected_pet'];
+            $stmt = $conn->prepare("
+                SELECT p.pet_id, p.pet_name, p.pet_breed, p.pet_age, p.pet_gender, p.pet_size, s.service_rate 
+                FROM pet p
+                JOIN service s ON p.pet_size = s.service_variant OR (p.pet_size = 'Cat' AND s.service_variant = 'Cats')
+                WHERE p.pet_id = :pet_id AND s.service_name = 'Pet Daycare'
+            ");
+            $stmt->execute(['pet_id' => $petId]);
+            $petDetails = $stmt->fetch(PDO::FETCH_ASSOC);
+            
+            echo json_encode(['success' => true, 'petDetails' => $petDetails]);
+            exit;
+        }
     }
 }
+
 
 // Set variables based on session
 if (isset($_SESSION['pet_type'])) $petSelected = true;
@@ -135,10 +138,13 @@ if (isset($_SESSION['selected_date'])) $dateSelected = true;
 if (isset($_SESSION['check_in_time']) && isset($_SESSION['check_out_time'])) $timeSelected = true;
 
 // Get user details
-$userId = $_SESSION['c_id'];
-$stmt = $conn->prepare("SELECT c_first_name, c_last_name, c_email FROM customer WHERE c_id = :user_id");
-$stmt->execute(['user_id' => $userId]);
-$userDetails = $stmt->fetch(PDO::FETCH_ASSOC);
+$userDetails = null;
+if($isLoggedIn){
+    $userId = $_SESSION['c_id'];
+    $stmt = $conn->prepare("SELECT c_first_name, c_last_name, c_email FROM customer WHERE c_id = :user_id");
+    $stmt->execute(['user_id' => $userId]);
+    $userDetails = $stmt->fetch(PDO::FETCH_ASSOC);
+}
 
 function generateCalendar($month, $year) {
     $firstDayOfMonth = mktime(0, 0, 0, $month, 1, $year);
@@ -201,6 +207,33 @@ function outputBookingCalendar() {
     $year = date('Y');
     echo generateCalendar($month, $year);
 }
+
+
+// Get service details
+$stmt = $conn->prepare("SELECT * FROM service 
+                        WHERE LOWER(service_name) = LOWER('pet daycare')
+                        AND LOWER(service_variant) = LOWER('small dog')");
+$stmt->execute();                        
+$smallDaycare = $stmt->fetch(PDO::FETCH_ASSOC);
+
+$stmt = $conn->prepare("SELECT * FROM service 
+                        WHERE LOWER(service_name) = LOWER('pet daycare')
+                        AND LOWER(service_variant) = LOWER('medium dog')");
+$stmt->execute();                        
+$medDaycare = $stmt->fetch(PDO::FETCH_ASSOC);
+
+$stmt = $conn->prepare("SELECT * FROM service 
+                        WHERE LOWER(service_name) = LOWER('pet daycare')
+                        AND LOWER(service_variant) = LOWER('large dog')");
+$stmt->execute();                        
+$largeDaycare = $stmt->fetch(PDO::FETCH_ASSOC);
+
+$stmt = $conn->prepare("SELECT * FROM service 
+                        WHERE LOWER(service_name) = LOWER('pet daycare')
+                        AND LOWER(service_variant) = LOWER('cats')");
+$stmt->execute();                        
+$catDaycare = $stmt->fetch(PDO::FETCH_ASSOC);
+
 ?>
 
 
@@ -210,7 +243,7 @@ function outputBookingCalendar() {
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Adorafu Happy Stay/Book/Pet Daycare</title>
+    <title>Book with Adorafur</title>
 
     <!-- Bootstrap CSS -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.0/dist/css/bootstrap.min.css">
@@ -226,7 +259,7 @@ function outputBookingCalendar() {
 
     <!-- Your custom JavaScript -->
     <script src="booking-daycare.js" defer></script>
-
+    <link rel="icon" type="image/png" href="Header-Pics/logo.png">
 
 </head>
 
@@ -282,32 +315,32 @@ function outputBookingCalendar() {
                         <div class="pet-information-dog">
                             <div class="pet-info dog-info">
                                 <img src="Booking/small_dog.png" alt="Small Dog" class="small-dog" data-selected-src="Booking/small_dog(selected).png">
-                                <h3>Small Dog</h3>
+                                <h3><?php echo $smallDaycare['service_variant']; ?></h3>
                                 <h6>Weight: 10kg<br>
-                                    ₱ 450</h6>
+                                    ₱ <?php echo $smallDaycare['service_rate']; ?></h6>
                             </div>
 
                             <div class="pet-info dog-info">
                                 <img src="Booking/reg_dog.png" alt="Regular Dog" class="reg-dog" data-selected-src="Booking/reg_dog(selected).png">
-                                <h3>Regular Dog</h3>
+                                <h3><?php echo $medDaycare['service_variant']; ?></h3>
                                 <h6>Weight: 26 - 40 lbs<br>
-                                    ₱ 550</h6>
+                                    ₱ <?php echo $medDaycare['service_rate']; ?></h6>
                             </div>
 
                             <div class="pet-info dog-info">
                                 <img src="Booking/large_dog.png" alt="Large Dog" class="large-dog" data-selected-src="Booking/large_dog(selected).png">
-                                <h3>Large Dog</h3>
+                                <h3><?php echo $largeDaycare['service_variant']; ?></h3>
                                 <h6>Weight: 40 lbs and above<br>
-                                    ₱ 650</h6>
+                                    ₱ <?php echo $largeDaycare['service_rate']; ?></h6>
                             </div>
                         </div>
 
                         <div class="pet-information-cat">
                             <div class="pet-info cat-info">
                                 <img src="Booking/reg_cat.png" alt="Cat" class="cat" data-selected-src="Booking/reg_cat(selected).png">
-                                <h3>Cat</h3>
+                                <h3><?php echo $catDaycare['service_variant']; ?></h3>
                                 <h6>Weight: 4 - 5kg<br>
-                                    ₱ 400</h6>
+                                    ₱ <?php echo $catDaycare['service_rate']; ?></h6>
                             </div>
                         </div>
                     </div>
@@ -343,10 +376,11 @@ function outputBookingCalendar() {
                             </div>
                         </div>
 
-                        <div class="book">BOOK</div>
+                            <div class="book">BOOK</div>
 
-                    </div>
+                    </div>  
                 </div>
+                <?php if ($isLoggedIn): ?>
                 <div class="book-1">
                     <div class="book-label">
                         <div class="client">
@@ -638,6 +672,7 @@ function outputBookingCalendar() {
                         </div>
                     </div>
                 </div><!-- /.main-container -->
+                <?php endif; ?>
             </div><!-- /.main -->
         </div>
     </div>

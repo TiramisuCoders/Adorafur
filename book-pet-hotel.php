@@ -1,6 +1,112 @@
 <?php
 require_once 'connect.php'; // Include database connection
 
+// Add these two PHP files at the beginning of book-pet-hotel.php, right after the require_once 'connect.php'; line
+
+// File 1: fetch-customer-pets.php - Add this as a separate endpoint
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['fetch_customer_pets'])) {
+    // Start session if not already started
+    if (session_status() == PHP_SESSION_NONE) {
+        session_start();
+    }
+
+    // Check if user is logged in
+    if (!isset($_SESSION['customer_id']) && !isset($_SESSION['c_id'])) {
+        echo json_encode([
+            'success' => false,
+            'message' => 'User not logged in'
+        ]);
+        exit;
+    }
+
+    // Get customer ID (support both session variable names)
+    $customerId = isset($_SESSION['customer_id']) ? $_SESSION['customer_id'] : $_SESSION['c_id'];
+
+    try {
+        // Prepare query to fetch pets for this customer
+        $stmt = $conn->prepare("SELECT pet_id, pet_name, pet_breed, pet_age, pet_gender, pet_size 
+                               FROM pet 
+                               WHERE customer_id = :customer_id");
+        $stmt->bindParam(':customer_id', $customerId, PDO::PARAM_INT);
+        $stmt->execute();
+        
+        // Fetch all pets
+        $pets = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        
+        if (count($pets) > 0) {
+            echo json_encode([
+                'success' => true,
+                'pets' => $pets
+            ]);
+        } else {
+            echo json_encode([
+                'success' => false,
+                'message' => 'No pets found for this customer',
+                'pets' => []
+            ]);
+        }
+        exit;
+    } catch (PDOException $e) {
+        echo json_encode([
+            'success' => false,
+            'message' => 'Database error: ' . $e->getMessage()
+        ]);
+        exit;
+    }
+}
+
+// File 2: get-client-info.php - Add this as a separate endpoint
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['get_client_info'])) {
+    // Start session if not already started
+    if (session_status() == PHP_SESSION_NONE) {
+        session_start();
+    }
+
+    // Check if user is logged in
+    if (!isset($_SESSION['customer_id']) && !isset($_SESSION['c_id'])) {
+        echo json_encode([
+            'success' => false,
+            'message' => 'User not logged in'
+        ]);
+        exit;
+    }
+
+    // Get customer ID (support both session variable names)
+    $customerId = isset($_SESSION['customer_id']) ? $_SESSION['customer_id'] : $_SESSION['c_id'];
+
+    try {
+        // Prepare query to fetch customer info
+        $stmt = $conn->prepare("SELECT c_first_name, c_last_name, c_email 
+                               FROM customer 
+                               WHERE c_id = :customer_id");
+        $stmt->bindParam(':customer_id', $customerId, PDO::PARAM_INT);
+        $stmt->execute();
+        
+        // Fetch customer data
+        $customer = $stmt->fetch(PDO::FETCH_ASSOC);
+        
+        if ($customer) {
+            echo json_encode([
+                'success' => true,
+                'client_name' => $customer['c_first_name'] . ' ' . $customer['c_last_name'],
+                'client_email' => $customer['c_email']
+            ]);
+        } else {
+            echo json_encode([
+                'success' => false,
+                'message' => 'Customer not found'
+            ]);
+        }
+        exit;
+    } catch (PDOException $e) {
+        echo json_encode([
+            'success' => false,
+            'message' => 'Database error: ' . $e->getMessage()
+        ]);
+        exit;
+    }
+}
+
 // Initialize session variables for booking flow
 if (!isset($_SESSION)) {
     session_start();
@@ -82,7 +188,7 @@ $transactionNo = 'TRX'.time().rand(1000, 9999);
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Adorafu Happy Stay/Book/Pet Hotel</title>
+    <title>Book with Adorafur</title>
 
     <!-- Bootstrap CSS -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.0/dist/css/bootstrap.min.css">
@@ -98,6 +204,7 @@ $transactionNo = 'TRX'.time().rand(1000, 9999);
 
     <!-- Your custom JavaScript -->
     <script src="book.js"></script>
+    <link rel="icon" type="image/png" href="Header-Pics/logo.png">
 
 
 </head>
@@ -283,40 +390,39 @@ $transactionNo = 'TRX'.time().rand(1000, 9999);
 </table>
 
 <script>
-    function updatePetDetails(selectElement) {
-        let selectedPet = selectElement.value ? JSON.parse(selectElement.value) : null;
-        let row = selectElement.closest("tr");
+    // Find the updatePetDetails function in the JavaScript section and update it to correctly set prices based on pet size
+function updatePetDetails(selectElement) {
+    let selectedPet = selectElement.value ? JSON.parse(selectElement.value) : null;
+    let row = selectElement.closest("tr");
 
-        row.querySelector("[data-label='Breed']").textContent = selectedPet ? selectedPet.pet_breed : "";
-        row.querySelector("[data-label='Age']").textContent = selectedPet ? selectedPet.pet_age + " years" : "";
-        row.querySelector("[data-label='Gender']").textContent = selectedPet ? selectedPet.pet_gender : "";
-        row.querySelector("[data-label='Size']").textContent = selectedPet ? selectedPet.pet_size : "";
-        
-        // Set price based on pet size
-        let price = "₱0.00";
-        if (selectedPet) {
-            switch(selectedPet.pet_size) {
-                case 'Cat':
-                    price = "₱500.00";
-                    break;
-                case 'Small':
-                    price = "₱700.00";
-                    break;
-                case 'Medium':
-                    price = "₱800.00";
-                    break;
-                case 'Large':
-                case 'XL':
-                case 'XXL':
-                    price = "₱900.00";
-                    break;
-            }
+    row.querySelector("[data-label='Breed']").textContent = selectedPet ? selectedPet.pet_breed : "";
+    row.querySelector("[data-label='Age']").textContent = selectedPet ? selectedPet.pet_age + " years" : "";
+    row.querySelector("[data-label='Gender']").textContent = selectedPet ? selectedPet.pet_gender : "";
+    row.querySelector("[data-label='Size']").textContent = selectedPet ? selectedPet.pet_size : "";
+    
+    // Set price based on pet size
+    let price = "₱0.00";
+    if (selectedPet) {
+        switch(selectedPet.pet_size) {
+            case 'Cat':
+                price = "₱500.00";
+                break;
+            case 'Small':
+                price = "₱700.00";
+                break;
+            case 'Regular':
+                price = "₱800.00";
+                break;
+            case 'Large':
+                price = "₱900.00";
+                break;
         }
-        row.querySelector("[data-label='Price']").textContent = price;
-        
-        // Update total price
-        calculateTotalPrice();
     }
+    row.querySelector("[data-label='Price']").textContent = price;
+    
+    // Update total price
+    calculateTotalPrice();
+}
 
     function addPetRow() {
         let tableBody = document.getElementById("petTableBody");
