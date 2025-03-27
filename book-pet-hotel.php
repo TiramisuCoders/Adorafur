@@ -86,9 +86,7 @@ $transactionNo = 'TRX'.time().rand(1000, 9999);
                     <div class="schedule-options">
                         <div class="available-slot" id="align-1">
                             Available Slots
-                            <?php if (!$isLoggedIn): ?>
-                                <div class="login-warning">Please log in to continue booking</div>
-                            <?php endif; ?>
+                            
                         </div>
                         <!-- Bootstrap Dropdown -->
                         <div class="selection-dropdown" id="align-1">
@@ -1488,7 +1486,7 @@ $transactionNo = 'TRX'.time().rand(1000, 9999);
                 "success" => false,
                 "message" => "Database error: " . $e->getMessage()
             ]);
-        }
+        }   
         
         exit;
     }
