@@ -46,6 +46,27 @@ $transactionNo = 'TRX'.time().rand(1000, 9999);
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.0/dist/js/bootstrap.bundle.min.js"></script>
 
     <link rel="icon" type="image/png" href="Header-Pics/logo.png">
+    <style>
+    .action-btn {
+        background-color: #5a3e36;
+        border: 1px solid #d4a373;
+        color: white;
+        border-radius: 4px;
+        padding: 2px 8px;
+        font-size: 12px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+    .action-btn:hover {
+        background-color: #d4a373;
+        color: white;
+    }
+    .current-day {
+        color: #ccc;
+        pointer-events: none;
+        text-decoration: none !important;
+    }
+</style>
 </head>
 
 <body>
@@ -86,9 +107,7 @@ $transactionNo = 'TRX'.time().rand(1000, 9999);
                     <div class="schedule-options">
                         <div class="available-slot" id="align-1">
                             Available Slots
-                            <?php if (!$isLoggedIn): ?>
-                                <div class="login-warning">Please log in to continue booking</div>
-                            <?php endif; ?>
+                            
                         </div>
                         <!-- Bootstrap Dropdown -->
                         <div class="selection-dropdown" id="align-1">
@@ -216,7 +235,7 @@ $transactionNo = 'TRX'.time().rand(1000, 9999);
                                         <td data-label="Gender"></td>
                                         <td data-label="Size"></td>
                                         <td data-label="Price">₱0.00</td>
-                                        <td><button type="button" onclick="addPetRow()">+</button></td>
+                                        <td><button type="button" onclick="addPetRow()" class="action-btn">(Add)</button></td>
                                     </tr>
                                 </tbody>
                             </table>
@@ -354,7 +373,7 @@ $transactionNo = 'TRX'.time().rand(1000, 9999);
                                 
                                 <!-- Payment Button -->
                                 <div class="proctopayment">
-                                    <button type="button" class="btn payment-btn" data-toggle="modal" data-target="#petPaymentModal">
+                                    <button type="button" class="btn payment-btn" id="proceedToPaymentBtn">
                                         Proceed to Payment
                                     </button>
 
@@ -389,6 +408,7 @@ $transactionNo = 'TRX'.time().rand(1000, 9999);
                                                                 </div>
 
                                                                 <form method="POST" enctype="multipart/form-data" id="paymentForm">
+                                                                    <input type="hidden" name="visible_pets" id="visiblePetsData" value="">
                                                                     <div class="payment-section">
                                                                         <p class="section-label">Mode of Payment</p>
                                                                         <div class="radio-group">
@@ -615,11 +635,14 @@ $transactionNo = 'TRX'.time().rand(1000, 9999);
                 const formattedDate = thisDate.toISOString().split('T')[0];
                 
                 let dayClass = "day";
-                if (thisDate < today) {
+                const isToday = thisDate.getTime() === today.getTime();
+                const isPastDay = thisDate < today;
+                
+                if (isPastDay || isToday) {
                     dayClass += " past-day";
                 }
                 
-                if (thisDate.getTime() === today.getTime()) {
+                if (isToday) {
                     dayClass += " current-day";
                 }
                 
@@ -667,14 +690,16 @@ $transactionNo = 'TRX'.time().rand(1000, 9999);
                 if (date > selectedDates.checkIn) {
                     selectedDates.checkOut = date;
                     
+                    // Store the formatted date strings for both dates
+                    const checkInDateStr = selectedDates.checkIn.toISOString().split('T')[0];
+                    const checkOutDateStr = date.toISOString().split('T')[0];
+                    
                     // Clear all highlights first
                     $(".day").removeClass("selected-date highlighted");
                     
-                    // Find and highlight the first date
-                    $(`.day[data-date="${selectedDates.checkIn.toISOString().split('T')[0]}"]`).addClass("selected-date");
-                    
-                    // Highlight the last date
-                    element.addClass("selected-date");
+                    // Explicitly find and highlight both the check-in and check-out dates by their data-date attributes
+                    $(`.day[data-date="${checkInDateStr}"]`).addClass("selected-date");
+                    $(`.day[data-date="${checkOutDateStr}"]`).addClass("selected-date");
                     
                     // Update booking data
                     window.bookingData.checkOutDate = date.toLocaleDateString('en-US', {
@@ -683,7 +708,15 @@ $transactionNo = 'TRX'.time().rand(1000, 9999);
                     });
                     
                     // Highlight dates in between
-                    highlightDateRange();
+                    $(".day").each(function() {
+                        const dateStr = $(this).attr("data-date");
+                        if (!dateStr) return;
+                        
+                        const currentDate = new Date(dateStr);
+                        if (currentDate > selectedDates.checkIn && currentDate < selectedDates.checkOut) {
+                            $(this).addClass("highlighted");
+                        }
+                    });
                 }
             }
             
@@ -903,6 +936,9 @@ $transactionNo = 'TRX'.time().rand(1000, 9999);
                                 
                             $(".petSelect").append(option);
                         });
+                        
+                        // Update available pets in all dropdowns
+                        updateAvailablePets();
                     } else {
                         console.log("No pets found or error:", response.message);
                     }
@@ -919,6 +955,35 @@ $transactionNo = 'TRX'.time().rand(1000, 9999);
             const petName = selectedOption.text();
             
             if (petName && petName !== "Choose Pet") {
+                // Check if this pet is already selected in another row
+                let isDuplicate = false;
+                
+                // Skip the current dropdown when checking for duplicates
+                $(".petSelect").not(selectElement).each(function() {
+                    if ($(this).find("option:selected").text() === petName) {
+                        isDuplicate = true;
+                        return false; // Break the loop
+                    }
+                });
+                
+                if (isDuplicate) {
+                    // Alert the user
+                    alert("This pet is already selected in another row. Please choose a different pet.");
+                    
+                    // Reset the dropdown to "Choose Pet"
+                    $(selectElement).val("");
+                    
+                    // Clear row data
+                    const row = $(selectElement).closest("tr");
+                    row.find("[data-label='Breed']").text("");
+                    row.find("[data-label='Age']").text("");
+                    row.find("[data-label='Gender']").text("");
+                    row.find("[data-label='Size']").text("");
+                    row.find("[data-label='Price']").text("₱0.00");
+                    
+                    return;
+                }
+                
                 try {
                     // Get pet details from the JSON
                     const petDetails = JSON.parse($(selectElement).val());
@@ -926,7 +991,7 @@ $transactionNo = 'TRX'.time().rand(1000, 9999);
                     
                     // Update row cells
                     row.find("[data-label='Breed']").text(petDetails.pet_breed || "");
-                    row.find("[data-label='Age']").text(petDetails.pet_age ? petDetails.pet_age + " years" : "");
+                    row.find("[data-label='Age']").text(petDetails.pet_age ? petDetails.pet_age + "" : "");
                     row.find("[data-label='Gender']").text(petDetails.pet_gender || "");
                     row.find("[data-label='Size']").text(petDetails.pet_size || "");
                     
@@ -973,6 +1038,9 @@ $transactionNo = 'TRX'.time().rand(1000, 9999);
                     // Update summary
                     calculateTotalPrice();
                     updateBookingSummary();
+                    
+                    // Update available pets in all dropdowns
+                    updateAvailablePets();
                 } catch (e) {
                     console.error("Error parsing pet details:", e);
                 }
@@ -984,32 +1052,53 @@ $transactionNo = 'TRX'.time().rand(1000, 9999);
                 row.find("[data-label='Gender']").text("");
                 row.find("[data-label='Size']").text("");
                 row.find("[data-label='Price']").text("₱0.00");
+                
+                // Remove from booking data if exists
+                const oldPetName = row.data("pet-name");
+                if (oldPetName) {
+                    const existingPetIndex = window.bookingData.pets.findIndex(p => p.name === oldPetName);
+                    if (existingPetIndex >= 0) {
+                        window.bookingData.pets.splice(existingPetIndex, 1);
+                    }
+                }
+                
+                // Update available pets in all dropdowns
+                updateAvailablePets();
             }
-        };
-        
-        // Add new pet row
-        window.addPetRow = function() {
-            const newRow = `
-                <tr>
-                    <td data-label="Name">
-                        <select class="petSelect" onchange="updatePetDetails(this)">
-                            <option value="">Choose Pet</option>
-                            ${$(".petSelect").first().find("option:not(:first)").clone().prop('outerHTML')}
-                        </select>
-                    </td>
-                    <td data-label="Breed"></td>
-                    <td data-label="Age"></td>
-                    <td data-label="Gender"></td>
-                    <td data-label="Size"></td>
-                    <td data-label="Price">₱0.00</td>
-                    <td><button type="button" onclick="removePetRow(this)">-</button></td>
-                </tr>
-            `;
             
-            $("#petTableBody").append(newRow);
+            // Store the selected pet name in the row for future reference
+            $(selectElement).closest("tr").data("pet-name", petName);
         };
-        
-        // Remove pet row
+
+        // Add a function to update available pets in all dropdowns
+        function updateAvailablePets() {
+            // Get all selected pets
+            const selectedPets = [];
+            $(".petSelect").each(function() {
+                const petName = $(this).find("option:selected").text();
+                if (petName && petName !== "Choose Pet") {
+                    selectedPets.push(petName);
+                }
+            });
+            
+            // Update each dropdown
+            $(".petSelect").each(function() {
+                const currentSelect = $(this);
+                const currentSelectedPet = currentSelect.find("option:selected").text();
+                
+                // Enable all options first
+                currentSelect.find("option").prop("disabled", false);
+                
+                // Disable options that are selected in other dropdowns
+                selectedPets.forEach(function(petName) {
+                    if (petName !== currentSelectedPet) {
+                        currentSelect.find(`option:contains("${petName}")`).prop("disabled", true);
+                    }
+                });
+            });
+        }
+
+        // Update the removePetRow function to also update available pets
         window.removePetRow = function(button) {
             const row = $(button).closest("tr");
             const petName = row.find(".petSelect option:selected").text();
@@ -1028,6 +1117,39 @@ $transactionNo = 'TRX'.time().rand(1000, 9999);
             // Update total price
             calculateTotalPrice();
             updateBookingSummary();
+            
+            // Update available pets in all dropdowns
+            updateAvailablePets();
+        };
+
+        // Add new pet row
+        window.addPetRow = function() {
+            // Get all options from the first dropdown
+            let options = '';
+            $(".petSelect").first().find("option").each(function() {
+                options += $(this).prop('outerHTML');
+            });
+            
+            const newRow = `
+                <tr>
+                    <td data-label="Name">
+                        <select class="petSelect" onchange="updatePetDetails(this)">
+                            ${options}
+                        </select>
+                    </td>
+                    <td data-label="Breed"></td>
+                    <td data-label="Age"></td>
+                    <td data-label="Gender"></td>
+                    <td data-label="Size"></td>
+                    <td data-label="Price">₱0.00</td>
+                    <td><button type="button" onclick="removePetRow(this)" class="action-btn">(Remove)</button></td>
+                </tr>
+            `;
+            
+            $("#petTableBody").append(newRow);
+            
+            // Update available pets in all dropdowns
+            updateAvailablePets();
         };
         
         // Calculate total price
@@ -1071,9 +1193,9 @@ $transactionNo = 'TRX'.time().rand(1000, 9999);
                     
                     // Update the pet details section
                     $('#petSummaryDetails').html(`
-                        <div class="info-row"><span class="label">Breed:</span><span class="value">${pet.breed || 'Not specified'}</span></div>
-                        <div class="info-row"><span class="label">Gender:</span><span class="value">${pet.gender || 'Not specified'}</span></div>
-                        <div class="info-row"><span class="label">Age:</span><span class="value">${pet.age ? pet.age + ' years old' : 'Not specified'}</span></div>
+                        <div class="info-row"><span class="label">Breed:</span><span class="value">${pet.breed || ''}</span></div>
+                        <div class="info-row"><span class="label">Gender:</span><span class="value">${pet.gender || ''}</span></div>
+                        <div class="info-row"><span class="label">Age:</span><span class="value">${pet.age ? pet.age + ' y/o' : ''}</span></div>
                     `);
                 } 
                 // If there are multiple pets
@@ -1087,9 +1209,9 @@ $transactionNo = 'TRX'.time().rand(1000, 9999);
                         petDetailsHtml += `
                             <div class="pet-summary-item">
                                 <h4>${pet.name}</h4>
-                                <div class="info-row"><span class="label">Breed:</span><span class="value">${pet.breed || 'Not specified'}</span></div>
-                                <div class="info-row"><span class="label">Gender:</span><span class="value">${pet.gender || 'Not specified'}</span></div>
-                                <div class="info-row"><span class="label">Age:</span><span class="value">${pet.age ? pet.age + ' years old' : 'Not specified'}</span></div>
+                                <div class="info-row"><span class="label">Breed:</span><span class="value">${pet.breed || ''}</span></div>
+                                <div class="info-row"><span class="label">Gender:</span><span class="value">${pet.gender || ''}</span></div>
+                                <div class="info-row"><span class="label">Age:</span><span class="value">${pet.age ? pet.age + ' y/o' : ''}</span></div>
                                 ${index < window.bookingData.pets.length - 1 ? '<hr>' : ''}
                             </div>
                         `;
@@ -1153,12 +1275,6 @@ $transactionNo = 'TRX'.time().rand(1000, 9999);
         
         // Initialize payment modal
         $("#petPaymentModal").on("show.bs.modal", function() {
-            // Validate pet selection
-            if (window.bookingData.pets.length === 0) {
-                alert("Please select at least one pet before proceeding to payment.");
-                return false;
-            }
-            
             // Reset form
             $("#paymentForm")[0].reset();
             $("#proceed-to-waiver").prop("disabled", true);
@@ -1166,9 +1282,6 @@ $transactionNo = 'TRX'.time().rand(1000, 9999);
             // Show default QR code (Maya)
             $("#gcashQR").hide();
             $("#mayaQR").show();
-            
-            // Update summary
-            updateBookingSummary();
         });
         
         // Handle proceed to waiver button
@@ -1199,7 +1312,7 @@ $transactionNo = 'TRX'.time().rand(1000, 9999);
             
             // Add booking data to form
             formData.append("booking_data", JSON.stringify(window.bookingData));
-            
+
             $.ajax({
                 type: "POST",
                 url: "process-booking.php",
@@ -1212,7 +1325,7 @@ $transactionNo = 'TRX'.time().rand(1000, 9999);
                         alert("Booking completed successfully!");
                         $("#waiverForm").modal("hide");
                         // Redirect to confirmation page or refresh
-                        window.location.href = "booking-confirmation.php";
+                        window.location.href = "book-pet-hotel.php";
                     } else {
                         alert("Error: " + (response.message || "Unknown error"));
                         // Re-enable the button if there's an error
@@ -1227,279 +1340,61 @@ $transactionNo = 'TRX'.time().rand(1000, 9999);
                 }
             });
         });
-        
-        // Handle payment button click
-        $(".payment-btn").on("click", function(e) {
-            // Check if a pet is selected
-            if (window.bookingData.pets.length === 0) {
-                e.preventDefault();
-                alert("Please select at least one pet before proceeding to payment.");
-                return;
-            }
-            
+
+        // Handle payment button click - MODIFIED TO ONLY FETCH VISIBLE PETS
+        $("#proceedToPaymentBtn").on("click", function(e) {
             // Check if dates are selected
             if (!window.bookingData.checkInDate || !window.bookingData.checkOutDate) {
-                e.preventDefault();
                 alert("Please select check-in and check-out dates.");
                 return;
             }
             
-            // If all validations pass, show payment modal
+            // Get only the pets that are currently visible in the table
+            const visiblePets = [];
+            
+            // Loop through each row in the pet table
+            $("#petTableBody tr").each(function() {
+                const petName = $(this).find(".petSelect option:selected").text();
+                
+                // Skip rows where no pet is selected
+                if (!petName || petName === "Choose Pet") {
+                    return;
+                }
+                
+                // Get all the data from the row
+                const petData = {
+                    name: petName,
+                    breed: $(this).find("[data-label='Breed']").text(),
+                    age: $(this).find("[data-label='Age']").text(),
+                    gender: $(this).find("[data-label='Gender']").text(),
+                    size: $(this).find("[data-label='Size']").text(),
+                    price: parseFloat($(this).find("[data-label='Price']").text().replace('₱', '').trim()) || 0
+                };
+                
+                // Add to visible pets array
+                visiblePets.push(petData);
+            });
+            
+            // Check if any pets are visible in the table
+            if (visiblePets.length === 0) {
+                alert("Please select at least one pet before proceeding to payment.");
+                return;
+            }
+            
+            // Update the booking data with only the visible pets
+            window.bookingData.pets = visiblePets;
+            
+            // Store the visible pets data in the hidden form field
+            $("#visiblePetsData").val(JSON.stringify(visiblePets));
+            
+            // Update the payment summary with only the visible pets
+            updateBookingSummary();
+            
+            // Show the payment modal
             $("#petPaymentModal").modal("show");
         });
     });
     </script>
-
-    <!-- Additional PHP files for AJAX requests -->
-    <?php
-    // Create check-login.php
-    $check_login_content = '<?php
-    // Start session if not already started
-    if (session_status() == PHP_SESSION_NONE) {
-        session_start();
-    }
-
-    // Check if user is logged in
-    $isLoggedIn = isset($_SESSION["c_id"]);
-    $response = [
-        "isLoggedIn" => $isLoggedIn
-    ];
-
-    if ($isLoggedIn) {
-        $response["c_id"] = $_SESSION["c_id"];
-    }
-
-    // Return JSON response
-    header("Content-Type: application/json");
-    echo json_encode($response);
-    ?>';
-    file_put_contents('check-login.php', $check_login_content);
-
-    // Create get-user-pets.php
-    $get_user_pets_content = '<?php
-    require_once "connect.php"; // Include database connection
-
-    // Start session if not already started
-    if (session_status() == PHP_SESSION_NONE) {
-        session_start();
-    }
-
-    // Check if user is logged in
-    $isLoggedIn = isset($_SESSION["c_id"]);
-    if (!$isLoggedIn && !isset($_POST["c_id"])) {
-        echo json_encode([
-            "success" => false,
-            "message" => "User not logged in"
-        ]);
-        exit;
-    }
-
-    // Get client ID from session or POST
-    $clientId = isset($_POST["c_id"]) ? $_POST["c_id"] : $_SESSION["c_id"];
-
-    try {
-        $stmt = $conn->prepare("SELECT pet_id, pet_name, pet_breed, pet_age, pet_gender, pet_size 
-                               FROM pet 
-                               WHERE customer_id = :customer_id");
-        $stmt->bindParam(":customer_id", $clientId, PDO::PARAM_INT);
-        $stmt->execute();
-        
-        $pets = $stmt->fetchAll(PDO::FETCH_ASSOC);
-        
-        echo json_encode([
-            "success" => true,
-            "pets" => $pets
-        ]);
-    } catch (PDOException $e) {
-        echo json_encode([
-            "success" => false,
-            "message" => "Database error: " . $e->getMessage()
-        ]);
-    }
-    ?>';
-    file_put_contents('get-user-pets.php', $get_user_pets_content);
-
-    // Create get-client-info.php
-    $get_client_info_content = '<?php
-    require_once "connect.php"; // Include database connection
-
-    // Start session if not already started
-    if (session_status() == PHP_SESSION_NONE) {
-        session_start();
-    }
-
-    // Check if user is logged in
-    $isLoggedIn = isset($_SESSION["c_id"]);
-    if (!$isLoggedIn) {
-        echo json_encode([
-            "success" => false,
-            "message" => "User not logged in"
-        ]);
-        exit;
-    }
-
-    // Get client ID from session or POST
-    $clientId = isset($_POST["c_id"]) ? $_POST["c_id"] : $_SESSION["c_id"];
-
-    try {
-        $stmt = $conn->prepare("SELECT c_first_name, c_last_name, c_email 
-                               FROM customer 
-                               WHERE c_id = :customer_id");
-        $stmt->bindParam(":customer_id", $clientId, PDO::PARAM_INT);
-        $stmt->execute();
-        
-        $customer = $stmt->fetch(PDO::FETCH_ASSOC);
-        
-        if ($customer) {
-            echo json_encode([
-                "success" => true,
-                "client_name" => $customer["c_first_name"] . " " . $customer["c_last_name"],
-                "client_email" => $customer["c_email"]
-            ]);
-        } else {
-            echo json_encode([
-                "success" => false,
-                "message" => "Customer not found"
-            ]);
-        }
-    } catch (PDOException $e) {
-        echo json_encode([
-            "success" => false,
-            "message" => "Database error: " . $e->getMessage()
-        ]);
-    }
-    ?>';
-    file_put_contents('get-client-info.php', $get_client_info_content);
-
-    // Create process-booking.php
-    $process_booking_content = '<?php
-    require_once "connect.php"; // Include database connection
-
-    // Start session if not already started
-    if (session_status() == PHP_SESSION_NONE) {
-        session_start();
-    }
-
-    // Check if user is logged in
-    $isLoggedIn = isset($_SESSION["c_id"]);
-    if (!$isLoggedIn) {
-        echo json_encode([
-            "success" => false,
-            "message" => "User not logged in"
-        ]);
-        exit;
-    }
-
-    // Process booking completion
-    if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["complete_booking"])) {
-        $customerId = $_SESSION["c_id"];
-        $bookingData = json_decode($_POST["booking_data"], true);
-        $paymentMethod = $_POST["payment_method"];
-        $referenceNo = $_POST["reference_no"];
-        
-        // Handle file upload for payment proof
-        $paymentProofPath = "";
-        if (isset($_FILES["payment_proof"]) && $_FILES["payment_proof"]["error"] == 0) {
-            $targetDir = "uploads/payment_proofs/";
-            
-            // Create directory if it doesn\'t exist
-            if (!file_exists($targetDir)) {
-                mkdir($targetDir, 0777, true);
-            }
-            
-            $fileName = time() . "_" . basename($_FILES["payment_proof"]["name"]);
-            $targetFilePath = $targetDir . $fileName;
-            
-            // Upload file
-            if (move_uploaded_file($_FILES["payment_proof"]["tmp_name"], $targetFilePath)) {
-                $paymentProofPath = $targetFilePath;
-            } else {
-                echo json_encode([
-                    "success" => false,
-                    "message" => "Failed to upload payment proof"
-                ]);
-                exit;
-            }
-        }
-        
-        try {
-            // Start transaction
-            $conn->beginTransaction();
-            
-            // 1. Create booking record
-            $stmt = $conn->prepare("INSERT INTO booking (customer_id, check_in_date, check_in_time, check_out_date, check_out_time, payment_method, reference_no, payment_proof, status, created_at) 
-                                   VALUES (:customer_id, :check_in_date, :check_in_time, :check_out_date, :check_out_time, :payment_method, :reference_no, :payment_proof, \'confirmed\', NOW())");
-            
-            $checkInDate = date("Y-m-d", strtotime($bookingData["checkInDate"]));
-            $checkOutDate = date("Y-m-d", strtotime($bookingData["checkOutDate"]));
-            
-            $stmt->bindParam(":customer_id", $customerId, PDO::PARAM_INT);
-            $stmt->bindParam(":check_in_date", $checkInDate);
-            $stmt->bindParam(":check_in_time", $bookingData["checkInTime"]);
-            $stmt->bindParam(":check_out_date", $checkOutDate);
-            $stmt->bindParam(":check_out_time", $bookingData["checkOutTime"]);
-            $stmt->bindParam(":payment_method", $paymentMethod);
-            $stmt->bindParam(":reference_no", $referenceNo);
-            $stmt->bindParam(":payment_proof", $paymentProofPath);
-            
-            $stmt->execute();
-            $bookingId = $conn->lastInsertId();
-            
-            // 2. Add booking details for each pet
-            if (!empty($bookingData["pets"])) {
-                $stmt = $conn->prepare("INSERT INTO booking_details (booking_id, pet_id, pet_name, pet_size, price) 
-                                       VALUES (:booking_id, :pet_id, :pet_name, :pet_size, :price)");
-                
-                foreach ($bookingData["pets"] as $pet) {
-                    // Get pet ID from name
-                    $petStmt = $conn->prepare("SELECT pet_id FROM pet WHERE pet_name = :pet_name AND customer_id = :customer_id LIMIT 1");
-                    $petStmt->bindParam(":pet_name", $pet["name"]);
-                    $petStmt->bindParam(":customer_id", $customerId, PDO::PARAM_INT);
-                    $petStmt->execute();
-                    $petResult = $petStmt->fetch(PDO::FETCH_ASSOC);
-                    
-                    $petId = $petResult ? $petResult["pet_id"] : 0;
-                    
-                    $stmt->bindParam(":booking_id", $bookingId, PDO::PARAM_INT);
-                    $stmt->bindParam(":pet_id", $petId, PDO::PARAM_INT);
-                    $stmt->bindParam(":pet_name", $pet["name"]);
-                    $stmt->bindParam(":pet_size", $pet["size"]);
-                    $stmt->bindParam(":price", $pet["price"]);
-                    
-                    $stmt->execute();
-                }
-            }
-            
-            // Commit transaction
-            $conn->commit();
-            
-            // Return success response
-            echo json_encode([
-                "success" => true,
-                "message" => "Booking completed successfully",
-                "booking_id" => $bookingId
-            ]);
-            
-        } catch (PDOException $e) {
-            // Rollback transaction on error
-            $conn->rollBack();
-            
-            echo json_encode([
-                "success" => false,
-                "message" => "Database error: " . $e->getMessage()
-            ]);
-        }
-        
-        exit;
-    }
-
-    // Default response for invalid requests
-    echo json_encode([
-        "success" => false,
-        "message" => "Invalid request"
-    ]);
-    ?>';
-    file_put_contents('process-booking.php', $process_booking_content);
-    ?>
 </body>
 </html>
+
