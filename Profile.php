@@ -73,7 +73,7 @@ $profile_picture = isset($fetch_cust_info['profile_picture']) && !empty($fetch_c
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Profile</title>
-    <link rel="stylesheet" href="Profile.css">
+    <link rel="stylesheet" href="Profile1.css">
     <link rel="stylesheet" href="headers.css">
     <link rel="icon" type="image/png" href="Header-Pics/logo.png">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
@@ -271,10 +271,10 @@ include 'header.php'; ?>
                                                 <p class="view-and-edit">View & Edit</p>
                                             </button>
 
-                                            <!-- Delete Button -->
+                                            <!-- Delete Button
                                             <button type="button" class="btn" id="delbut" data-bs-toggle="modal" data-bs-target="#delModal" data-pet-id="<?php echo $pet['pet_id']; ?>">
                                                 <p class="del">Delete</p>
-                                            </button>
+                                            </button> -->
                                         </div>
                                     </div>
                                 </td>
@@ -387,7 +387,7 @@ include 'header.php'; ?>
     </div>
 </div>
 
-<!-- DELETE MODAL -->
+<!-- DELETE MODAL
 <div class="modal fade" id="delModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="staticBackdropLabel" aria-hidden="true">
     <div class="modal-dialog modal-lg modal-dialog-centered">
         <div class="modal-content" id="del-modal">
@@ -410,7 +410,7 @@ include 'header.php'; ?>
             </form>
         </div>
     </div>
-</div>
+</div> -->
 
 <!-- REGISTER NEW PET MODAL -->
 <div class="modal fade" id="regPetModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="staticBackdropLabel" aria-hidden="true">
@@ -464,7 +464,7 @@ include 'header.php'; ?>
                                     
                                     <div class="mb-3">
                                         <label class="form-label">AGE</label>
-                                        <input type="text" name="age" class="form-control" placeholder="Type Age Here" required>
+                                        <input type="number" name="age" class="form-control" placeholder="Type Age Here" required>
                                     </div>
 
                                     <div class="mb-3">
@@ -741,14 +741,14 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     // Handle Delete Pet Modal
-    const delModal = document.getElementById('delModal');
-    if (delModal) {
-        delModal.addEventListener('show.bs.modal', function(event) {
-            const button = event.relatedTarget;
-            const petId = button.getAttribute('data-pet-id');
-            document.getElementById('delete_pet_id').value = petId;
-        });
-    }
+//    const delModal = document.getElementById('delModal');
+  //  if (delModal) {
+    //    delModal.addEventListener('show.bs.modal', function(event) {
+      //      const button = event.relatedTarget;
+        //    const petId = button.getAttribute('data-pet-id');
+          //  document.getElementById('delete_pet_id').value = petId;
+       // });
+   // }
     
     // Handle Cancel Booking Modal
     const cancelModal = document.getElementById('req-to-cancel-modal');
