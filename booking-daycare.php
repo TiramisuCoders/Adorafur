@@ -75,7 +75,7 @@ $transactionNo = 'TRX'.time().rand(1000, 9999);
 
     <div class="main">
         <div class="main-container">
-            <div class="pet-hotel-title" id="flex">PET HOTEL</div>
+            <div class="pet-hotel-title" id="flex">PET DAYCARE</div>
             <hr class="hr" id="flex">
             <div class="content-wrapper">
                 <div class="calendar" id="flex">
@@ -396,7 +396,7 @@ $transactionNo = 'TRX'.time().rand(1000, 9999);
                                                                 </div>
 
                                                                 <div class="info-grid">
-                                                                    <div class="info-row"><span class="label">Service:</span><span class="value">Pet Hotel</span></div>
+                                                                    <div class="info-row"><span class="label">Service:</span><span class="value">Daycare</span></div>
                                                                     <div id="petSummaryDetails">
                                                                         <!-- Pet details will be inserted here dynamically -->
                                                                     </div>
