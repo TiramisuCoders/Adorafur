@@ -1,10 +1,9 @@
 // Initialize booking data object
 window.bookingData = {
   pets: [],
-  checkInDate: "",
-  checkInTime: "",
-  checkOutDate: "",
-  checkOutTime: "",
+  date: "",
+  dropOffTime: "",
+  pickUpTime: "",
 }
 
 // Calendar functionality
@@ -27,10 +26,7 @@ $(document).ready(() => {
     "NOVEMBER",
     "DECEMBER",
   ]
-  const selectedDates = {
-    checkIn: null,
-    checkOut: null,
-  }
+  let selectedDate = null
 
   // Check if user is logged in - this will be set in the PHP file
   const isLoggedIn = window.isLoggedIn || false
@@ -88,10 +84,7 @@ $(document).ready(() => {
       }
 
       // Check if this date is selected
-      if (selectedDates.checkIn && formattedDate === selectedDates.checkIn.toISOString().split("T")[0]) {
-        dayClass += " selected-date"
-      }
-      if (selectedDates.checkOut && formattedDate === selectedDates.checkOut.toISOString().split("T")[0]) {
+      if (selectedDate && formattedDate === selectedDate.toISOString().split("T")[0]) {
         dayClass += " selected-date"
       }
 
@@ -107,88 +100,29 @@ $(document).ready(() => {
 
       $("#days").append(dayElement)
     }
-
-    // Highlight date range if both dates are selected
-    highlightDateRange()
   }
 
   // Handle date click
   function handleDateClick(date, element) {
-    if (!selectedDates.checkIn || (selectedDates.checkIn && selectedDates.checkOut)) {
-      // Start new selection
-      clearDateSelection()
-      selectedDates.checkIn = date
-      element.addClass("selected-date")
+    // Clear previous selection
+    $(".day").removeClass("selected-date")
 
-      // Update booking data
-      window.bookingData.checkInDate = date.toLocaleDateString("en-US", {
-        month: "long",
-        day: "numeric",
-      })
-      window.bookingData.checkOutDate = window.bookingData.checkInDate
-    } else {
-      // Complete selection
-      if (date > selectedDates.checkIn) {
-        selectedDates.checkOut = date
+    // Select new date
+    selectedDate = date
+    element.addClass("selected-date")
 
-        // Store the formatted date strings for both dates
-        const checkInDateStr = selectedDates.checkIn.toISOString().split("T")[0]
-        const checkOutDateStr = date.toISOString().split("T")[0]
-
-        // Clear all highlights first
-        $(".day").removeClass("selected-date highlighted")
-
-        // Explicitly find and highlight both the check-in and check-out dates by their data-date attributes
-        $(`.day[data-date="${checkInDateStr}"]`).addClass("selected-date")
-        $(`.day[data-date="${checkOutDateStr}"]`).addClass("selected-date")
-
-        // Update booking data
-        window.bookingData.checkOutDate = date.toLocaleDateString("en-US", {
-          month: "long",
-          day: "numeric",
-        })
-
-        // Highlight dates in between
-        $(".day").each(function () {
-          const dateStr = $(this).attr("data-date")
-          if (!dateStr) return
-
-          const currentDate = new Date(dateStr)
-          if (currentDate > selectedDates.checkIn && currentDate < selectedDates.checkOut) {
-            $(this).addClass("highlighted")
-          }
-        })
-      }
-    }
+    // Update booking data
+    window.bookingData.date = date.toLocaleDateString("en-US", {
+      month: "long",
+      day: "numeric",
+      year: "numeric",
+    })
 
     // Enable time selection after date selection
     $(".checkin-out").removeClass("disabled-section")
 
     // Update summary
     updateBookingSummary()
-  }
-
-  // Clear date selection
-  function clearDateSelection() {
-    selectedDates.checkIn = null
-    selectedDates.checkOut = null
-    $(".day").removeClass("selected-date highlighted")
-  }
-
-  // Highlight date range
-  function highlightDateRange() {
-    if (!selectedDates.checkIn || !selectedDates.checkOut) return
-
-    $(".day").each(function () {
-      const dateStr = $(this).attr("data-date")
-      if (!dateStr) return
-
-      const date = new Date(dateStr)
-
-      if (date > selectedDates.checkIn && date < selectedDates.checkOut) {
-        $(this).addClass("highlighted")
-      }
-    })
   }
 
   // Initialize calendar
@@ -315,26 +249,98 @@ $(document).ready(() => {
     img.attr("data-selected-src", tempSrc)
   }
 
-  // Handle check-in and check-out time selection
+  // Handle drop-off and pick-up time selection
   $(".check-in-time").click(function () {
     const selectedTime = $(this).text()
     $("#checkInMenu").text(selectedTime)
-    window.bookingData.checkInTime = selectedTime
+    window.bookingData.dropOffTime = selectedTime
+
+    // Get the selected hour for automatic check-out time
+    const timeComponents = selectedTime.split(":")
+    let hour = Number.parseInt(timeComponents[0])
+    const isPM = selectedTime.includes("PM")
+    const isAM = selectedTime.includes("AM")
+
+    // Convert to 24-hour format for calculation
+    if (isPM && hour !== 12) {
+      hour += 12
+    } else if (isAM && hour === 12) {
+      hour = 0
+    }
+
+    // Calculate check-out time (3 hours later)
+    let checkoutHour = hour + 3
+    let checkoutPeriod = isPM ? "PM" : "AM"
+
+    // Handle period change
+    if (checkoutHour >= 12) {
+      checkoutPeriod = "PM"
+      if (checkoutHour > 12) {
+        checkoutHour -= 12
+      }
+    }
+
+    // Format the checkout time
+    const checkoutTime = `${checkoutHour}:00 ${checkoutPeriod}`
+
+    // Find and select the matching checkout time in the dropdown
+    let matchFound = false
+    $(".check-out-time").each(function () {
+      if ($(this).text() === checkoutTime) {
+        // Simulate click on this option
+        $(this).click()
+        matchFound = true
+        return false // Break the loop
+      }
+    })
+
+    // If no exact match found, select the next available time
+    if (!matchFound) {
+      let nextTimeFound = false
+      $(".check-out-time").each(function () {
+        const thisTime = $(this).text()
+        const thisHour = Number.parseInt(thisTime.split(":")[0])
+        const thisIsPM = thisTime.includes("PM")
+
+        let thisHour24 = thisHour
+        if (thisIsPM && thisHour !== 12) {
+          thisHour24 += 12
+        } else if (!thisIsPM && thisHour === 12) {
+          thisHour24 = 0
+        }
+
+        // If this time is after the calculated checkout time
+        if (
+          (thisIsPM && !checkoutPeriod.includes("PM")) ||
+          (thisIsPM === checkoutPeriod.includes("PM") && thisHour >= checkoutHour)
+        ) {
+          $(this).click()
+          nextTimeFound = true
+          return false // Break the loop
+        }
+      })
+
+      // If still no time found, select the last available time
+      if (!nextTimeFound) {
+        $(".check-out-time").last().click()
+      }
+    }
+
     updateBookingSummary()
-    checkTimeSelection()
   })
 
+  // Remove the manual check-out time selection logic since it's now automated
   $(".check-out-time").click(function () {
     const selectedTime = $(this).text()
     $("#checkOutMenu").text(selectedTime)
-    window.bookingData.checkOutTime = selectedTime
+    window.bookingData.pickUpTime = selectedTime
     updateBookingSummary()
     checkTimeSelection()
   })
 
   // Check if both times are selected
   function checkTimeSelection() {
-    if (window.bookingData.checkInTime && window.bookingData.checkOutTime) {
+    if (window.bookingData.dropOffTime && window.bookingData.pickUpTime) {
       $(".book").removeClass("disabled-section")
     }
   }
@@ -441,20 +447,20 @@ $(document).ready(() => {
         row.find("[data-label='Gender']").text(petDetails.pet_gender || "")
         row.find("[data-label='Size']").text(petDetails.pet_size || "")
 
-        // Set price based on pet size
+        // Set price based on pet size - Daycare prices
         let price = 0
         switch (petDetails.pet_size) {
           case "Cat":
-            price = 500
+            price = 300
             break
           case "Small":
-            price = 700
+            price = 400
             break
           case "Regular":
-            price = 800
+            price = 450
             break
           case "Large":
-            price = 900
+            price = 500
             break
         }
 
@@ -605,22 +611,10 @@ $(document).ready(() => {
   window.calculateTotalPrice = () => {
     let totalPrice = 0
 
-    // Calculate number of days between check-in and check-out
-    let numberOfDays = 1 // Default to 1 day
-
-    if (selectedDates.checkIn && selectedDates.checkOut) {
-      // Calculate the difference in days
-      const checkIn = new Date(selectedDates.checkIn)
-      const checkOut = new Date(selectedDates.checkOut)
-      const timeDiff = Math.abs(checkOut.getTime() - checkIn.getTime())
-      numberOfDays = Math.ceil(timeDiff / (1000 * 3600 * 24)) || 1
-    }
-
-    // Calculate price based on selected pets
+    // Calculate price based on selected pets (for daycare, it's just a single day)
     if (window.bookingData.pets.length > 0) {
       window.bookingData.pets.forEach((pet) => {
-        // Multiply pet price by number of days
-        totalPrice += (pet.price || 0) * numberOfDays
+        totalPrice += pet.price || 0
       })
     }
 
@@ -671,20 +665,20 @@ $(document).ready(() => {
       }
     }
 
-    // Update dates if available
-    if (window.bookingData.checkInDate) {
-      if (window.bookingData.checkInTime) {
-        $("#summaryCheckIn").text(`${window.bookingData.checkInDate}, ${window.bookingData.checkInTime}`)
+    // Update date if available
+    if (window.bookingData.date) {
+      // Update drop-off time display
+      if (window.bookingData.dropOffTime) {
+        $("#summaryCheckIn").text(`${window.bookingData.date}, ${window.bookingData.dropOffTime}`)
       } else {
-        $("#summaryCheckIn").text(window.bookingData.checkInDate)
+        $("#summaryCheckIn").text(window.bookingData.date)
       }
-    }
 
-    if (window.bookingData.checkOutDate) {
-      if (window.bookingData.checkOutTime) {
-        $("#summaryCheckOut").text(`${window.bookingData.checkOutDate}, ${window.bookingData.checkOutTime}`)
+      // Update pick-up time display
+      if (window.bookingData.pickUpTime) {
+        $("#summaryCheckOut").text(`${window.bookingData.date}, ${window.bookingData.pickUpTime}`)
       } else {
-        $("#summaryCheckOut").text(window.bookingData.checkOutDate)
+        $("#summaryCheckOut").text(window.bookingData.date)
       }
     }
 
@@ -774,7 +768,7 @@ $(document).ready(() => {
           alert("Booking completed successfully!")
           $("#waiverForm").modal("hide")
           // Redirect to confirmation page or refresh
-          window.location.href = "book-pet-hotel.php"
+          window.location.href = "booking-daycare.php"
         } else {
           alert("Error: " + (response.message || "Unknown error"))
           // Re-enable the button if there's an error
@@ -792,9 +786,15 @@ $(document).ready(() => {
 
   // Handle payment button click - MODIFIED TO ONLY FETCH VISIBLE PETS
   $("#proceedToPaymentBtn").on("click", (e) => {
-    // Check if dates are selected
-    if (!window.bookingData.checkInDate || !window.bookingData.checkOutDate) {
-      alert("Please select check-in and check-out dates.")
+    // Check if date is selected
+    if (!window.bookingData.date) {
+      alert("Please select a date for daycare.")
+      return
+    }
+
+    // Check if times are selected
+    if (!window.bookingData.dropOffTime || !window.bookingData.pickUpTime) {
+      alert("Please select drop-off and pick-up times.")
       return
     }
 
