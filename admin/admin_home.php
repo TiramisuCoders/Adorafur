@@ -28,10 +28,18 @@ $sql = "SELECT
             END,
             b.booking_check_in ASC;";
 
+
 try {
     $stmt = $conn->prepare($sql);  // Prepare the query
     $stmt->execute();  // Execute the query
     $reservations = $stmt->fetchAll(PDO::FETCH_ASSOC);  // Fetch results as an associative array
+
+    // Query to get staff names
+    $stmt = $conn->query("SELECT admin_name FROM admin");
+
+    // Fetch all results into an associative array
+    $staffNames = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
 } catch (PDOException $e) {
     echo "Error: " . $e->getMessage();
 }
@@ -43,8 +51,8 @@ try {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="admin-css/admin_header1.css">
-    <link rel="stylesheet" href="admin-css/ad_home.css">
+    <link rel="stylesheet" href="admin-css/admin_header01.css">
+    <link rel="stylesheet" href="admin-css/admin_home.css">
 
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
@@ -107,7 +115,7 @@ try {
        
         <div class="date-and-day">Loading date...</div>
 
-
+        <div class="reservations-container">
         <table class="reservations">
             <?php
             if (!empty($reservations)) { // Check if there are results
@@ -177,9 +185,9 @@ try {
             }
             ?>
             </tbody>
-        </table>  
+        </table>
+        </div>
     </div>
-
 
     <!-- Bootstrap Modal -->
 <div class="modal fade" id="bookingModal" tabindex="-1" aria-labelledby="bookingModalLabel" aria-hidden="true">
@@ -191,11 +199,19 @@ try {
                     <div class="staff-section">
                         <label class="staff-label">Staff:</label>
                         <select class="staff-select" id="staffSelect">
-                            <option value="Veronica">Veronica</option>
-                            <option value="John">John</option>
-                            <option value="Sarah">Sarah</option>
+                        <?php
+                        // Check if there are staff names to display
+                        if ($staffNames) {
+                            foreach ($staffNames as $staff) {
+                                echo "<option value='" . htmlspecialchars($staff['admin_name']) . "'>" . htmlspecialchars($staff['admin_name']) . "</option>";
+                            }
+                        } else {
+                            echo "<option>No staff available</option>";
+                        }
+                        ?>
                         </select>
                     </div>
+
                     <div class="button-group">
                         <button class="button" id="saveButton">Save</button>
                         <button class="button" id="cancelButton" onclick="document.querySelector('.modal-overlay').style.display='none'">Cancel</button>
@@ -257,8 +273,22 @@ try {
                                 <input type="text" class="form-control" name="referenceNo" id="referenceNo">
                             </div>
                             <div class="mb-3">
+                                <div class="form-group">
+                                    <label class="form-label text-brown mb-2">Booking Status:</label>
+                                    <select class="form-control" name="bookingStatusUpdate" id="bookingStatusUpdate">
+                                        <option value="pending">Pending</option>
+                                        <option value="confirmed">Confirmed</option>
+                                        <option value="completed">Completed</option>
+                                        <option value="cancelled">Cancelled</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="mb-3">
                                 <label class="form-label">Payment Status:</label>
-                                <input type="text" class="form-control" name="paymentStatus" id="paymentStatus">
+                                <select class="form-control" name="paymentStatus" id="paymentStatus">
+                                        <option value="downpayment">Downpayment</option>
+                                        <option value="fully_paid">Fully Paid</option>
+                                    </select>
                             </div>
                              <!-- Add Payment Section -->
                              <div class="card mt-4">

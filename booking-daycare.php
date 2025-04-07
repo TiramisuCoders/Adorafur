@@ -1,241 +1,29 @@
 <?php
-session_start();    
+require_once 'connect.php'; // Include database connection
 
-require_once ('connect.php');
+// Start session if not already started
+if (session_status() == PHP_SESSION_NONE) {
+    session_start();
+}
 
-$petSelected = false;
-$dateSelected = false;
-$timeSelected = false;
+// Check if user is logged in
 $isLoggedIn = isset($_SESSION['c_id']);
+$customerInfo = null;
 
-// Handle AJAX requests
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    if (isset($_POST['pet_type'])) {
-        $_SESSION['pet_type'] = $_POST['pet_type'];
-        $petSelected = true;
-        echo json_encode(['success' => true, 'message' => 'Pet type saved']);
-        exit;
-    }
-    
-    if (isset($_POST['selected_date'])) {
-        $_SESSION['selected_date'] = $_POST['selected_date'];
-        $dateSelected = true;
-        
-        // Get available slots for the selected date
-        $date = $_POST['selected_date'];
-        $serviceType = 'Pet Daycare';
-        
-        // Get total bookings for the selected date
-        $stmt = $conn->prepare("
-            SELECT COUNT(*) as booking_count 
-            FROM bookings b
-            JOIN service s ON b.service_id = s.service_id
-            WHERE DATE(b.booking_check_in) = :date
-            AND s.service_name = :service_type
-            AND b.booking_status IN ('Confirmed', 'Pending')
-        ");
-        $stmt->execute(['date' => $date, 'service_type' => $serviceType]);
-        $result = $stmt->fetch(PDO::FETCH_ASSOC);
-        $bookingCount = $result['booking_count'];
-        
-        // Standard slots per day (you can adjust this value)
-        $standardSlots = 10;
-        $availableSlots = $standardSlots - $bookingCount;
-        
-        echo json_encode([
-            'success' => true, 
-            'message' => 'Date saved',
-            'availableSlots' => max(0, $availableSlots)
-        ]);
-        exit;
-    }
-    
-    if (isset($_POST['check_in_time'])) {
-        $_SESSION['check_in_time'] = $_POST['check_in_time'];
-        
-        // Calculate default check out time (3 hours after check in)
-        $checkInTime = $_POST['check_in_time'];
-        $checkInHour = intval(substr($checkInTime, 0, 2));
-        $checkInPeriod = substr($checkInTime, -2);
-        
-        // Convert to 24-hour format for calculation
-        if ($checkInPeriod == 'PM' && $checkInHour < 12) {
-            $checkInHour += 12;
-        } else if ($checkInPeriod == 'AM' && $checkInHour == 12) {
-            $checkInHour = 0;
-        }
-        
-        // Add 3 hours
-        $checkOutHour = $checkInHour + 3;
-        
-        // Convert back to 12-hour format
-        $checkOutPeriod = 'AM';
-        if ($checkOutHour >= 12) {
-            $checkOutPeriod = 'PM';
-            if ($checkOutHour > 12) {
-                $checkOutHour -= 12;
-            }
-        }
-        
-        $checkOutTime = sprintf("%d:00 %s", $checkOutHour, $checkOutPeriod);
-        $_SESSION['check_out_time'] = $checkOutTime;
-        
-        echo json_encode([
-            'success' => true, 
-            'message' => 'Check-in time saved',
-            'defaultCheckOut' => $checkOutTime
-        ]);
-        exit;
-    }
-    
-    if (isset($_POST['check_out_time'])) {
-        $_SESSION['check_out_time'] = $_POST['check_out_time'];
-        $timeSelected = true;
-        echo json_encode(['success' => true, 'message' => 'Check-out time saved']);
-        exit;
-    }
-    
-    // These requests require authentication
-    if (isset($_POST['get_pets']) || isset($_POST['selected_pet'])) {
-        if (!$isLoggedIn) {
-            echo json_encode(['success' => false, 'requireLogin' => true, 'message' => 'Login required']);
-            exit;
-        }
-        
-        if (isset($_POST['get_pets'])) {
-            // Get pets for the logged-in user
-            $userId = $_SESSION['c_id'];
-            $stmt = $conn->prepare("SELECT pet_id, pet_name, pet_breed, pet_age, pet_gender, pet_size FROM pet WHERE customer_id = :customer_id");
-            $stmt->execute(['customer_id' => $userId]);
-            $pets = $stmt->fetchAll(PDO::FETCH_ASSOC);
-            
-            echo json_encode(['success' => true, 'pets' => $pets]);
-            exit;
-        }
-        
-        if (isset($_POST['selected_pet'])) {
-            // Get pet details
-            $petId = $_POST['selected_pet'];
-            $stmt = $conn->prepare("
-                SELECT p.pet_id, p.pet_name, p.pet_breed, p.pet_age, p.pet_gender, p.pet_size, s.service_rate 
-                FROM pet p
-                JOIN service s ON p.pet_size = s.service_variant OR (p.pet_size = 'Cat' AND s.service_variant = 'Cats')
-                WHERE p.pet_id = :pet_id AND s.service_name = 'Pet Daycare'
-            ");
-            $stmt->execute(['pet_id' => $petId]);
-            $petDetails = $stmt->fetch(PDO::FETCH_ASSOC);
-            
-            echo json_encode(['success' => true, 'petDetails' => $petDetails]);
-            exit;
-        }
+// Fetch customer info if logged in
+if ($isLoggedIn) {
+    try {
+        $stmt = $conn->prepare("SELECT * FROM customer WHERE c_id = ?");
+        $stmt->execute([$_SESSION['c_id']]);
+        $customerInfo = $stmt->fetch(PDO::FETCH_ASSOC);
+    } catch (PDOException $e) {
+        // Handle error silently
     }
 }
 
-
-// Set variables based on session
-if (isset($_SESSION['pet_type'])) $petSelected = true;
-if (isset($_SESSION['selected_date'])) $dateSelected = true;
-if (isset($_SESSION['check_in_time']) && isset($_SESSION['check_out_time'])) $timeSelected = true;
-
-// Get user details
-$userDetails = null;
-if($isLoggedIn){
-    $userId = $_SESSION['c_id'];
-    $stmt = $conn->prepare("SELECT c_first_name, c_last_name, c_email FROM customer WHERE c_id = :user_id");
-    $stmt->execute(['user_id' => $userId]);
-    $userDetails = $stmt->fetch(PDO::FETCH_ASSOC);
-}
-
-function generateCalendar($month, $year) {
-    $firstDayOfMonth = mktime(0, 0, 0, $month, 1, $year);
-    $numberDays = date('t', $firstDayOfMonth);
-    $dateComponents = getdate($firstDayOfMonth);
-    $monthName = $dateComponents['month'];
-    $dayOfWeek = $dateComponents['wday'];
-    $dateToday = date('Y-m-d');
-
-    $calendar = "<table class='calendar'>";
-    $calendar .= "<caption>$monthName $year</caption>";
-    $calendar .= "<tr>";
-
-    $weekdays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-    foreach($weekdays as $day) {
-        $calendar .= "<th class='header'>$day</th>";
-    }
-
-    $calendar .= "</tr><tr>";
-
-    if ($dayOfWeek > 0) { 
-        $calendar .= "<td colspan='$dayOfWeek'>&nbsp;</td>"; 
-    }
-
-    $currentDay = 1;
-
-    while ($currentDay <= $numberDays) {
-        if ($dayOfWeek == 7) {
-            $dayOfWeek = 0;
-            $calendar .= "</tr><tr>";
-        }
-        
-        $currentDayRel = str_pad($currentDay, 2, "0", STR_PAD_LEFT);
-        $date = "$year-$month-$currentDayRel";
-        
-        $today = $date == $dateToday ? "today" : "";
-        $past = strtotime($date) < strtotime($dateToday) ? "past" : "";
-        
-        $calendar .= "<td class='day $today $past' data-date='$date'>";
-        $calendar .= $currentDay;
-        $calendar .= "</td>";
-        
-        $currentDay++;
-        $dayOfWeek++;
-    }
-
-    if ($dayOfWeek != 7) { 
-        $remainingDays = 7 - $dayOfWeek;
-        $calendar .= "<td colspan='$remainingDays'>&nbsp;</td>"; 
-    }
-
-    $calendar .= "</tr>";
-    $calendar .= "</table>";
-
-    return $calendar;
-}
-
-function outputBookingCalendar() {
-    $month = date('m');
-    $year = date('Y');
-    echo generateCalendar($month, $year);
-}
-
-
-// Get service details
-$stmt = $conn->prepare("SELECT * FROM service 
-                        WHERE LOWER(service_name) = LOWER('pet daycare')
-                        AND LOWER(service_variant) = LOWER('small dog')");
-$stmt->execute();                        
-$smallDaycare = $stmt->fetch(PDO::FETCH_ASSOC);
-
-$stmt = $conn->prepare("SELECT * FROM service 
-                        WHERE LOWER(service_name) = LOWER('pet daycare')
-                        AND LOWER(service_variant) = LOWER('medium dog')");
-$stmt->execute();                        
-$medDaycare = $stmt->fetch(PDO::FETCH_ASSOC);
-
-$stmt = $conn->prepare("SELECT * FROM service 
-                        WHERE LOWER(service_name) = LOWER('pet daycare')
-                        AND LOWER(service_variant) = LOWER('large dog')");
-$stmt->execute();                        
-$largeDaycare = $stmt->fetch(PDO::FETCH_ASSOC);
-
-$stmt = $conn->prepare("SELECT * FROM service 
-                        WHERE LOWER(service_name) = LOWER('pet daycare')
-                        AND LOWER(service_variant) = LOWER('cats')");
-$stmt->execute();                        
-$catDaycare = $stmt->fetch(PDO::FETCH_ASSOC);
-
+// Generate a unique transaction number
+$transactionNo = 'TRX'.time().rand(1000, 9999);
 ?>
-
 
 <!DOCTYPE html>
 <html lang="en" dir="ltr">
@@ -257,10 +45,28 @@ $catDaycare = $stmt->fetch(PDO::FETCH_ASSOC);
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.0/dist/js/bootstrap.bundle.min.js"></script>
 
-    <!-- Your custom JavaScript -->
-    <script src="booking-daycare.js" defer></script>
     <link rel="icon" type="image/png" href="Header-Pics/logo.png">
-
+    <style>
+    .action-btn {
+        background-color: #5a3e36;
+        border: 1px solid #d4a373;
+        color: white;
+        border-radius: 4px;
+        padding: 2px 8px;
+        font-size: 12px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+    .action-btn:hover {
+        background-color: #d4a373;
+        color: white;
+    }
+    .current-day {
+        color: #ccc;
+        pointer-events: none;
+        text-decoration: none !important;
+    }
+</style>
 </head>
 
 <body>
@@ -299,7 +105,10 @@ $catDaycare = $stmt->fetch(PDO::FETCH_ASSOC);
                 <!-- Booking Section -->
                 <div class="main-schedule-options">
                     <div class="schedule-options">
-                        <div class="available-slot" id="align-1">Available Slots: <span id="availableSlotCount">-</span></div>
+                        <div class="available-slot" id="align-1">
+                            Available Slots
+                            
+                        </div>
                         <!-- Bootstrap Dropdown -->
                         <div class="selection-dropdown" id="align-1">
                             <button class="btn btn-secondary dropdown-toggle" type="button" id="petSelectionMenu" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
@@ -315,32 +124,32 @@ $catDaycare = $stmt->fetch(PDO::FETCH_ASSOC);
                         <div class="pet-information-dog">
                             <div class="pet-info dog-info">
                                 <img src="Booking/small_dog.png" alt="Small Dog" class="small-dog" data-selected-src="Booking/small_dog(selected).png">
-                                <h3><?php echo $smallDaycare['service_variant']; ?></h3>
+                                <h3>Small Dog</h3>
                                 <h6>Weight: 10kg<br>
-                                    ₱ <?php echo $smallDaycare['service_rate']; ?></h6>
+                                    ₱ 700</h6>
                             </div>
 
                             <div class="pet-info dog-info">
                                 <img src="Booking/reg_dog.png" alt="Regular Dog" class="reg-dog" data-selected-src="Booking/reg_dog(selected).png">
-                                <h3><?php echo $medDaycare['service_variant']; ?></h3>
+                                <h3>Regular Dog</h3>
                                 <h6>Weight: 26 - 40 lbs<br>
-                                    ₱ <?php echo $medDaycare['service_rate']; ?></h6>
+                                    ₱ 800</h6>
                             </div>
 
                             <div class="pet-info dog-info">
                                 <img src="Booking/large_dog.png" alt="Large Dog" class="large-dog" data-selected-src="Booking/large_dog(selected).png">
-                                <h3><?php echo $largeDaycare['service_variant']; ?></h3>
+                                <h3>Large Dog</h3>
                                 <h6>Weight: 40 lbs and above<br>
-                                    ₱ <?php echo $largeDaycare['service_rate']; ?></h6>
+                                    ₱ 900</h6>
                             </div>
                         </div>
 
                         <div class="pet-information-cat">
                             <div class="pet-info cat-info">
                                 <img src="Booking/reg_cat.png" alt="Cat" class="cat" data-selected-src="Booking/reg_cat(selected).png">
-                                <h3><?php echo $catDaycare['service_variant']; ?></h3>
+                                <h3>Cat</h3>
                                 <h6>Weight: 4 - 5kg<br>
-                                    ₱ <?php echo $catDaycare['service_rate']; ?></h6>
+                                    ₱ 500</h6>
                             </div>
                         </div>
                     </div>
@@ -359,10 +168,12 @@ $catDaycare = $stmt->fetch(PDO::FETCH_ASSOC);
                                     <button class="dropdown-item check-in-time" type="button">2:00 PM</button>
                                     <button class="dropdown-item check-in-time" type="button">3:00 PM</button>
                                     <button class="dropdown-item check-in-time" type="button">4:00 PM</button>
+                                    <button class="dropdown-item check-in-time" type="button">5:00 PM</button>
+                                    <button class="dropdown-item check-in-time" type="button">6:00 PM</button>
+                                    <button class="dropdown-item check-in-time" type="button">7:00 PM</button>
                                 </div>
                             </div>
                         </div>
-
 
                         <div class="check-in" id="check">
                             <h3>Check Out: </h3>
@@ -371,21 +182,29 @@ $catDaycare = $stmt->fetch(PDO::FETCH_ASSOC);
                                     Choose Time
                                 </button>
                                 <div class="dropdown-menu" aria-labelledby="checkOutMenu">
-                                    <!-- Check-out times will be dynamically populated based on check-in time -->
+                                    <button class="dropdown-item check-out-time" type="button">10:00 AM</button>
+                                    <button class="dropdown-item check-out-time" type="button">11:00 AM</button>
+                                    <button class="dropdown-item check-out-time" type="button">12:00 PM</button>
+                                    <button class="dropdown-item check-out-time" type="button">1:00 PM</button>
+                                    <button class="dropdown-item check-out-time" type="button">2:00 PM</button>
+                                    <button class="dropdown-item check-out-time" type="button">3:00 PM</button>
+                                    <button class="dropdown-item check-out-time" type="button">4:00 PM</button>
+                                    <button class="dropdown-item check-out-time" type="button">5:00 PM</button>
+                                    <button class="dropdown-item check-out-time" type="button">6:00 PM</button>
+                                    <button class="dropdown-item check-out-time" type="button">7:00 PM</button>
                                 </div>
                             </div>
                         </div>
 
-                            <div class="book">BOOK</div>
-
-                    </div>  
+                        <div class="book">BOOK</div>
+                    </div>
                 </div>
-                <?php if ($isLoggedIn): ?>
+                
                 <div class="book-1">
                     <div class="book-label">
                         <div class="client">
-                            <b><?php echo $userDetails['c_first_name'] . ' ' . $userDetails['c_last_name']; ?></b><br>
-                            <span class="client-email"><?php echo $userDetails['c_email']; ?></span>
+                            <b><?php echo $isLoggedIn && $customerInfo ? htmlspecialchars($customerInfo['c_first_name'] . ' ' . $customerInfo['c_last_name']) : 'Client name'; ?></b><br>
+                            <span class="client-email"><?php echo $isLoggedIn && $customerInfo ? htmlspecialchars($customerInfo['c_email']) : 'Client Email'; ?></span>
                         </div>
                         <div class="pet-1">
                             <div class="pets"><b>Pet/s</b></div>
@@ -393,29 +212,36 @@ $catDaycare = $stmt->fetch(PDO::FETCH_ASSOC);
                             <table class="table">
                                 <thead>
                                     <tr>
-                                        <th>NAME</th>
-                                        <th>BREED</th>
-                                        <th>AGE</th>
-                                        <th>GENDER</th>
-                                        <th>SIZE</th>
-                                        <th>PRICE</th>
+                                        <th>Name</th>
+                                        <th>Breed</th>
+                                        <th>Age</th>
+                                        <th>Gender</th>
+                                        <th>Size</th>
+                                        <th>Price</th>
+                                        <th>Action</th>
                                     </tr>
                                 </thead>
                                 <tbody id="petTableBody">
-                                    <tr id="petSelectionRow">
-                                        <td colspan="6">
-                                            <select id="petDropdown" class="form-control">
-                                                <option value="">Select a pet</option>
-                                                <!-- Pet options will be loaded dynamically -->
+                                    <tr>
+                                        <!-- Dropdown inside the Name column -->
+                                        <td data-label="Name">
+                                            <select class="petSelect" onchange="updatePetDetails(this)">
+                                                <option value="">Choose Pet</option>
+                                                <!-- Pet options will be loaded via AJAX -->
                                             </select>
                                         </td>
+                                        <td data-label="Breed"></td>
+                                        <td data-label="Age"></td>
+                                        <td data-label="Gender"></td>
+                                        <td data-label="Size"></td>
+                                        <td data-label="Price">₱0.00</td>
+                                        <td><button type="button" onclick="addPetRow()" class="action-btn">(Add)</button></td>
                                     </tr>
-                                    <!-- Additional rows will be added dynamically when pets are selected -->
                                 </tbody>
                             </table>
 
                             <div class="lower-section">
-                                <button type="button" class="btn" id="regPet" data-bs-toggle="modal" data-bs-target="#petRegistrationModal">
+                                <button type="button" class="btn" id="regPet" data-toggle="modal" data-target="#petRegistrationModal">
                                     <h6 class="regnewpet" style="font-weight: 600;">Need to register new pet?</h6>
                                 </button>
 
@@ -424,9 +250,12 @@ $catDaycare = $stmt->fetch(PDO::FETCH_ASSOC);
                                         <div class="modal-content">
                                             <div class="modal-header d-flex justify-content-center align-items-center" id="modalHeader">
                                                 <h1 class="modal-title" id="modalTitle">Register Your Pet</h1>
-                                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                                    <span aria-hidden="true">&times;</span>
+                                                </button>
                                             </div>
                                             <div class="modal-body" id="modalBody">
+                                                <!-- Pet registration form content -->
                                                 <div class="pet-registration-form">
                                                     <form class="pet-form" method="post" enctype="multipart/form-data">
                                                         <div class="container-fluid p-0">
@@ -446,12 +275,12 @@ $catDaycare = $stmt->fetch(PDO::FETCH_ASSOC);
                                                                                 <label for="sizeSmallDog">Small Dog</label>
                                                                             </div>
                                                                             <div>
-                                                                                <input type="radio" name="pet_size" id="sizeLargeDog" value="Large">
-                                                                                <label for="sizeLargeDog">Large Dog</label>
+                                                                                <input type="radio" name="pet_size" id="sizeRegularDog" value="Regular">
+                                                                                <label for="sizeRegularDog">Regular Dog</label>
                                                                             </div>
                                                                             <div>
-                                                                                <input type="radio" name="pet_size" id="sizeRegularDog" value="Medium">
-                                                                                <label for="sizeRegularDog">Regular Dog</label>
+                                                                                <input type="radio" name="pet_size" id="sizeLargeDog" value="Large">
+                                                                                <label for="sizeLargeDog">Large Dog</label>
                                                                             </div>
                                                                             <div>
                                                                                 <input type="radio" name="pet_size" id="sizeRegularCat" value="Cat">
@@ -502,11 +331,11 @@ $catDaycare = $stmt->fetch(PDO::FETCH_ASSOC);
                                                                         <input type="file" name="vaccination_file" class="form-control mb-2" accept="image/*,application/pdf">
                                                                         <div class="radio-group">
                                                                             <div>
-                                                                                <input type="radio" name="vaccination_status" id="vaccinatedYes" value="Up to date">
+                                                                                <input type="radio" name="vaccination_status" id="vaccinatedYes" value="vaccinated">
                                                                                 <label for="vaccinatedYes">Vaccinated</label>
                                                                             </div>
                                                                             <div>
-                                                                                <input type="radio" name="vaccination_status" id="vaccinatedNo" value="Not vaccinated">
+                                                                                <input type="radio" name="vaccination_status" id="vaccinatedNo" value="not_vaccinated">
                                                                                 <label for="vaccinatedNo">Not Vaccinated</label>
                                                                             </div>
                                                                         </div>
@@ -541,13 +370,12 @@ $catDaycare = $stmt->fetch(PDO::FETCH_ASSOC);
                                         </div>
                                     </div>
                                 </div>
-                                <!-- Payment Modal -->
-                                <!-- Payment Modal Button -->
+                                
+                                <!-- Payment Button -->
                                 <div class="proctopayment">
-                                    <button type="button" class="btn payment-btn" data-bs-toggle="modal" data-bs-target="#petPaymentModal">
+                                    <button type="button" class="btn payment-btn" id="proceedToPaymentBtn">
                                         Proceed to Payment
                                     </button>
-
 
                                     <!-- Payment Modal -->
                                     <div class="modal fade" id="petPaymentModal" tabindex="-1" aria-labelledby="petPaymentModalLabel" aria-hidden="true">
@@ -560,21 +388,27 @@ $catDaycare = $stmt->fetch(PDO::FETCH_ASSOC);
 
                                                         <div class="modal-grid">
                                                             <div class="details-section">
-                                                                <p class="transaction-no">Transaction No. 4565789</p>
-                                                                <h2 class="pet-name">Good Boi</h2>
-                                                                <p class="dates">October 5, 12:00 NN - 6:00 PM</p>
-
-                                                                <div class="info-grid">
-                                                                    <div class="info-row"><span class="label">Service:</span><span class="value">Pet Daycare</span></div>
-                                                                    <div class="info-row"><span class="label">Breed:</span><span class="value">Shih Tzu</span></div>
-                                                                    <div class="info-row"><span class="label">Gender:</span><span class="value">Male</span></div>
-                                                                    <div class="info-row"><span class="label">Age:</span><span class="value">7 years old</span></div>
-                                                                    <div class="info-row"><span class="label">Owner:</span><span class="value">Jude Emmanuel Flores</span></div>
-                                                                    <div class="info-row"><span class="label">Amount to pay:</span><span class="value">₱ 250.00</span></div>
-                                                                    <div class="info-row"><span class="label">Remaining Balance:</span><span class="value">₱ 250.00</span></div>
+                                                                <p class="transaction-no">Transaction No. <?php echo $transactionNo; ?></p>
+                                                                <h2 class="pet-name" id="summaryPetName">Your Pet</h2>
+                                                                <div class="booking-dates">
+                                                                    <p><strong>Check in:</strong> <span id="summaryCheckIn">Not selected</span></p>
+                                                                    <p><strong>Check out:</strong> <span id="summaryCheckOut">Not selected</span></p>
                                                                 </div>
 
-                                                                <form method="POST" enctype="multipart/form-data">
+                                                                <div class="info-grid">
+                                                                    <div class="info-row"><span class="label">Service:</span><span class="value">Daycare</span></div>
+                                                                    <div id="petSummaryDetails">
+                                                                        <!-- Pet details will be inserted here dynamically -->
+                                                                    </div>
+                                                                    <div class="info-row"><span class="label">Owner:</span><span class="value">
+                                                                        <?php echo $isLoggedIn && $customerInfo ? htmlspecialchars($customerInfo['c_first_name'] . ' ' . $customerInfo['c_last_name']) : 'Not logged in'; ?>
+                                                                    </span></div>
+                                                                    <div class="info-row"><span class="label">Amount to pay:</span><span class="value" id="summaryTotalAmount">₱ 0.00</span></div>
+                                                                    <div class="info-row"><span class="label">Remaining Balance:</span><span class="value" id="summaryRemainingBalance">₱ 0.00</span></div>
+                                                                </div>
+
+                                                                <form method="POST" enctype="multipart/form-data" id="paymentForm">
+                                                                    <input type="hidden" name="visible_pets" id="visiblePetsData" value="">
                                                                     <div class="payment-section">
                                                                         <p class="section-label">Mode of Payment</p>
                                                                         <div class="radio-group">
@@ -588,25 +422,20 @@ $catDaycare = $stmt->fetch(PDO::FETCH_ASSOC);
                                                                         <p class="section-label">Proof of Payment</p>
                                                                         <input type="file" name="payment_proof" accept="image/*" required>
                                                                     </div>
-
-
                                                                 </form>
                                                             </div>
 
                                                             <div class="qr-section">
                                                                 <div class="qr-codes">
-                                                                    <img src="gcash.png" alt="GCash QR Code" class="qr-code">
-                                                                    <img src="maya.png" alt="Maya QR Code" class="qr-code">
+                                                                    <img src="gcash.png" alt="GCash QR Code" class="qr-code" id="gcashQR" style="display: none;">
+                                                                    <img src="maya.png" alt="Maya QR Code" class="qr-code" id="mayaQR">
                                                                 </div>
                                                                 <p class="qr-instruction">We accept bank transfer to our GCash/Maya account or just scan the QR Code!</p>
                                                                 <div class="account-info">
                                                                     <p>Account Number: <span>987654321</span></p>
                                                                     <p>Account Name: <span>Veatrice Delos Santos</span></p>
                                                                 </div>
-                                                                <button type="button" class="action-btn" style="margin-bottom: 100px;"
-                                                                    data-bs-dismiss="modal"
-                                                                    data-bs-toggle="modal"
-                                                                    data-bs-target="#waiverForm">
+                                                                <button type="button" class="btn btn-primary action-btn" id="proceed-to-waiver" data-toggle="modal" data-target="#waiverForm" disabled>
                                                                     Complete Booking
                                                                 </button>
                                                             </div>
@@ -616,16 +445,19 @@ $catDaycare = $stmt->fetch(PDO::FETCH_ASSOC);
                                             </div>
                                         </div>
                                     </div>
-                                    <div class="modal fade" id="waiverForm" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="staticBackdropLabel" aria-hidden="true">
+                                    
+                                    <!-- Waiver Modal -->
+                                    <div class="modal fade" id="waiverForm" data-backdrop="static" data-keyboard="false" tabindex="-1" role="dialog" aria-labelledby="staticBackdropLabel" aria-hidden="true">
                                         <div class="modal-dialog modal-xl modal-dialog-scrollable">
                                             <div class="modal-content">
                                                 <div class="modal-header" id="waiverForm-header">
-                                                    <h1 class="  id="waiverForm-header">
                                                     <h1 class="modal-title" id="waiverForm-title">Liability Release and Waiver Form</h1>
-                                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                                        <span aria-hidden="true">&times;</span>
+                                                    </button>
                                                 </div>
                                                 <div class="modal-body" id="waiverForm-body">
-
+                                                    <!-- Waiver content -->
                                                     <p>
                                                         We care about the safety and wellbeing of all pets. We want to assure you that we will make every effort to make your pet's stay with us as pleasant as possible.
                                                         While we provide the best care for your fur babies, there are possible risks that come with availing of pet boarding services.
@@ -644,6 +476,7 @@ $catDaycare = $stmt->fetch(PDO::FETCH_ASSOC);
                                                             I agree to hold ADORAFUR HAPPY STAY free and harmless from any claims for damage, all defense costs, fees and business losses arising from any claim or any third party may have against ADORAFUR HAPPY STAY.
                                                         </li>
 
+                                                        <!-- Additional waiver content -->
                                                         <li>
                                                             Pets must be sociable to be allowed to stay with us.
                                                             Some pets may have aggressive tendencies if triggered, despite being able to socialize.
@@ -652,17 +485,77 @@ $catDaycare = $stmt->fetch(PDO::FETCH_ASSOC);
                                                             In any case, we reserve the right to refuse any pet that are hostile, aggressive and appear to be ill for everyone's safety.
                                                         </li>
 
+                                                        <li>
+                                                            Please be aware that we strive to avoid any accidents during their stay.
+                                                            Pets can be unpredictable and injuries, illness or escaping may occur.
+                                                            Minor injuries from nicks from clippers during grooming or rough play may result if your pet does not respond to the handler to behave properly during their stay.
+                                                            All pet owners are required to accept these and other risks as a condition of their pet's participation in our services at Adorafur Happy Stay.
+                                                        </li>
+
+                                                        <li>
+                                                            Adorafur Happy Stay will not be held responsible for any sickness, injury or death caused by the pet to itself during grooming,
+                                                            from pre-existing health conditions, natural disasters, or any illness a pet acquires due to non-vaccination or expired vaccines.
+                                                        </li>
+
+                                                        <li>
+                                                            I agree to hold Adorafur Happy Stay harmless from any claims for damage, all defense costs, fees and business losses arising resulting from any claims to be made against Adorafur Happy Stay
+                                                            for which its agents or employees are not ultimately held to be legally responsible.
+                                                        </li>
+
+                                                        <li>I certify that my pet has never unduly harmed or threatened anyone or any other pets.</li>
+                                                        <li>I expressly agree to be held responsible for any damage to property (i.e. kennels, fencing, walls, flooring etc.) caused by my pet.</li>
+                                                        <li>I expressly agree to be held responsible for medical costs for any human injury caused by my pet.</li>
+
+                                                        <li>The Owner understands that it is possible for us to discover a pet's illness during their stay with us such as arthritis, cysts,
+                                                            cancer or any health problems old age brings for senior dogs.</li>
+
+                                                        <li>
+                                                            These conditions take time to develop and could be discovered during their stay.
+                                                            In that case, we will notify you immediately if something feels off with your pet and we would take them to the vet to get a diagnosis and proper treatment,
+                                                            costs shall be shouldered by the owner. We understand how stressful and worrisome this is if this may happen to your pet.
+                                                            Rest assured we will give them the care they need and provide the best comfort for them as much as possible. We will send you daily updates, vet's advice and etc.
+                                                        </li>
+
+                                                        <li>
+                                                            Your pet's safety and well being is our absolute #1 priority.
+                                                        </li>
+
+                                                        <li>
+                                                            Should the owner leave intentionally their pet in ADORAFUR HAPPY STAY without giving any communication for more than 1 week,
+                                                            ADORAFUR HAPPY STAY reserves the right to hold the pet as a security for non-payment of the services and may sell and alienate the same, without the consent of the owner, to a third party to satisfy any claims it may have against the customer. Otherwise, Adorafur Happy Stay shall have the dogs/ cats adopted or endorse them to the necessary dog impounding station as deemed necessary
+                                                        </li>
                                                     </ul>
 
                                                     <p>
-                                                        <input type="checkbox" id="waiverForm-checkbox" name="agree" value="1" required>
+                                                        Adorafur Happy Stay holds the highest standards to ensure that your pet is handled with respect and cared for properly.
+                                                        It is extremely important to us that you know when your pet is under our supervision, Adorafur Happy Stay will provide them with the best care we can provide,
+                                                        meeting the high expectations that we personally have for our own pets when under the supervision of another person.
+                                                        We recognize and respect that all pets are living beings who have feelings and experience emotion. We value that you have entrusted your pet to us to provide our services to them.
+                                                    </p>
+
+                                                    <hr>
+
+                                                    <strong>Conforme: </strong>
+
+                                                    <p>
+                                                        By submitting this agreement form, I, the Owner, acknowledge represent that I have made full disclosure and have read, understand and accept the terms and conditions stated in this agreement.
+                                                        I acknowledge all of the statements above and understand and agree to release Adorafur Happy Stay and its employees from any and all liabilities, expenses, and costs (including veterinary and legal fees)
+                                                        resulting from any service provided, or unintentional injury to my pet while under their care or afterwards. I acknowledge this agreement shall be effective and binding on both parties.
+                                                        I also agree to follow the health and safety protocols of Adorafur Happy Stay.
+                                                    </p>
+
+                                                    <p>
+                                                        <input type="checkbox" id="waiverForm-checkbox1" name="agree" value="1">
+                                                        I hereby grant Adorafur Happy Stay and its care takers permission to board and care for my pet
+                                                    </p>
+                                                    <p>
+                                                        <input type="checkbox" id="waiverForm-checkbox2" name="agree" value="1">
                                                         I have read and agree with the Liability Release and Waiver Form
                                                     </p>
                                                 </div>
 
                                                 <div class="modal-footer" id="waiverForm-footer">
-                                                    <button type="button" class="btn" id="complete-booking">Complete Booking</button>
-                                                    
+                                                    <button type="button" class="btn btn-primary" id="complete-booking">Complete Booking</button>
                                                 </div>
                                             </div>
                                         </div>
@@ -671,11 +564,20 @@ $catDaycare = $stmt->fetch(PDO::FETCH_ASSOC);
                             </div>
                         </div>
                     </div>
-                </div><!-- /.main-container -->
-                <?php endif; ?>
-            </div><!-- /.main -->
+                </div>
+            </div>
         </div>
     </div>
-</body>
 
+    <!-- Pass PHP variables to JavaScript -->
+    <script>
+        // Set login status and customer ID for JavaScript
+        window.isLoggedIn = <?php echo $isLoggedIn ? 'true' : 'false'; ?>;
+        window.customerId = <?php echo $isLoggedIn ? $_SESSION['c_id'] : 0; ?>;
+    </script>
+    
+    <!-- Include the external JavaScript file -->
+    <script src="daycare.js"></script>
+</body>
 </html>
+
