@@ -104,15 +104,16 @@ nav ul li a:hover, .btn-primary:hover {
 }
 
 .dropdown-menu .dropdown-item {
-  color: #FAF1EA;
+  background-color: #ffffff;
+  color:#D98D62;
   width: auto;
   padding: 10px 5px;
   display: block;
 }
 
 .dropdown-menu .dropdown-item:hover {
-  background-color: #FAF1EA;
-  color:#D98D62;
+  background-color: #fde1ce;
+  color:#7d4d31;
 }
 
 .dropdown {
