@@ -49,16 +49,16 @@
 
             <!-- BOOK -->
             <li class="nav-item dropdown">
-              <a href="home.php#second-scroll-title" class="nav-link <?php echo ($activePage == 'home') ? 'active' : ''; ?> dropdown-toggle">BOOK</a>              
+              <a href="index.php#second-scroll-title" class="nav-link <?php echo ($activePage == 'home') ? 'active' : ''; ?> dropdown-toggle">BOOK</a>              
               <ul class="dropdown-menu" aria-labelledby="bookDropdown">
-                <li><a class="dropdown-item" href="home.php#second-scroll-title">Book</a></li>
-                <li><a class="dropdown-item" href="home.php#inclusions">Inclusion and Perks</a></li>
+                <li><a class="dropdown-item" href="index.php#second-scroll-title">Book</a></li>
+                <li><a class="dropdown-item" href="index.php#inclusions">Inclusion and Perks</a></li>
               </ul>
             </li>
 
             <!-- HOME -->
             <li class="nav-item">
-              <a class="nav-link <?php echo ($activePage == 'home') ? 'active' : ''; ?>" href="home.php">HOME</a>
+              <a class="nav-link <?php echo ($activePage == 'home') ? 'active' : ''; ?>" href="index.php">HOME</a>
             </li>
 
             <!-- CONTACT US -->
@@ -91,6 +91,7 @@
       </div>
     </div>
   </nav>
+</div>
 
   <!-- JAVASCRIPT FOR SMOOTH SCROLLING -->
   <script>
@@ -106,5 +107,6 @@
       });
     });
   </script>
+  
 </body>
 </html>
