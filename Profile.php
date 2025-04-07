@@ -41,7 +41,7 @@ $pets = $pet_stmt->fetchAll(PDO::FETCH_ASSOC);
 // Fetch current reservations
 $current_reservations_query = "SELECT b.*, p.*, pay.pay_status, s.service_name FROM bookings b
                                 LEFT JOIN pet p on p.pet_id = b.pet_id
-                                LEFT JOIN payment pay on pay.pay_id = b.payment_id
+                                LEFT JOIN payment pay on pay.booking_id = b.booking_id
                                 LEFT JOIN service s on s.service_id = b.service_id
                                 WHERE p.customer_id = :c_id AND b.booking_status != 'Completed' AND b.booking_status != 'Cancelled' ORDER BY booking_check_in  DESC";
 
@@ -53,7 +53,7 @@ $current_reservations = $current_reservations_stmt->fetchAll(PDO::FETCH_ASSOC);
 // Fetch reservation history
 $history_query = "SELECT b.*, p.*, pay.pay_status, s.service_name FROM bookings b
                                 LEFT JOIN pet p on p.pet_id = b.pet_id
-                                LEFT JOIN payment pay on pay.pay_id = b.payment_id
+                                LEFT JOIN payment pay on pay.booking_id = b.booking_id
                                 LEFT JOIN service s on s.service_id = b.service_id
                                 WHERE p.customer_id = :c_id AND (b.booking_status = 'Completed' OR b.booking_status = 'Cancelled') ORDER BY booking_check_in DESC";
 $history_stmt = $conn->prepare($history_query);
@@ -61,10 +61,6 @@ $history_stmt->bindParam(':c_id', $user_id);
 $history_stmt->execute();
 $reservation_history = $history_stmt->fetchAll(PDO::FETCH_ASSOC);
 
-// Handle profile picture path
-$profile_picture = isset($fetch_cust_info['profile_picture']) && !empty($fetch_cust_info['profile_picture']) 
-    ? $fetch_cust_info['profile_picture'] 
-    : "Profile-Pics/profile_icon.png";
 ?>
 
 <!DOCTYPE html>
@@ -107,7 +103,6 @@ include 'header.php'; ?>
 
             <div class="user-deets">
                 <div class="pfp">
-                    <img src="<?php echo $profile_picture; ?>" alt="Profile Picture" class="profile-icon">
                     <h6 class="cusID">CUSTOMER ID</h6>
                     <h6 class="cusNum">NO. <?php echo $fetch_cust_info['c_id']; ?></h6>
                     <h6 class="cusMem"><?php echo $fetch_cust_info['membership_status']; ?> Member</h6>
@@ -638,10 +633,7 @@ include 'header.php'; ?>
                 </div>
 
                 <form action="update_profile.php" method="POST" enctype="multipart/form-data">
-                    <div class="mb-3 text-center">
-                        <img src="<?php echo $profile_picture; ?>" alt="Profile Picture" class="profile-icon mb-2" style="width: 100px; height: 100px; border-radius: 50%;">
-                        <input type="file" name="profile_picture" class="form-control" accept="image/*">
-                    </div>
+                    
                     
                     <div class="row mb-3">
                         <div class="col-md-6">
