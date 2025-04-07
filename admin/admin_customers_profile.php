@@ -328,10 +328,7 @@ if (empty($transactions)) {
                 <option value="gcash">GCash</option>
                 <option value="maya">Maya</option>
                 <option value="cash">Cash</option>
-                <option value="others">Others</option>
             </select>
-
-            <input type="text" id="otherPaymentMethod" name="otherPaymentMethod" placeholder="Enter payment method" style="display: none;">
             
             <br>
             <label for="membershipStatus">Membership Status:</label><br>
