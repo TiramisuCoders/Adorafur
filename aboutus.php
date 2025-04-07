@@ -126,7 +126,7 @@ include 'header.php'; ?>
             <h1> WE'RE HERE FOR YOUR PETS! </h1>
             <p>Visit us Monday to Saturday, 10AM - 7PM. We can't wait to care for your furry friends</p>
             <div class="gstart">
-                <a href="#learnm"><h2 class="gstart"> Learn More </h2></a>
+                <a href="Contact_Us.php#main"><h2 class="gstart"> Learn More </h2></a>
             </div>
         </div>
     </div>
