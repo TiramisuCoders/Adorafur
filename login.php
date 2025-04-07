@@ -15,6 +15,11 @@
     $login_email_error = null;
     $login_password_error = null;
 
+    require 'vendor/autoload.php';
+        
+    use PHPMailer\PHPMailer\PHPMailer;
+    use PHPMailer\PHPMailer\Exception;
+    
 // Start session at the very beginning
 if (session_status() == PHP_SESSION_NONE) {
     session_start();
@@ -84,23 +89,14 @@ function handleRegister($conn) {
         $hasError = true;
     }
 
-    if (strlen($password) < 8 || strlen($password) > 12) {
-        $password_error = 'Password must be between 8 and 12 characters.';
-        $hasError = true;
-    }
-
     if (!preg_match('/[A-Z]/', $password)) {
         die("Password must contain at least 1 uppercase letter.");
         $password_error  = 'Pasword must contain atleast 1 uppercase';
         $hasError = true;
-    }
-
-    if (!preg_match('/\d/', $password)) {
+    }elseif (!preg_match('/\d/', $password)) {
         $password_error  = 'Pasword must contain atleast 1 number';
         $hasError = true;
-    }
-
-    if (!preg_match('/[\W_]/', $password)) {
+    }elseif (!preg_match('/[\W_]/', $password)) {
         $password_error  = 'Pasword must contain atleast 1 special character';
         $hasError = true;
     }
@@ -134,18 +130,45 @@ function handleRegister($conn) {
     
         if ($stmt->execute()) {
             $_SESSION['registration_success'] = true; // Store success in session
-            // / Clear form data after successful registration
-            $firstname = "";
-            $lastname = "";
-            $email = "";
-            $contactNumber = "";
+             
+            $mail = new PHPMailer(true);
+
+            try {
+                $mail->isSMTP();
+                $mail->Host       = 'smtp.gmail.com';
+                $mail->SMTPAuth   = true;
+                $mail->Username   = 'engineering.soft123@gmail.com';
+                $mail->Password   = 'rely gziq zziz gylh';
+                $mail->SMTPSecure = 'tls';
+                $mail->Port       = 587;
+        
+                $mail->setFrom('engineering.soft123@gmail.com', 'Adorafur');
+                $mail->addAddress($email, $firstname);
+                $mail->isHTML(true);
+                $mail->Subject = 'Welcome!';
+                $mail->Body    = "<h3>Welcome to Adorafur, $firstname!</h3>
+                                    <p>Thanks for registering. We're excited to have you on board 🐾</p>
+                                    <p>Feel free to explore our platform and let us know if you have any questions.</p> <br>
+                                    <p>- The Adorafur Team</p>";
+                $mail->send();
+                echo "📧 Email to send: $email<br>";
+            } catch (Exception $e) {
+                echo "❌ Mailer Error: {$mail->ErrorInfo}";
+            }
         } 
+
+        $_SESSION['registration_success'] = true;
+        $firstname = $lastname = $email = $contactNumber = '';
+        return true;
+        
     }
     $_SESSION['register_error'] = true; // Flag to show the register modal with errors
     return false;
 }
 
 function handleLogin($conn) {
+
+    
     
     global $login_email_error, $login_password_error;
     $hasError = false;
@@ -197,14 +220,12 @@ function handleLogin($conn) {
         }
     }
 
-    $_SESSION['login_error'] = true; // Flag to show the login modal with errors
+    $_SESSION['login_error'] = true; 
     return false;
         
 }
 
 function handleForgotPassword($conn) {
-    // Your forgot password logic here
-    // This is just a placeholder
     echo "Password reset functionality not implemented yet.";
 }
 ?>
@@ -218,6 +239,7 @@ function handleForgotPassword($conn) {
     <link rel="stylesheet" href="log_in1.css">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
 
     <style>
         <?php if ($firstname_error): ?> .firstname-error { display: block; } <?php endif; ?>
@@ -227,7 +249,6 @@ function handleForgotPassword($conn) {
         <?php if ($password_error): ?> .password-error { display: block; } <?php endif; ?>
         <?php if ($login_email_error): ?> .login-email-error { display: block; } <?php endif; ?>
         <?php if ($login_password_error): ?> .login-password-error { display: block; } <?php endif; ?>
-
 
         .error{
         color: #af4242;
@@ -321,7 +342,7 @@ function handleForgotPassword($conn) {
                                         <div class="col-6">
                                             <div class="mb-1">
                                                 <label for="firstName">First Name <span class="text-danger">*</span></label>
-                                                <input type="text" class="form-control" id="firstName" name="firstName" value="<?php echo $firstname?>" required>
+                                                <input type="text" class="form-control" id="firstName" name="firstName" value="<?php echo $firstname?>" placeholder="Enter First Name" required>
                                                 <?php if ($firstname_error): ?>
                                                     <p class="error firstname-error"><?php echo $firstname_error; ?></p>
                                                 <?php endif; ?>
@@ -359,17 +380,18 @@ function handleForgotPassword($conn) {
 
                                             </div>
                                         </div>
-                                        
+
                                         <div class="col-12">
                                             <div class="mb-3 password-input">
                                                 <label for="password">Password <span class="text-danger">*</span></label>
                                                 <input type="password" class="form-control" id="password" name="password" placeholder="Password" required>  
                                                 <i class="fas fa-eye password-toggle" id="passwordToggle"></i>
                                                 <div class="password-requirements">Password must be 8-12 characters, containing a 1 special character, 1 uppercase and 1 number.</div>
-                                                <?php if ($password_error): ?>
-                                                    <p class="error password-error"><?php echo $password_error; ?></p>
-                                                <?php endif; ?>
                                             </div>
+                                            <?php if (!empty($password_error)): ?>
+                                                    <p class="text-danger"><?php echo $password_error; ?></p>
+                                            <?php endif; ?>
+
                                         </div>
                                         
                                         <div class="col-12">
