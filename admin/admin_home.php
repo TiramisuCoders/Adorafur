@@ -23,11 +23,10 @@ $sql = "SELECT
         WHERE b.booking_status <> 'Cancelled'
         ORDER BY
             CASE
-                WHEN b.booking_check_in >= CURDATE() THEN 1  -- Future & today's bookings first
+                WHEN b.booking_check_in >= CURRENT_DATE THEN 1  -- Future & today's bookings first
                 ELSE 2  -- Past bookings last
             END,
             b.booking_check_in ASC;";
-
 
 try {
     $stmt = $conn->prepare($sql);  // Prepare the query
@@ -118,7 +117,7 @@ try {
         <div class="reservations-container">
         <table class="reservations">
             <?php
-            if (!empty($reservations)) { // Check if there are results
+            if ($stmt->rowCount() > 0) { // Check if there are results
                 echo '
                 <thead class="attributes">
                     <th class="id">ID</th>
