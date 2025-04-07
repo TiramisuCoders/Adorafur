@@ -411,15 +411,14 @@ function handleForgotPassword($conn) {
                             <div id="loginPasswordError" class="error login-password-error mt-4 w-50 text-center" style="display: none;"></div>
                         </div>
 
+                        <button type="submit" id="loginbut" class="btn btn-primary">Login</button>
+                        <p class="mt-3 text-center"><a href="#" data-bs-toggle="modal" data-bs-target="#registerModal" id="not-yet-register">Not yet registered?</a></p>
                         <!-- Add resend verification link -->
                         <div class="mb-3 d-flex flex-column justify-content-center">
                             <p class="text-center mt-2">
                                 <a href="#" id="resendVerificationLink">Didn't receive verification email?</a>
                             </p>
                         </div>
-
-                        <button type="submit" id="loginbut" class="btn btn-primary">Login</button>
-                        <p class="mt-3 text-center"><a href="#" data-bs-toggle="modal" data-bs-target="#registerModal" id="not-yet-register">Not yet registered?</a></p>
                     </form>
                 </div>
             </div>
