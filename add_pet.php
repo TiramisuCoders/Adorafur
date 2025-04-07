@@ -1,4 +1,6 @@
 <?php
+
+
 error_reporting(E_ALL);
 ini_set('display_errors', 1);
 
@@ -15,19 +17,25 @@ if (!isset($_SESSION['c_id'])) {
 $user_id = $_SESSION['c_id'];
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    error_log("Received POST data: " . print_r($_POST, true));
-    error_log("Received FILES data: " . print_r($_FILES, true));
+    // error_log("Received POST data: " . print_r($_POST, true));
+    // error_log("Received FILES data: " . print_r($_FILES, true));
 
+
+    $pet_id = $_POST['pet_id'];
+    
     $pet_name = $_POST['pet_name'];
     $pet_size = $_POST['pet_size'];
     $breed = $_POST['breed'];
-    $age = $_POST['age'];
+    $years = isset($_POST['pet_age_years']) ? intval($_POST['pet_age_years']) : 0;
+    $months = isset($_POST['pet_age_months']) ? intval($_POST['pet_age_months']) : 0;
+    $age = $years . " years " . $months . " mos";
     $gender = $_POST['gender'];
     $description = $_POST['description'];
     $special_instructions = $_POST['special_instructions'];
     $vaccination_status = $_POST['vaccination_status'];
     $date_administered = $_POST['date_administered'];
     $expiry_date = $_POST['expiry_date'];
+
     
     // Map pet size values to database values
     $petSizeMap = [
@@ -46,7 +54,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     // Handle pet photo upload
     $image_path = "";
     if (isset($_FILES['pet_photo']) && $_FILES['pet_photo']['error'] == 0) {
-        $upload_dir = "uploads/pets/";
+        $upload_dir = "Pet-Pictures";
         
         // Create directory if it doesn't exist
         if (!file_exists($upload_dir)) {
@@ -135,7 +143,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $stmt->execute();
 
         if ($stmt->rowCount() > 0) {
-            $_SESSION['success_message'] = "Pet added successfully";
+            // $_SESSION['success_message'] = "Pet added successfully";
         } else {
             error_log("Pet insertion failed without throwing an exception");
             $_SESSION['error_message'] = "Error adding pet: No rows affected";
