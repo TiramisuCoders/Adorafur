@@ -183,7 +183,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['action']) && $_POST['a
                 <div class="text-center mb-4">
                     <h2>Password Reset Successful</h2>
                     <p class="alert alert-success">Your password has been successfully reset.</p>
-                    <p>You can now <a href="login.php" class="btn btn-primary">Login</a> with your new password.</p>
+                    <p>You can now <a href="index.php" class="btn btn-primary">Login</a> with your new password.</p>
                 </div>
             <?php else: ?>
                 <h2 class="text-center mb-4">Reset Your Password</h2>
