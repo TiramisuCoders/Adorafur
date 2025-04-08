@@ -74,7 +74,7 @@
             <?php if (isset($_SESSION['c_id'])): ?>
                                 <!-- If the user is logged in -->
               <li class="nav-item dropdown">
-                <a href="profile.php" class="nav-link <?php echo ($activePage == 'profile') ? 'active' : ''; ?> dropdown-toggle">PROFILE</a>
+                <a href="Profile.php" class="nav-link <?php echo ($activePage == 'profile') ? 'active' : ''; ?> dropdown-toggle">PROFILE</a>
                 <ul class="dropdown-menu">
                   <li><a class="dropdown-item" href="logout.php">Logout</a></li>
                 </ul>
