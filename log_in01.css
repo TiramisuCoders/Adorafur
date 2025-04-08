@@ -59,7 +59,7 @@
     background-color: #421D11;
   }
   
-  #not-yet-register, #sign-in{
+  #not-yet-register, #sign-in, #resendVerificationLink{
     color: #421D11;
   }
   
@@ -107,4 +107,24 @@ input[type="password"]::-ms-reveal,
 input[type="password"]::-webkit-credentials-auto-fill-button,
 input[type="password"]::-webkit-textfield-decoration-container {
     display: none !important;
+}
+
+#create-but, #loginbut{
+  background-color: #421D11;
+  color: #fff;
+  border: none;
+}
+
+#create-but:hover, #loginbut:hover {
+  background-color: #2f150c;
+}
+
+#cancel-but {
+  background-color: #fff;
+  color: #000;
+  border: 1px solid #ccc;
+}
+
+#cancel-but:hover {
+  background-color: #f2f2f2;
 }
