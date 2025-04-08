@@ -12,7 +12,7 @@ header('Pragma: no-cache');
 header('Content-Type: application/json');
 
 // Include database connection
-require_once 'connect.php';
+require_once '../connect.php';
 session_start();
 
 try {
@@ -22,27 +22,18 @@ try {
         throw new Exception("Unauthorized access. Please log in.");
     }
 
-    // Fetch latest reminders and tasks
+    // Fetch latest reminders and tasks using PDO
     $query = "SELECT activity_date, activity_time, activity_description, activity_type 
               FROM Admin_Activities_Reminders 
-              WHERE admin_id = ? 
+              WHERE admin_id = :admin_id 
               ORDER BY activity_date ASC, activity_time ASC";
 
-    $stmt = mysqli_prepare($conn, $query);
-    if (!$stmt) {
-        throw new Exception("Database error: " . mysqli_error($conn));
-    }
-
-    mysqli_stmt_bind_param($stmt, "i", $admin_id);
+    $stmt = $conn->prepare($query);
+    $stmt->bindParam(':admin_id', $admin_id, PDO::PARAM_INT);
+    $stmt->execute();
     
-    if (!mysqli_stmt_execute($stmt)) {
-        throw new Exception("Query execution failed: " . mysqli_stmt_error($stmt));
-    }
-    
-    $result = mysqli_stmt_get_result($stmt);
-
     $activities = [];
-    while ($row = mysqli_fetch_assoc($result)) {
+    while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
         // Format the date and time for display
         $dateObj = new DateTime($row['activity_date']);
         $row['formatted_date'] = $dateObj->format('M d, Y');
@@ -52,8 +43,6 @@ try {
         
         $activities[] = $row;
     }
-
-    mysqli_stmt_close($stmt);
     
     echo json_encode([
         "success" => true, 
@@ -67,9 +56,5 @@ try {
         "success" => false, 
         "error" => $e->getMessage()
     ]);
-} finally {
-    if (isset($conn)) {
-        mysqli_close($conn);
-    }
 }
 ?>
