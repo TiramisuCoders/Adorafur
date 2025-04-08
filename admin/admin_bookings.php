@@ -7,6 +7,14 @@
     <link rel="stylesheet" href="admin-css/admin_bookings.css">
     <link rel="icon" type="image/png" href="admin-pics/adorafur-logo.png">
     <title>Admin Bookings</title>
+    <!-- Add debug script to check for errors -->
+    <script>
+        window.onerror = function(message, source, lineno, colno, error) {
+            console.error("JavaScript Error:", message, "at", source, "line:", lineno);
+            alert("JavaScript Error: " + message + " at line " + lineno);
+            return true;
+        };
+    </script>
 </head> 
 
 <body>
@@ -78,27 +86,7 @@
       </div>
     </div>
 
-    <!-- MODAL FORM (Initially Hidden) -->
-    <div class="sidebar-modal" id="activityModal">
-        <div class="sidebar-modal-content">
-            <h3 class="sidebar-mtitle">Add New  <span id="activity-type-title"></span></h3>
-            <label for="activity_description" class="modal-textlabel">Description:</label>
-            <input type="text" id="activity_description" required>
-
-            <label for="activity_date" class="modal-textlabel">Date:</label>
-            <input type="date" id="activity_date" required>
-
-            <label for="activity_time" class="modal-textlabel">Time:</label>
-            <input type="time" id="activity_time" required>
-
-            <input type="hidden" id="activity_type" value="">
-<br>
-            <button id="submitActivityBtn">Add</button>
-            <button class="close-btn" onclick="closeSidebarModal()">Cancel</button>
-        </div>
-    </div>
-
-    <script src="admin.js"></script>
+    <!-- Make sure the script path is correct and add a version parameter to prevent caching -->
+    <script src="admin.js?v=1.0.1"></script>
 </body>
 </html>
-
