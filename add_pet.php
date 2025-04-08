@@ -1,6 +1,5 @@
 <?php
 
-
 error_reporting(E_ALL);
 ini_set('display_errors', 1);
 
@@ -54,7 +53,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     // Handle pet photo upload
     $image_path = "";
     if (isset($_FILES['pet_photo']) && $_FILES['pet_photo']['error'] == 0) {
-        $upload_dir = "Pet-Pictures";
+        $upload_dir = "uploads/pets";
         
         // Create directory if it doesn't exist
         if (!file_exists($upload_dir)) {
