@@ -1161,3 +1161,7 @@ function handleForgotPassword($conn) {
 
 </body>
 </html>
+
+<?php 
+$activePage = 'home';
+include 'header.php'; ?>
