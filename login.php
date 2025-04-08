@@ -40,7 +40,12 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 handleLogin($conn);
                 break;
             case 'forgotPassword':
-                handleForgotPassword($conn);
+                $result = handleForgotPassword($conn);
+                if ($result['success']) {
+                    echo "<div class='alert alert-success'>Password reset link sent to your email.</div>";
+                } elseif ($result['error']) {
+                    echo "<div class='alert alert-danger'>" . $result['error'] . "</div>";
+                }
                 break;
         }
     }
@@ -319,9 +324,60 @@ function handleLogin($conn) {
 }
 
 function handleForgotPassword($conn) {
-    // Your forgot password logic here
-    // This is just a placeholder
-    echo "Password reset functionality not implemented yet.";
+    $email = $_POST['email'] ?? '';
+    $error = null;
+    $success = false;
+    
+    if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+        $error = 'Please enter a valid email address.';
+    } else {
+        // Check if the email exists in the database
+        $stmt = $conn->prepare("SELECT c_id FROM customer WHERE c_email = ?");
+        $stmt->execute([$email]);
+        
+        if ($stmt->rowCount() === 0) {
+            $error = 'No account found with this email address.';
+        } else {
+            // Email exists, send password reset request to Supabase
+            $supabase_url = "https://ygbwanzobuielhttdzsw.supabase.co";
+            $supabase_key = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlnYndhbnpvYnVpZWxodHRkenN3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDM1MTY3NTMsImV4cCI6MjA1OTA5Mjc1M30.bIaP_7rfHyne5PQ_Wmt8qdMYFDzurdnEAUR7U2bxbDQ";
+            
+            $ch = curl_init();
+            curl_setopt($ch, CURLOPT_URL, $supabase_url . "/auth/v1/recover");
+            curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+            curl_setopt($ch, CURLOPT_POST, 1);
+            
+            $data = [
+                'email' => $email
+            ];
+            
+            curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($data));
+            
+            $headers = [
+                'Content-Type: application/json',
+                'apikey: ' . $supabase_key
+            ];
+            
+            curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+            
+            $response = curl_exec($ch);
+            $http_code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+            
+            curl_close($ch);
+            
+            if ($http_code === 200) {
+                $success = true;
+            } else {
+                $response_data = json_decode($response, true);
+                $error = $response_data['message'] ?? 'An error occurred while processing your request.';
+            }
+        }
+    }
+    
+    return [
+        'success' => $success,
+        'error' => $error
+    ];
 }
 ?>
 
@@ -415,6 +471,7 @@ function handleForgotPassword($conn) {
 
                         <button type="submit" id="loginbut" class="btn btn-primary">Login</button>
                         <p class="mt-3 text-center"><a href="#" data-bs-toggle="modal" data-bs-target="#registerModal" id="not-yet-register">Not yet registered?</a></p>
+                        <p class="mt-2 text-center"><a href="#" data-bs-toggle="modal" data-bs-target="#forgotPasswordModal" id="forgot-password-link">Forgot Password?</a></p>
                         <!-- Add resend verification link -->
                         <div class="mb-3 d-flex flex-column justify-content-center">
                             <p class="text-center mt-2">
@@ -757,9 +814,98 @@ function handleForgotPassword($conn) {
                 }, 500);
             });
         }
+
+// Handle forgot password form submission
+const forgotPasswordForm = document.getElementById('forgotPasswordForm');
+if (forgotPasswordForm) {
+    forgotPasswordForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        const email = document.getElementById('forgotPasswordEmail').value.trim();
+        const messageDiv = document.getElementById('forgotPasswordMessage');
+        const submitButton = document.getElementById('resetPasswordBtn');
+        
+        if (!email) {
+            showForgotPasswordMessage('Please enter your email address.', 'danger');
+            return;
+        }
+        
+        // Disable button during request
+        submitButton.disabled = true;
+        submitButton.innerHTML = 'Sending...';
+        
+        // Send AJAX request
+        fetch('process-forgot-password.php', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            body: 'email=' + encodeURIComponent(email) + '&action=forgotPassword'
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showForgotPasswordMessage('Password reset link has been sent to your email.', 'success');
+                document.getElementById('forgotPasswordEmail').value = '';
+                
+                // Close modal after 3 seconds on success
+                setTimeout(() => {
+                    const modal = bootstrap.Modal.getInstance(document.getElementById('forgotPasswordModal'));
+                    if (modal) {
+                        modal.hide();
+                    }
+                }, 3000);
+            } else {
+                showForgotPasswordMessage(data.error || 'An error occurred. Please try again.', 'danger');
+            }
+        })
+        .catch(error => {
+            showForgotPasswordMessage('An error occurred. Please try again.', 'danger');
+            console.error('Error:', error);
+        })
+        .finally(() => {
+            // Re-enable button
+            submitButton.disabled = false;
+            submitButton.innerHTML = 'Send Reset Link';
+        });
+    });
+}
+
+function showForgotPasswordMessage(message, type) {
+    const messageDiv = document.getElementById('forgotPasswordMessage');
+    if (messageDiv) {
+        messageDiv.textContent = message;
+        messageDiv.className = `alert alert-${type}`;
+        messageDiv.classList.remove('d-none');
+    }
+}
     });
 </script>
 
+<!-- Forgot Password Modal -->
+<div class="modal fade" id="forgotPasswordModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Reset Your Password</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>Enter your email address and we'll send you a link to reset your password.</p>
+                <form id="forgotPasswordForm" action="" method="POST">
+                    <input type="hidden" name="action" value="forgotPassword">
+                    <div class="mb-3">
+                        <input type="email" class="form-control" id="forgotPasswordEmail" name="email" required placeholder="Enter your email">
+                    </div>
+                    <div id="forgotPasswordMessage" class="alert d-none"></div>
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-primary" id="resetPasswordBtn">Send Reset Link</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
 
 </body>
 </html>
