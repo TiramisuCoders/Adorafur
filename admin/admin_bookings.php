@@ -1,10 +1,11 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
+<meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="admin-css/admin_header01.css">
-    <link rel="stylesheet" href="admin-css/admin_bookings.css">
+    <!-- Fix CSS path and add version parameter to prevent caching -->
+    <link rel="stylesheet" href="admin-css/admin_header01.css?v=1.0.1">
+    <link rel="stylesheet" href="admin-css/admin_bookings.css?v=1.0.1">
     <link rel="icon" type="image/png" href="admin-pics/adorafur-logo.png">
     <title>Admin Bookings</title>
     <!-- Add debug script to check for errors -->
