@@ -154,6 +154,7 @@ if (empty($transactions)) {
     <link rel="stylesheet" href="admin-css/admin_header1.css">
     <link rel="stylesheet" href="admin-css/admin_customer_profile1.css">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="icon" type="image/png" href="admin-pics/adorafur-logo.png">
     <style>
         body { background: #e8e8e8; }
     </style>
@@ -188,9 +189,6 @@ if (empty($transactions)) {
 
       <!-- HEADER -->
       <div class="header-img-container">
-            <button id="notificationButton">
-                <img class="notifications" src="admin-pics/notification-bell.png" alt="Notifications" />
-            </button>
         </div>
 
     </nav>

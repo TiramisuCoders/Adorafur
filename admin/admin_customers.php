@@ -6,6 +6,7 @@
     <link rel="stylesheet" href="admin-css/admin_header1.css">
     <link rel="stylesheet" href="admin-css/admin_customers.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <link rel="icon" type="image/png" href="admin-pics/adorafur-logo.png">
       
     <script src="admin.js"></script>
     <title>Admin Customers</title>
@@ -40,9 +41,6 @@
 
       <!-- HEADER -->
       <div class="header-img-container">
-            <button id="notificationButton">
-                <img class="notifications" src="admin-pics/notification-bell.png" alt="Notifications" />
-            </button>
         </div>
 
     </nav>
