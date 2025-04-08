@@ -209,104 +209,106 @@ function handleLogin($conn) {
     $email = $_POST['email'] ?? '';
     $password = $_POST['password'] ?? '';
 
-    // First, check if the user exists in Supabase Auth and is verified
-    $supabase_url = "https://ygbwanzobuielhttdzsw.supabase.co";
-    $supabase_key = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlnYndhbnpvYnVpZWxodHRkenN3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDM1MTY3NTMsImV4cCI6MjA1OTA5Mjc1M30.bIaP_7rfHyne5PQ_Wmt8qdMYFDzurdnEAUR7U2bxbDQ"; // Replace with your actual anon key
-    
-    $ch = curl_init();
-    curl_setopt($ch, CURLOPT_URL, $supabase_url . "/auth/v1/token?grant_type=password");
-    curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
-    curl_setopt($ch, CURLOPT_POST, 1);
-    
-    $auth_data = [
-        'email' => $email,
-        'password' => $password
-    ];
-    
-    curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($auth_data));
-    
-    $headers = [
-        'Content-Type: application/json',
-        'apikey: ' . $supabase_key
-    ];
-    
-    curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
-    
-    $response = curl_exec($ch);
-    $http_code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-    
-    // For debugging
-    error_log("Supabase Auth Login Response: " . $response);
-    error_log("HTTP Code: " . $http_code);
-    
-    curl_close($ch);
-    
-    // If Supabase Auth login is successful, proceed with your database login
-    if ($http_code === 200) {
-        // Check if user is an admin
-        $stmt = $conn->prepare("SELECT admin_id, admin_password FROM admin WHERE admin_email = ?");
-        $stmt->execute([$email]);
-        $admin = $stmt->fetch(PDO::FETCH_ASSOC);
+    // First check if the user is an admin
+    $stmt = $conn->prepare("SELECT admin_id, admin_password FROM admin WHERE admin_email = ?");
+    $stmt->execute([$email]);
+    $admin = $stmt->fetch(PDO::FETCH_ASSOC);
 
-        // If not an admin, check customer login
-        $stmt = $conn->prepare("SELECT c_id, c_password FROM customer WHERE c_email = ?");
-        $stmt->execute([$email]);
-        $customer = $stmt->fetch(PDO::FETCH_ASSOC);
-
-        // If admin exists, check admin password
-        if ($admin) {
-            if ($password === $admin['admin_password']) {
-                $_SESSION['admin_id'] = $admin['admin_id'];
-                header("Location: admin/admin_home.php");
-                exit();
-            } else {
-                $login_password_error = 'Wrong password';
-                $hasError = true;
-            }
-        } 
-        // If customer exists, check customer password
-        else if ($customer) {
-            // Since we've already verified with Supabase, we can skip password verification
-            // or keep it for double security
-            if (password_verify($password, $customer['c_password'])) {
-                $_SESSION['c_id'] = $customer['c_id'];
-                $_SESSION['customer_id'] = $customer['c_id'];
-                
-                $_SESSION['login_time'] = date('Y-m-d H:i:s');
-                $_SESSION['login_email'] = $email;
-                
-                header("Location: profile.php");
-                exit();
-            } else {
-                $login_password_error = 'Password mismatch between systems. Please contact support.';
-                $hasError = true;
-            }
+    // If admin exists, check admin password directly without Supabase
+    if ($admin) {
+        if ($password === $admin['admin_password']) {
+            $_SESSION['admin_id'] = $admin['admin_id'];
+            header("Location: admin/admin_home.php");
+            exit();
         } else {
-            // User exists in Supabase but not in our database
-            // This is an edge case - we should create the user in our database
-            $login_email_error = 'User exists in authentication system but not in database. Please register again.';
+            $login_password_error = 'Wrong password';
             $hasError = true;
         }
-    } else {
-        // Handle Supabase Auth error
-        $response_data = json_decode($response, true);
+    } 
+    // If not an admin, proceed with Supabase Auth for regular users
+    else {
+        // Check if user exists in Supabase Auth and is verified
+        $supabase_url = "https://ygbwanzobuielhttdzsw.supabase.co";
+        $supabase_key = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlnYndhbnpvYnVpZWxodHRkenN3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDM1MTY3NTMsImV4cCI6MjA1OTA5Mjc1M30.bIaP_7rfHyne5PQ_Wmt8qdMYFDzurdnEAUR7U2bxbDQ";
         
-        if (isset($response_data['error_description'])) {
-            if (strpos($response_data['error_description'], 'Email not confirmed') !== false) {
-                $login_email_error = 'Please verify your email before logging in.';
-            } else if (strpos($response_data['error_description'], 'Invalid login credentials') !== false) {
-                $login_password_error = 'Invalid email or password';
+        $ch = curl_init();
+        curl_setopt($ch, CURLOPT_URL, $supabase_url . "/auth/v1/token?grant_type=password");
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+        curl_setopt($ch, CURLOPT_POST, 1);
+        
+        $auth_data = [
+            'email' => $email,
+            'password' => $password
+        ];
+        
+        curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($auth_data));
+        
+        $headers = [
+            'Content-Type: application/json',
+            'apikey: ' . $supabase_key
+        ];
+        
+        curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+        
+        $response = curl_exec($ch);
+        $http_code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        
+        // For debugging
+        error_log("Supabase Auth Login Response: " . $response);
+        error_log("HTTP Code: " . $http_code);
+        
+        curl_close($ch);
+        
+        // If Supabase Auth login is successful, proceed with database login
+        if ($http_code === 200) {
+            // Check customer login
+            $stmt = $conn->prepare("SELECT c_id, c_password FROM customer WHERE c_email = ?");
+            $stmt->execute([$email]);
+            $customer = $stmt->fetch(PDO::FETCH_ASSOC);
+
+            // If customer exists, check customer password
+            if ($customer) {
+                // Since we've already verified with Supabase, we can skip password verification
+                // or keep it for double security
+                if (password_verify($password, $customer['c_password'])) {
+                    $_SESSION['c_id'] = $customer['c_id'];
+                    $_SESSION['customer_id'] = $customer['c_id'];
+                    
+                    $_SESSION['login_time'] = date('Y-m-d H:i:s');
+                    $_SESSION['login_email'] = $email;
+                    
+                    header("Location: profile.php");
+                    exit();
+                } else {
+                    $login_password_error = 'Password mismatch between systems. Please contact support.';
+                    $hasError = true;
+                }
             } else {
-                $login_password_error = $response_data['error_description'];
+                // User exists in Supabase but not in our database
+                $login_email_error = 'User exists in authentication system but not in database. Please register again.';
+                $hasError = true;
             }
-        } else if (isset($response_data['message'])) {
-            $login_password_error = $response_data['message'];
         } else {
-            // If we can't parse the error, show the raw response for debugging
-            $login_password_error = 'Authentication error: ' . substr($response, 0, 100) . '...';
+            // Handle Supabase Auth error
+            $response_data = json_decode($response, true);
+            
+            if (isset($response_data['error_description'])) {
+                if (strpos($response_data['error_description'], 'Email not confirmed') !== false) {
+                    $login_email_error = 'Please verify your email before logging in.';
+                } else if (strpos($response_data['error_description'], 'Invalid login credentials') !== false) {
+                    $login_password_error = 'Invalid email or password';
+                } else {
+                    $login_password_error = $response_data['error_description'];
+                }
+            } else if (isset($response_data['message'])) {
+                $login_password_error = $response_data['message'];
+            } else {
+                // If we can't parse the error, show the raw response for debugging
+                $login_password_error = 'Authentication error: ' . substr($response, 0, 100) . '...';
+            }
+            
+            $hasError = true;
         }
-        
-        $hasError = true;
     }
 
     if ($hasError) {
@@ -411,15 +413,14 @@ function handleForgotPassword($conn) {
                             <div id="loginPasswordError" class="error login-password-error mt-4 w-50 text-center" style="display: none;"></div>
                         </div>
 
+                        <button type="submit" id="loginbut" class="btn btn-primary">Login</button>
+                        <p class="mt-3 text-center"><a href="#" data-bs-toggle="modal" data-bs-target="#registerModal" id="not-yet-register">Not yet registered?</a></p>
                         <!-- Add resend verification link -->
                         <div class="mb-3 d-flex flex-column justify-content-center">
                             <p class="text-center mt-2">
                                 <a href="#" id="resendVerificationLink">Didn't receive verification email?</a>
                             </p>
                         </div>
-
-                        <button type="submit" id="loginbut" class="btn btn-primary">Login</button>
-                        <p class="mt-3 text-center"><a href="#" data-bs-toggle="modal" data-bs-target="#registerModal" id="not-yet-register">Not yet registered?</a></p>
                     </form>
                 </div>
             </div>

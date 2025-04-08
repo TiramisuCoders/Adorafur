@@ -3,8 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="admin-css/admin_header1.css">
-    <link rel="stylesheet" href="admin-css/admin_booking.css">
+    <link rel="stylesheet" href="admin-css/admin_header01.css">
+    <link rel="stylesheet" href="admin-css/admin_bookings.css">
+    <link rel="icon" type="image/png" href="admin-pics/adorafur-logo.png">
     <title>Admin Bookings</title>
 </head> 
 
@@ -38,9 +39,6 @@
 
       <!-- HEADER -->
       <div class="header-img-container">
-            <button id="notificationButton">
-                <img class="notifications" src="admin-pics/notification-bell.png" alt="Notifications" />
-            </button>
         </div>
 
     </nav>
@@ -49,7 +47,7 @@
     <!-- BOOKINGS PANEL -->
     <div class="panel-container">
       <div class="head">
-        <div class="head-text"> Customers</div>
+        <div class="head-text"> Bookings</div>
         <div class="time-text" id="real-time-clock">Loading...</div>
       </div>
 

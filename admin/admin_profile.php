@@ -40,6 +40,7 @@ try {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="admin-css/admin_header1.css">
     <link rel="stylesheet" href="admin-css/admin_profile1.css">
+    <link rel="icon" type="image/png" href="admin-pics/adorafur-logo.png">
     <script src="admin.js"></script>
 
     <title>Admin Profile</title>
@@ -75,9 +76,6 @@ try {
 
       <!-- HEADER -->
       <div class="header-img-container">
-            <button id="notificationButton">
-                <img class="notifications" src="admin-pics/notification-bell.png" alt="Notifications" />
-            </button>
         </div>
 
     </nav>

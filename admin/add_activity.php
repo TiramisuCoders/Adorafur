@@ -8,7 +8,7 @@ ob_start();
 session_start();
 
 try {
-    require_once 'connect.php';
+    require_once '../connect.php';
     
     // Use session admin_id instead of hardcoded value
     $admin_id = $_SESSION['admin_id'] ?? null;
@@ -44,24 +44,26 @@ try {
         throw new Exception('Invalid activity type. Must be Task or Reminder');
     }
 
-    $stmt = mysqli_prepare($conn, "
-        INSERT INTO Admin_Activities_Reminders 
-        (admin_id, activity_date, activity_time, activity_description, activity_type) 
-        VALUES (?, ?, ?, ?, ?)
-    ");
-
-    if (!$stmt) {
-        throw new Exception("Prepare failed: " . mysqli_error($conn));
-    }
-
-    mysqli_stmt_bind_param($stmt, "issss", $admin_id, $date, $time, $description, $type);
-    $result = mysqli_stmt_execute($stmt);
+    // Using PDO prepared statement with named parameters
+    $sql = "INSERT INTO Admin_Activities_Reminders 
+            (admin_id, activity_date, activity_time, activity_description, activity_type) 
+            VALUES (:admin_id, :date, :time, :description, :type)";
+    
+    $stmt = $conn->prepare($sql);
+    
+    // Bind parameters using named parameters
+    $stmt->bindParam(':admin_id', $admin_id, PDO::PARAM_INT);
+    $stmt->bindParam(':date', $date, PDO::PARAM_STR);
+    $stmt->bindParam(':time', $time, PDO::PARAM_STR);
+    $stmt->bindParam(':description', $description, PDO::PARAM_STR);
+    $stmt->bindParam(':type', $type, PDO::PARAM_STR);
+    
+    // Execute the statement
+    $result = $stmt->execute();
 
     if (!$result) {
-        throw new Exception('Failed to insert record into database: ' . mysqli_stmt_error($stmt));
+        throw new Exception('Failed to insert record into database');
     }
-
-    mysqli_stmt_close($stmt);
 
     ob_end_clean();
     header('Content-Type: application/json');
@@ -78,10 +80,5 @@ try {
         'error' => $e->getMessage()
     ]);
     exit;
-} finally {
-    if (isset($conn)) {
-        mysqli_close($conn);
-    }
 }
 ?>
-
