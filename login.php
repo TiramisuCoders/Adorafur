@@ -210,7 +210,7 @@ function handleLogin($conn) {
     global $login_email_error, $login_password_error;
     $hasError = false;
 
-    $email = $_POST['email'] ?? '';
+    $email = strtolower($_POST['email'] ?? '');
     $password = $_POST['password'] ?? '';
 
     // First check if the user is an admin
@@ -266,7 +266,7 @@ function handleLogin($conn) {
         // If Supabase Auth login is successful, proceed with database login
         if ($http_code === 200) {
             // Check customer login
-            $stmt = $conn->prepare("SELECT c_id, c_password FROM customer WHERE c_email = ?");
+            $stmt = $conn->prepare("SELECT c_id, c_password FROM customer WHERE LOWER(c_email) = ?");
             $stmt->execute([$email]);
             $customer = $stmt->fetch(PDO::FETCH_ASSOC);
 
