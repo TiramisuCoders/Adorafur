@@ -500,8 +500,6 @@ function submitActivity() {
     })
 }
 
-// Add these functions to fetch and display bookings
-
 // Function to fetch bookings for the current week
 function fetchBookingsForWeek() {
   const weekDates = getWeekDates(currentDate)
@@ -509,6 +507,17 @@ function fetchBookingsForWeek() {
   const endDate = formatDateToISO(weekDates[6])
 
   console.log(`Fetching bookings from ${startDate} to ${endDate}`)
+
+  // Show loading indicator in each day cell
+  document.querySelectorAll(".day").forEach((day) => {
+    const loadingDiv = document.createElement("div")
+    loadingDiv.className = "booking-loading"
+    loadingDiv.textContent = "Loading bookings..."
+    loadingDiv.style.fontSize = "12px"
+    loadingDiv.style.color = "#888"
+    loadingDiv.style.marginTop = "10px"
+    day.appendChild(loadingDiv)
+  })
 
   fetch(`fetch_bookings.php?start_date=${startDate}&end_date=${endDate}`, {
     method: "GET",
@@ -522,22 +531,42 @@ function fetchBookingsForWeek() {
       }
       return response.json()
     })
-    .then((data) => {
-      if (data.success) {
-        displayBookingsInCalendar(data.data, weekDates)
+    .then((responseData) => {
+      console.log("Bookings response:", responseData)
+
+      // Remove loading indicators
+      document.querySelectorAll(".booking-loading").forEach((el) => el.remove())
+
+      if (responseData.success) {
+        displayBookingsInCalendar(responseData.data, weekDates)
       } else {
-        console.error("Error fetching bookings:", data.error)
+        console.error("Error fetching bookings:", responseData.error)
+        throw new Error(responseData.error || "Failed to fetch bookings")
       }
     })
     .catch((error) => {
       console.error("Error loading bookings:", error)
+
+      // Remove loading indicators
+      document.querySelectorAll(".booking-loading").forEach((el) => el.remove())
+
+      // Show error message in each day cell
+      document.querySelectorAll(".day").forEach((day) => {
+        const errorDiv = document.createElement("div")
+        errorDiv.className = "booking-error"
+        errorDiv.textContent = "Could not load bookings"
+        errorDiv.style.fontSize = "12px"
+        errorDiv.style.color = "#d32f2f"
+        errorDiv.style.marginTop = "10px"
+        day.appendChild(errorDiv)
+      })
     })
 }
 
 // Function to display bookings in the calendar
 function displayBookingsInCalendar(bookingsData, weekDates) {
   // Clear any existing booking elements
-  document.querySelectorAll(".booking-item").forEach((el) => el.remove())
+  document.querySelectorAll(".bookings-container").forEach((el) => el.remove())
 
   // Loop through each day in the week
   weekDates.forEach((date, index) => {
@@ -556,7 +585,21 @@ function displayBookingsInCalendar(bookingsData, weekDates) {
 
       // Add each booking
       bookingsForDay.forEach((booking) => {
-        const bookingElement = createBookingElement(booking)
+        // Create a simple booking element
+        const bookingElement = document.createElement("div")
+        bookingElement.className = `booking-item booking-status-${booking.booking_status.toLowerCase()} booking-service-${booking.service_name.toLowerCase().replace(/\s+/g, "-")}`
+
+        // Add the booking content
+        bookingElement.innerHTML = `
+          <div class="booking-header">
+            <div class="booking-pet-name">${booking.pet_name}</div>
+          </div>
+          <div class="booking-times">
+            ${booking.formatted_check_in_time} - ${booking.formatted_check_out_time}
+          </div>
+          <div class="booking-status">${booking.booking_status}</div>
+        `
+
         bookingsContainer.appendChild(bookingElement)
       })
 
@@ -564,52 +607,6 @@ function displayBookingsInCalendar(bookingsData, weekDates) {
     }
   })
 }
-
-// Function to create a booking element
-function createBookingElement(booking) {
-  // Get service type for styling and display
-  const serviceType = booking.service_name ? booking.service_name.toLowerCase() : "unknown"
-  const serviceVariant = booking.service_variant ? booking.service_variant : ""
-
-  // Create the booking element with service-specific class
-  const bookingElement = document.createElement("div")
-  bookingElement.className = `booking-item booking-status-${booking.booking_status.toLowerCase()} booking-service-${serviceType.replace(/\s+/g, "-")}`
-  bookingElement.dataset.bookingId = booking.booking_id
-  bookingElement.dataset.serviceType = serviceType
-
-  // Create the content with simplified service information
-  bookingElement.innerHTML = `
-    <div class="booking-header">
-      <div class="booking-pet-name">${booking.pet_name}</div>
-      <div class="service-badge" title="${booking.service_name}${booking.service_variant ? " - " + booking.service_variant : ""}">
-        ${getServiceShortName(serviceType)}
-      </div>
-    </div>
-    <div class="booking-times">
-      <span class="booking-check-in">${booking.formatted_check_in_time}</span> - 
-      <span class="booking-check-out">${booking.formatted_check_out_time}</span>
-    </div>
-    <div class="booking-status">${booking.booking_status}</div>
-  `
-
-  return bookingElement
-}
-
-// Helper function to get shortened service name for display
-function getServiceShortName(serviceType) {
-  switch (serviceType.toLowerCase()) {
-    case "pet hotel":
-      return "Hotel"
-    case "pet daycare":
-      return "Daycare"
-    default:
-      return "Service"
-  }
-}
-
-// Remove these functions as they're no longer needed
-// Helper function to get service icon - REMOVED
-// Helper function to get pet size indicator - REMOVED
 
 // ✅ Event Listeners - Improved initialization
 document.addEventListener("DOMContentLoaded", () => {
@@ -646,4 +643,3 @@ document.addEventListener("DOMContentLoaded", () => {
 
   console.log("Initialization complete")
 })
-
