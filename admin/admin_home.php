@@ -11,7 +11,7 @@ $sql = "SELECT
             CONCAT(c.c_first_name, ' ', c.c_last_name) AS owner_name,
             c.c_contact_number AS owner_num,
             pay.pay_status AS pay_status,
-            (b.booking_total_amount - p.pay_amount) AS pay_balance,
+            
             pay.pay_method AS pay_mop,
             pay.pay_reference_number AS pay_reference_number,
             DATE(b.booking_check_in) AS b_in,
@@ -149,7 +149,7 @@ try {
                         data-payment-status="<?php echo htmlspecialchars($fetch_reservations['pay_status']); ?>"
                         data-mop="<?php echo htmlspecialchars($fetch_reservations['pay_mop']); ?>"
                         data-reference-number="<?php echo htmlspecialchars($fetch_reservations['pay_reference_number']); ?>"
-                        data-pay-balance="<?php echo htmlspecialchars($fetch_reservations['pay_balance']); ?>"
+                        
                         
 
                            <strong> <?php echo htmlspecialchars($fetch_reservations['b_id']); ?> </strong>

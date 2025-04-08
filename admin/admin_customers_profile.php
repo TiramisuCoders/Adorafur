@@ -101,7 +101,6 @@ try {
     $pets = $petsStmt->fetchAll(PDO::FETCH_ASSOC);
 
     
-    // Query to fetch transactions for this customer
     $transactionsSql = "SELECT 
         t.booking_id,
         s.service_name,
@@ -121,7 +120,7 @@ try {
     JOIN 
         customer c ON p.customer_id = c.c_id 
     JOIN 
-        payment pay ON pay.pay_id = t.payment_id
+        payment pay ON pay.booking_id = t.booking_id
     WHERE 
         c.c_id = :customer_id
     ORDER BY 
@@ -368,24 +367,6 @@ if (empty($transactions)) {
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        // JavaScript for real-time clock
-        function updateClock() {
-            const now = new Date();
-            const options = { 
-                weekday: 'long', 
-                year: 'numeric', 
-                month: 'long', 
-                day: 'numeric',
-                hour: '2-digit',
-                minute: '2-digit',
-                second: '2-digit'
-            };
-            document.getElementById('real-time-clock').textContent = now.toLocaleDateString('en-US', options);
-        }
-        
-        // Update clock immediately and then every second
-        updateClock();
-        setInterval(updateClock, 1000);
         
         // JavaScript for modal functionality
         var modal = document.getElementById("membershipModal");
