@@ -281,7 +281,7 @@ function handleLogin($conn) {
                     $_SESSION['login_time'] = date('Y-m-d H:i:s');
                     $_SESSION['login_email'] = $email;
                     
-                    header("Location: profile.php");
+                    header("Location: Profile.php");
                     exit();
                 } else {
                     $login_password_error = 'Password mismatch between systems. Please contact support.';
@@ -335,7 +335,7 @@ function handleForgotPassword($conn) {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>LOG IN PAGE</title>
-    <link rel="stylesheet" href="log_in1.css">
+    <link rel="stylesheet" href="log_in01.css">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     
@@ -417,7 +417,7 @@ function handleForgotPassword($conn) {
                             <div id="loginPasswordError" class="error login-password-error mt-4 w-50 text-center" style="display: none;"></div>
                         </div>
 
-                        <button type="submit" id="loginbut" class="btn btn-primary">Login</button>
+                        <button type="submit" id="loginbut" class="btn">Login</button>
                         <p class="mt-3 text-center"><a href="#" data-bs-toggle="modal" data-bs-target="#registerModal" id="not-yet-register">Not yet registered?</a></p>
                         <!-- Add resend verification link -->
                         <div class="mb-3 d-flex flex-column justify-content-center">
@@ -510,9 +510,15 @@ function handleForgotPassword($conn) {
                                             </div>
                                         </div>
                                         
-                                        <div class="col-12">
-                                            <button type="submit" class="btn btn-primary create-button w-100" id="create-but">Create</button>
+                                        <div class="row g-2">
+                                            <div class="col-6">
+                                                <button type="button" class="btn w-100" id="cancel-but" data-bs-dismiss="modal">Cancel</button>
+                                            </div>
+                                            <div class="col-6">
+                                                <button type="submit" class="btn create-button w-100" id="create-but">Create</button>
+                                            </div>
                                         </div>
+
                                     </div>
                                     
                                     <p class="text-center mt-4 mb-0">
@@ -526,8 +532,8 @@ function handleForgotPassword($conn) {
                         
                         <!-- Image Side -->
                         <div class="col-md-6 d-none d-md-block image-side p-0 position-relative">
-                            <button type="button" class="btn-close position-absolute" data-bs-dismiss="modal" aria-label="Close"></button>
-                            <img src="Register-dog.png" alt="Happy dog" class="dog-image">
+                        <!-- <button type="button" class="btn-close custom-close position-absolute" data-bs-dismiss="modal" aria-label="Close"></button> -->
+                        <img src="Register-dog.png" alt="Happy dog" class="dog-image">
                         </div>
 
                     </div>
