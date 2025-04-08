@@ -54,12 +54,20 @@ function renderCalendar() {
   const weekDates = getWeekDates(currentDate)
   const firstDayOfWeek = weekDates[0]
 
-  document.getElementById("week-range").textContent = firstDayOfWeek.toLocaleString("en-US", {
-    month: "long",
-    year: "numeric",
-  })
+  const weekRangeElement = document.getElementById("week-range")
+  if (weekRangeElement) {
+    weekRangeElement.textContent = firstDayOfWeek.toLocaleString("en-US", {
+      month: "long",
+      year: "numeric",
+    })
+  }
 
   const calendar = document.getElementById("calendar")
+  if (!calendar) {
+    console.error("Calendar element not found")
+    return
+  }
+
   calendar.innerHTML = ""
 
   weekDates.forEach((date) => {
@@ -89,6 +97,19 @@ function changeWeek(offset) {
   renderCalendar()
 }
 
+// Helper function to get the base URL for API requests
+function getApiBaseUrl() {
+  // Check if we're in the admin directory
+  const path = window.location.pathname
+  if (path.includes("/admin/")) {
+    return "./" // Relative to current directory
+  } else if (path.includes("/admin")) {
+    return "./" // Relative to current directory
+  } else {
+    return "./admin/" // Fallback
+  }
+}
+
 // Update the fetchReminders function to better handle current and future tasks
 function fetchReminders() {
   console.log("Fetching current and future reminders...")
@@ -103,7 +124,10 @@ function fetchReminders() {
     tasksContainer.innerHTML = '<div class="sidebar-title">TASKS</div><div class="sidebar-textbox">Loading...</div>'
   }
 
-  fetch("fetch_reminders.php", {
+  const apiUrl = getApiBaseUrl() + "fetch_reminders.php"
+  console.log("Fetching reminders from:", apiUrl)
+
+  fetch(apiUrl, {
     method: "GET",
     headers: {
       "Cache-Control": "no-cache",
@@ -301,9 +325,9 @@ function fetchReminders() {
       // Show error message in the sidebar
       if (remindersContainer && tasksContainer) {
         remindersContainer.innerHTML =
-          '<div class="sidebar-title">UPCOMING REMINDERS</div><div class="sidebar-textbox error">Error loading reminders</div>'
+          '<div class="sidebar-title">REMINDERS</div><div class="sidebar-textbox error">Error loading reminders</div>'
         tasksContainer.innerHTML =
-          '<div class="sidebar-title">UPCOMING TASKS</div><div class="sidebar-textbox error">Error loading tasks</div>'
+          '<div class="sidebar-title">TASKS</div><div class="sidebar-textbox error">Error loading tasks</div>'
 
         // Still add the buttons so users can add new items
         const addReminderBtn = document.createElement("div")
@@ -350,27 +374,6 @@ function createActivityItem(activity, itemClass) {
 
   return item
 }
-
-// Add some CSS for the new date headers
-document.addEventListener("DOMContentLoaded", () => {
-  // Remove this code that adds styles dynamically
-  /*
-  const style = document.createElement('style');
-  style.textContent = `
-    .sidebar-date-header {
-      font-size: 0.9rem;
-      font-weight: bold;
-      margin: 10px 0 5px 5px;
-      color: #555;
-    }
-    
-    .sidebar-title {
-      margin-bottom: 10px;
-    }
-  `;
-  document.head.appendChild(style);
-  */
-})
 
 // Helper function to attach event listeners to add buttons
 function attachAddButtonListeners() {
@@ -464,7 +467,10 @@ function submitActivity() {
 
   console.log("Submitting activity:", { description, date, time, type })
 
-  fetch("add_activity.php", {
+  const apiUrl = getApiBaseUrl() + "add_activity.php"
+  console.log("Submitting to:", apiUrl)
+
+  fetch(apiUrl, {
     method: "POST",
     body: formData,
   })
@@ -510,7 +516,10 @@ function fetchBookingsForWeek() {
 
   console.log(`Fetching bookings from ${startDate} to ${endDate}`)
 
-  fetch(`fetch_bookings.php?start_date=${startDate}&end_date=${endDate}`, {
+  const apiUrl = getApiBaseUrl() + `fetch_bookings.php?start_date=${startDate}&end_date=${endDate}`
+  console.log("Fetching bookings from:", apiUrl)
+
+  fetch(apiUrl, {
     method: "GET",
     headers: {
       "Cache-Control": "no-cache",
@@ -607,10 +616,6 @@ function getServiceShortName(serviceType) {
   }
 }
 
-// Remove these functions as they're no longer needed
-// Helper function to get service icon - REMOVED
-// Helper function to get pet size indicator - REMOVED
-
 // ✅ Event Listeners - Improved initialization
 document.addEventListener("DOMContentLoaded", () => {
   console.log("DOM fully loaded")
@@ -646,4 +651,3 @@ document.addEventListener("DOMContentLoaded", () => {
 
   console.log("Initialization complete")
 })
-
