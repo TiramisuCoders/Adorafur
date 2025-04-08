@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="header1.css">
-    <link rel="stylesheet" href="home.css">
+    <link rel="stylesheet" href="home1.css">
     <script src="script.js" defer></script>
     <link rel="icon" type="image/png" href="Header-Pics/logo.png">
     <title>Adorafur Home</title>
@@ -256,31 +256,37 @@ include 'header.php'; ?>
         </div><!--third-section-->
     </div><!--Home-->
 
+
     <div class="time-sec">  
-        <img src="Home-Pics/second-cloud.png" alt="">      
+        <img src="Home-Pics/second-cloud.png" alt="">    
+        
+
         <div class="service-box daycare">
             <div class="content">
                 <div class="icon-box">
-                    <img src="Home-Pics/sun.png" class="icon" />
-                    <span class="hover-text1">7AM 12PM</span>
+                    <img src="Home-Pics/sun1.png" class="icon" />
+                    <span class="hover-text1">7AM <br> 12PM</span>
                 </div>
                 <div class="text-content">
                     <h2>DAYCARE</h2>
-                    <p class="default-txt">Our daycare service is the perfect spot for your pet to have a blast while you're away. No overnight stays, just pure daytime enjoyment!</p>
+                    <p class="default-txt">Our daycare service is the perfect spot for your pet to have a blast while you're away. 
+                        No overnight stays, just pure daytime enjoyment!</p>
                 </div>
             </div>
         </div>
 
+
         <div class="service-box hotel">
             <div class="content">
                 <div class="icon-box">
-                    <img src="Home-Pics/moon.png"  class="icon"/>
+                    <img src="Home-Pics/moon1.png"  class="icon"/>
                     <span class="hover-text1">24/7</span>
 
                 </div>
                 <div class="text-content">
                     <h2>PET HOTEL</h2>
-                    <p class="default-txt">From playful days to peaceful nights, we're here to make sure they feel right at home, around the clock!</p>
+                    <p class="default-txt">From playful days to peaceful nights, we're here to make sure they feel right at home, 
+                        around the clock!</p>
                 </div>
             </div>
         </div>

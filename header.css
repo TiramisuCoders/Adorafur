@@ -20,7 +20,7 @@ nav, .btn-primary{
 
 
 nav ul li a, .btn-primary {
-  color: #FAF1EA;
+  color: #c69b7a;
   font-size: 17px;
   padding: 7px 13px;
   border-radius: 3px;
@@ -29,7 +29,7 @@ nav ul li a, .btn-primary {
 
 
 nav ul li a:hover, .btn-primary:hover {
-  color: #FAF1EA;
+  color: #c69b7a;
   font-size: 17px;
   padding: 7px 13px;
   border-radius: 3px;
@@ -201,3 +201,4 @@ hr{
 .nav-item.dropdown:hover .dropdown-menu {
   display: block;
 }
+
