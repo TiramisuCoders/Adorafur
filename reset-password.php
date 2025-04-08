@@ -96,25 +96,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['action']) && $_POST['a
     }
 }
 ?>
-
-echo "<script>
-    document.addEventListener('DOMContentLoaded', function() {
-        // Extract token from URL hash
-        const hash = window.location.hash;
-        if (hash && hash.includes('access_token=')) {
-            let token = hash.split('access_token=')[1];
-            if (token.includes('&')) {
-                token = token.split('&')[0];
-            }
-            if (token) {
-                // Set token in the form
-                document.getElementById('token').value = token;
-                console.log('Token extracted from hash: ' + token);
-            }
-        }
-    });
-</script>";
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -160,6 +141,24 @@ echo "<script>
             border-radius: 5px;
         }
     </style>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Extract token from URL hash
+            const hash = window.location.hash;
+            if (hash && hash.includes('access_token=')) {
+                let token = hash.split('access_token=')[1];
+                if (token.includes('&')) {
+                    token = token.split('&')[0];
+                }
+                if (token) {
+                    // Set token in the form
+                    document.getElementById('token').value = token;
+                    console.log('Token extracted from hash: ' + token);
+                }
+            }
+        });
+    </script>
 </head>
 <body>
     <div class="container">

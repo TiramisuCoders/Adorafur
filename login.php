@@ -55,14 +55,24 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                     echo "<div class='alert alert-danger'>" . $result['error'] . "</div>";
                 }
                 break;
-            case 'resetPassword':
-                $result = handleResetPassword($conn);
-                if ($result['success']) {
-                    echo "<div class='alert alert-success'>Your password has been reset successfully.</div>";
-                } elseif ($result['error']) {
-                    echo "<div class='alert alert-danger'>" . $result['error'] . "</div>";
-                }
-                break;
+                case 'resetPassword':
+                    $result = handleResetPassword($conn);
+                    
+                    // For AJAX requests, return JSON
+                    if (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && 
+                        strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest') {
+                        header('Content-Type: application/json');
+                        echo json_encode($result);
+                        exit;
+                    } else {
+                        // For regular form submissions
+                        if ($result['success']) {
+                            echo "<div class='alert alert-success'>Your password has been reset successfully.</div>";
+                        } elseif ($result['error']) {
+                            echo "<div class='alert alert-danger'>" . $result['error'] . "</div>";
+                        }
+                    }
+                    break;
         }
     }
 }
@@ -1093,10 +1103,11 @@ function handleForgotPassword($conn) {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/x-www-form-urlencoded',
+                        'X-Requested-With': 'XMLHttpRequest'  // Add this header to identify AJAX requests
                     },
                     body: 'action=resetPassword&token=' + encodeURIComponent(token) + 
-                          '&password=' + encodeURIComponent(password) + 
-                          '&confirmPassword=' + encodeURIComponent(confirmPassword)
+                        '&password=' + encodeURIComponent(password) + 
+                        '&confirmPassword=' + encodeURIComponent(confirmPassword)
                 })
                 .then(response => response.json())
                 .then(data => {
