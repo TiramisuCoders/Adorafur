@@ -40,8 +40,11 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
                 curl_setopt($ch, CURLOPT_POST, 1);
                 
+                // Add the redirect URL to your site's index page
+                // Supabase will add the token as a hash fragment
                 $data = [
-                    'email' => $email
+                    'email' => $email,
+                    'redirect_to' => 'http://' . $_SERVER['HTTP_HOST'] . dirname($_SERVER['PHP_SELF']) . '/index.php'
                 ];
                 
                 curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($data));
