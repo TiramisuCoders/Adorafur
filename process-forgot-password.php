@@ -44,7 +44,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 // Supabase will add the token as a hash fragment
                 $data = [
                     'email' => $email,
-                    'redirect_to' => 'http://' . $_SERVER['HTTP_HOST'] . dirname($_SERVER['PHP_SELF']) . '/index.php'
+                    'redirect_to' => 'http://' . $_SERVER['HTTP_HOST'] . dirname($_SERVER['PHP_SELF']) . '/reset-password.php'
                 ];
                 
                 curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($data));

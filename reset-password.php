@@ -8,12 +8,19 @@ if (session_status() == PHP_SESSION_NONE) {
 include("connect.php");
 
 // Initialize variables
-$token = $_GET['token'] ?? '';
+$token = '';
 $error = '';
 $success = false;
 
+// Check for token in URL hash fragment (will be handled by JavaScript)
+// Also check for token in query parameter as fallback
+if (isset($_GET['token'])) {
+    $token = $_GET['token'];
+}
+
 // For debugging
 error_log("Token received: " . $token);
+
 
 // Check if form is submitted
 if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['action']) && $_POST['action'] === 'resetPassword') {
@@ -90,6 +97,24 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['action']) && $_POST['a
 }
 ?>
 
+echo "<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Extract token from URL hash
+        const hash = window.location.hash;
+        if (hash && hash.includes('access_token=')) {
+            let token = hash.split('access_token=')[1];
+            if (token.includes('&')) {
+                token = token.split('&')[0];
+            }
+            if (token) {
+                // Set token in the form
+                document.getElementById('token').value = token;
+                console.log('Token extracted from hash: ' + token);
+            }
+        }
+    });
+</script>";
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -161,17 +186,17 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['action']) && $_POST['a
                     </div>
                 <?php else: ?>
                     <form method="POST" action="">
-                        <input type="hidden" name="action" value="resetPassword">
-                        <input type="hidden" name="token" value="<?php echo htmlspecialchars($token); ?>">
-                        
-                        <div class="mb-3 password-input">
-                            <label for="password" class="form-label">New Password</label>
-                            <input type="password" class="form-control" id="password" name="password" required>
-                            <i class="fas fa-eye password-toggle" id="passwordToggle"></i>
-                            <div class="password-requirements">
-                                Password must be 8-12 characters, containing 1 special character, 1 uppercase letter and 1 number.
-                            </div>
+                    <input type="hidden" name="action" value="resetPassword">
+                    <input type="hidden" id="token" name="token" value="<?php echo htmlspecialchars($token); ?>">
+                    
+                    <div class="mb-3 password-input">
+                        <label for="password" class="form-label">New Password</label>
+                        <input type="password" class="form-control" id="password" name="password" required>
+                        <i class="fas fa-eye password-toggle" id="passwordToggle"></i>
+                        <div class="password-requirements">
+                            Password must be 8-12 characters, containing 1 special character, 1 uppercase letter and 1 number.
                         </div>
+                    </div>
                         
                         <div class="mb-4 password-input">
                             <label for="confirmPassword" class="form-label">Confirm New Password</label>
