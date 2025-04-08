@@ -51,7 +51,6 @@ function formatDateToISO(date) {
 
 // ✅ Renders the calendar
 function renderCalendar() {
-  console.log("Rendering calendar...")
   const weekDates = getWeekDates(currentDate)
   const firstDayOfWeek = weekDates[0]
 
@@ -61,17 +60,11 @@ function renderCalendar() {
   })
 
   const calendar = document.getElementById("calendar")
-  if (!calendar) {
-    console.error("Calendar element not found!")
-    return
-  }
-
   calendar.innerHTML = ""
 
   weekDates.forEach((date) => {
     const dayDiv = document.createElement("div")
     dayDiv.className = "day"
-    dayDiv.dataset.date = formatDateToISO(date) // Add date as data attribute for easy reference
 
     const dayText = document.createElement("div")
     dayText.className = "day-name"
@@ -81,21 +74,17 @@ function renderCalendar() {
     dateText.className = "day-number"
     dateText.textContent = date.getDate().toString().padStart(2, "0")
 
-    // Create a container for bookings
-    const bookingsContainer = document.createElement("div")
-    bookingsContainer.className = "day-bookings"
-
     dayDiv.appendChild(dayText)
     dayDiv.appendChild(dateText)
-    dayDiv.appendChild(bookingsContainer)
     calendar.appendChild(dayDiv)
   })
 
+  // Fetch and display bookings after rendering the calendar
+  fetchBookingsForWeek()
 }
 
 // ✅ Changes the displayed week when clicking buttons
 function changeWeek(offset) {
-  console.log(`Changing week by ${offset} weeks`)
   currentDate.setDate(currentDate.getDate() + offset * 7)
   renderCalendar()
 }
@@ -511,6 +500,101 @@ function submitActivity() {
     })
 }
 
+// Add these functions to fetch and display bookings
+
+// Function to fetch bookings for the current week
+function fetchBookingsForWeek() {
+  const weekDates = getWeekDates(currentDate)
+  const startDate = formatDateToISO(weekDates[0])
+  const endDate = formatDateToISO(weekDates[6])
+
+  console.log(`Fetching bookings from ${startDate} to ${endDate}`)
+
+  fetch(`fetch_bookings.php?start_date=${startDate}&end_date=${endDate}`, {
+    method: "GET",
+    headers: {
+      "Cache-Control": "no-cache",
+    },
+  })
+    .then((response) => {
+      if (!response.ok) {
+        throw new Error(`HTTP error! Status: ${response.status}`)
+      }
+      return response.json()
+    })
+    .then((data) => {
+      if (data.success) {
+        displayBookingsInCalendar(data.data, weekDates)
+      } else {
+        console.error("Error fetching bookings:", data.error)
+      }
+    })
+    .catch((error) => {
+      console.error("Error loading bookings:", error)
+    })
+}
+
+// Function to display bookings in the calendar
+function displayBookingsInCalendar(bookingsData, weekDates) {
+  // Clear any existing booking elements
+  document.querySelectorAll(".booking-item").forEach((el) => el.remove())
+
+  // Loop through each day in the week
+  weekDates.forEach((date, index) => {
+    const dateStr = formatDateToISO(date)
+    const dayElement = document.querySelectorAll(".day")[index]
+
+    if (!dayElement) return
+
+    // Check if there are bookings for this date
+    const bookingsForDay = bookingsData[dateStr] || []
+
+    if (bookingsForDay.length > 0) {
+      // Create a container for bookings
+      const bookingsContainer = document.createElement("div")
+      bookingsContainer.className = "bookings-container"
+
+      // Add each booking
+      bookingsForDay.forEach((booking) => {
+        const bookingElement = createBookingElement(booking)
+        bookingsContainer.appendChild(bookingElement)
+      })
+
+      dayElement.appendChild(bookingsContainer)
+    }
+  })
+}
+
+// Function to create a booking element
+function createBookingElement(booking) {
+  // Get service type for styling and display
+  const serviceType = booking.service_name ? booking.service_name.toLowerCase() : "unknown"
+  const serviceVariant = booking.service_variant ? booking.service_variant : ""
+
+  // Create the booking element with service-specific class
+  const bookingElement = document.createElement("div")
+  bookingElement.className = `booking-item booking-status-${booking.booking_status.toLowerCase()} booking-service-${serviceType.replace(/\s+/g, "-")}`
+  bookingElement.dataset.bookingId = booking.booking_id
+  bookingElement.dataset.serviceType = serviceType
+
+  // Create the content with simplified service information
+  bookingElement.innerHTML = `
+    <div class="booking-header">
+      <div class="booking-pet-name">${booking.pet_name}</div>
+      <div class="service-badge" title="${booking.service_name}${booking.service_variant ? " - " + booking.service_variant : ""}">
+        ${getServiceShortName(serviceType)}
+      </div>
+    </div>
+    <div class="booking-times">
+      <span class="booking-check-in">${booking.formatted_check_in_time}</span> - 
+      <span class="booking-check-out">${booking.formatted_check_out_time}</span>
+    </div>
+    <div class="booking-status">${booking.booking_status}</div>
+  `
+
+  return bookingElement
+}
+
 // Helper function to get shortened service name for display
 function getServiceShortName(serviceType) {
   switch (serviceType.toLowerCase()) {
@@ -523,9 +607,13 @@ function getServiceShortName(serviceType) {
   }
 }
 
+// Remove these functions as they're no longer needed
+// Helper function to get service icon - REMOVED
+// Helper function to get pet size indicator - REMOVED
+
 // ✅ Event Listeners - Improved initialization
 document.addEventListener("DOMContentLoaded", () => {
-  console.log("DOM fully loaded - Initializing calendar and bookings")
+  console.log("DOM fully loaded")
 
   // Initialize clock
   updateClock()
@@ -540,164 +628,22 @@ document.addEventListener("DOMContentLoaded", () => {
   // Initialize calendar with bookings
   renderCalendar()
 
-// Add this function after your renderCalendar function
-function fetchAndDisplayBookings() {
-  // Get the dates for the current week
-  const weekDates = getWeekDates(currentDate);
-  const startDate = formatDateToISO(weekDates[0]);
-  const endDate = formatDateToISO(weekDates[6]);
-  
-  console.log(`Fetching bookings from ${startDate} to ${endDate}`);
-  
-  // Fetch bookings for current week
-  fetch(`fetch_bookings.php?start_date=${startDate}&end_date=${endDate}`)
-    .then(response => {
-      if (!response.ok) {
-        throw new Error(`HTTP error! Status: ${response.status}`);
-      }
-      return response.json();
-    })
-    .then(data => {
-      if (!data.success) {
-        console.error('Error fetching bookings:', data.error);
-        return;
-      }
-      
-      console.log('Bookings received:', data.data);
-      displayBookingsOnCalendar(data.data, weekDates);
-    })
-    .catch(error => {
-      console.error('Error loading bookings:', error);
-    });
-}
-
-// Function to display bookings on the calendar
-function displayBookingsOnCalendar(bookings, weekDates) {
-  // Clear any existing bookings first
-  document.querySelectorAll('.booking-item').forEach(item => item.remove());
-  
-  // Process each booking
-  bookings.forEach(booking => {
-    // Convert dates to Date objects
-    const checkInDate = new Date(booking.check_in_date);
-    const checkOutDate = new Date(booking.check_out_date);
-    
-    // Loop through each day of the week
-    weekDates.forEach(date => {
-      const currentDate = new Date(date);
-      currentDate.setHours(0, 0, 0, 0);
-      
-      // Check if the current date is within the booking period
-      if (currentDate >= checkInDate && currentDate <= checkOutDate) {
-        // Find the corresponding day div
-        const dayDiv = document.querySelector(`.day[data-date="${formatDateToISO(currentDate)}"]`);
-        if (!dayDiv) return;
-        
-        const bookingsContainer = dayDiv.querySelector('.day-bookings');
-        if (!bookingsContainer) return;
-        
-        // Create booking element
-        const bookingElement = document.createElement('div');
-        bookingElement.className = `booking-item status-${booking.status.toLowerCase().replace(/\s+/g, '-')}`;
-        bookingElement.dataset.bookingId = booking.booking_id;
-        
-        // Create content
-        const serviceShortName = getServiceShortName(booking.service_type);
-        
-        // Show different info based on whether it's check-in, check-out, or in-between day
-        let bookingText = `${booking.pet_name} - ${serviceShortName}`;
-        
-        if (isSameDay(currentDate, checkInDate)) {
-          bookingText = `📥 ${bookingText} (Check-in)`;
-        } else if (isSameDay(currentDate, checkOutDate)) {
-          bookingText = `📤 ${bookingText} (Check-out)`;
-        }
-        
-        bookingElement.innerHTML = `
-          <div class="booking-info">${bookingText}</div>
-          <div class="booking-status">${booking.status}</div>
-        `;
-        
-        // Add click event to show booking details
-        bookingElement.addEventListener('click', () => showBookingDetails(booking));
-        
-        // Append to the container
-        bookingsContainer.appendChild(bookingElement);
-      }
-    });
-  });
-}
-
-// Helper function to check if two dates are the same day
-function isSameDay(date1, date2) {
-  return date1.getFullYear() === date2.getFullYear() &&
-         date1.getMonth() === date2.getMonth() &&
-         date1.getDate() === date2.getDate();
-}
-
-// Show booking details (simple alert for now)
-function showBookingDetails(booking) {
-  const message = `
-    Booking #${booking.booking_id}
-    Pet: ${booking.pet_name}
-    Owner: ${booking.first_name} ${booking.last_name}
-    Service: ${booking.service_type}
-    Check-in: ${booking.check_in_date}
-    Check-out: ${booking.check_out_date}
-    Status: ${booking.status}
-  `;
-  alert(message);
-}
-
-// Update your renderCalendar function to call fetchAndDisplayBookings after rendering
-function renderCalendar() {
-  console.log("Rendering calendar...");
-  const weekDates = getWeekDates(currentDate);
-  const firstDayOfWeek = weekDates[0];
-
-  document.getElementById("week-range").textContent = firstDayOfWeek.toLocaleString("en-US", {
-    month: "long",
-    year: "numeric",
-  });
-
-  const calendar = document.getElementById("calendar");
-  if (!calendar) {
-    console.error("Calendar element not found!");
-    return;
+  // Add event listener for submit button
+  const submitBtn = document.getElementById("submitActivityBtn")
+  if (submitBtn) {
+    submitBtn.addEventListener("click", submitActivity)
+    console.log("Submit button listener attached")
+  } else {
+    console.error("Submit button not found")
   }
 
-  calendar.innerHTML = "";
+  // Add event listener for close button
+  const closeBtn = document.querySelector(".close-btn")
+  if (closeBtn) {
+    closeBtn.addEventListener("click", closeSidebarModal)
+    console.log("Close button listener attached")
+  }
 
-  weekDates.forEach((date) => {
-    const dayDiv = document.createElement("div");
-    dayDiv.className = "day";
-    dayDiv.dataset.date = formatDateToISO(date); // Add date as data attribute for easy reference
+  console.log("Initialization complete")
+})
 
-    const dayText = document.createElement("div");
-    dayText.className = "day-name";
-    dayText.textContent = date.toLocaleDateString("en-US", { weekday: "long" }).toUpperCase();
-
-    const dateText = document.createElement("div");
-    dateText.className = "day-number";
-    dateText.textContent = date.getDate().toString().padStart(2, "0");
-
-    // Create a container for bookings
-    const bookingsContainer = document.createElement("div");
-    bookingsContainer.className = "day-bookings";
-
-    dayDiv.appendChild(dayText);
-    dayDiv.appendChild(dateText);
-    dayDiv.appendChild(bookingsContainer);
-    calendar.appendChild(dayDiv);
-  });
-  
-  // After rendering the calendar structure, fetch and display bookings
-  fetchAndDisplayBookings();
-}
-
-// Update your changeWeek function to call fetchAndDisplayBookings too
-function changeWeek(offset) {
-  console.log(`Changing week by ${offset} weeks`);
-  currentDate.setDate(currentDate.getDate() + offset * 7);
-  renderCalendar();
-}
