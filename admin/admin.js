@@ -54,12 +54,17 @@ function renderCalendar() {
   const weekDates = getWeekDates(currentDate)
   const firstDayOfWeek = weekDates[0]
 
-  document.getElementById("week-range").textContent = firstDayOfWeek.toLocaleString("en-US", {
-    month: "long",
-    year: "numeric",
-  })
+  const weekRangeElement = document.getElementById("week-range")
+  if (weekRangeElement) {
+    weekRangeElement.textContent = firstDayOfWeek.toLocaleString("en-US", {
+      month: "long",
+      year: "numeric",
+    })
+  }
 
   const calendar = document.getElementById("calendar")
+  if (!calendar) return
+
   calendar.innerHTML = ""
 
   weekDates.forEach((date) => {
@@ -616,30 +621,8 @@ document.addEventListener("DOMContentLoaded", () => {
   updateClock()
   setInterval(updateClock, 1000)
 
-  // Initialize date display
-  updateDateDisplay()
-
-  // Fetch reminders and tasks
-  fetchReminders()
-
   // Initialize calendar with bookings
   renderCalendar()
-
-  // Add event listener for submit button
-  const submitBtn = document.getElementById("submitActivityBtn")
-  if (submitBtn) {
-    submitBtn.addEventListener("click", submitActivity)
-    console.log("Submit button listener attached")
-  } else {
-    console.error("Submit button not found")
-  }
-
-  // Add event listener for close button
-  const closeBtn = document.querySelector(".close-btn")
-  if (closeBtn) {
-    closeBtn.addEventListener("click", closeSidebarModal)
-    console.log("Close button listener attached")
-  }
 
   console.log("Initialization complete")
 })
