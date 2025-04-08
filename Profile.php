@@ -7,7 +7,7 @@ include("connect.php");
 // Check if user is logged in
 if (!isset($_SESSION['c_id'])) {
     // Redirect to login page if not logged in
-    header("Location: index.php");
+    header("Location: login.php");
     exit();
 }
 
@@ -633,6 +633,7 @@ include 'header.php'; ?>
                 </div>
 
                 <form action="update_profile.php" method="POST" enctype="multipart/form-data">
+                    
                     
                     <div class="row mb-3">
                         <div class="col-md-6">
