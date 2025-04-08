@@ -53,7 +53,7 @@ function handleRegister($conn) {
 
     $firstname = htmlspecialchars($_POST['firstName'] ?? '');
     $lastname = htmlspecialchars($_POST['lastName'] ?? '');
-    $email = htmlspecialchars($_POST['email'] ?? '');
+    $email = strtolower(htmlspecialchars($_POST['email'] ?? ''));
     $contactNumber = htmlspecialchars($_POST['contactNumber'] ?? '');
     $password = $_POST['password'] ?? '';
     $repeatPassword = $_POST['repeatPassword'] ?? '';
@@ -114,17 +114,21 @@ function handleRegister($conn) {
         $hasError = true;
     } 
 
-    // Check if email already exists in database
     if (!$hasError && $email) {
-        $stmt = $conn->prepare("SELECT * FROM customer WHERE c_email = :email");
-        $stmt->bindParam(':email', $email);
+        // Convert email to lowercase before checking
+        $emailLower = strtolower($email);
+    
+        // Use LOWER() in SQL to compare in a case-insensitive way
+        $stmt = $conn->prepare("SELECT * FROM customer WHERE c_email ILIKE :email");
+        $stmt->bindParam(':email', $emailLower);
         $stmt->execute();
-
+    
         if ($stmt->rowCount() > 0) {
-            $email_error= 'Email already registered.';
+            $email_error = 'Email already registered.';
             $hasError = true;
         } 
     }
+    
 
     if (!$hasError) {
         // Create user in Supabase Auth via API
@@ -206,7 +210,7 @@ function handleLogin($conn) {
     global $login_email_error, $login_password_error;
     $hasError = false;
 
-    $email = $_POST['email'] ?? '';
+    $email = strtolower($_POST['email'] ?? '');
     $password = $_POST['password'] ?? '';
 
     // First check if the user is an admin
@@ -262,7 +266,7 @@ function handleLogin($conn) {
         // If Supabase Auth login is successful, proceed with database login
         if ($http_code === 200) {
             // Check customer login
-            $stmt = $conn->prepare("SELECT c_id, c_password FROM customer WHERE c_email = ?");
+            $stmt = $conn->prepare("SELECT c_id, c_password FROM customer WHERE LOWER(c_email) = ?");
             $stmt->execute([$email]);
             $customer = $stmt->fetch(PDO::FETCH_ASSOC);
 
@@ -445,7 +449,7 @@ function handleForgotPassword($conn) {
                                         <div class="col-6">
                                             <div class="mb-1">
                                                 <label for="firstName">First Name <span class="text-danger">*</span></label>
-                                                <input type="text" class="form-control" id="firstName" name="firstName" value="<?php echo $firstname?>" required>
+                                                <input type="text" class="form-control" id="firstName" name="firstName" value="<?php echo $firstname?>"  placeholder="Enter First Name" required>
                                                 <?php if ($firstname_error): ?>
                                                     <p class="error firstname-error"><?php echo $firstname_error; ?></p>
                                                 <?php endif; ?>
