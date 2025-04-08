@@ -52,27 +52,27 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     }
     
     // Handle profile picture upload
-    $profile_picture_update = "";
-    if (isset($_FILES['profile_picture']) && $_FILES['profile_picture']['error'] == 0) {
-        $upload_dir = "uploads/profiles/";
+    // $profile_picture_update = "";
+    // if (isset($_FILES['profile_picture']) && $_FILES['profile_picture']['error'] == 0) {
+    //     $upload_dir = "uploads/profiles/";
         
-        // Create directory if it doesn't exist
-        if (!file_exists($upload_dir)) {
-            mkdir($upload_dir, 0777, true);
-        }
+    //     // Create directory if it doesn't exist
+    //     if (!file_exists($upload_dir)) {
+    //         mkdir($upload_dir, 0777, true);
+    //     }
         
-        $file_name = $user_id . "_" . time() . "_" . basename($_FILES['profile_picture']['name']);
-        $target_file = $upload_dir . $file_name;
+    //     $file_name = $user_id . "_" . time() . "_" . basename($_FILES['profile_picture']['name']);
+    //     $target_file = $upload_dir . $file_name;
         
-        // Check if image file is a actual image
-        $check = getimagesize($_FILES['profile_picture']['tmp_name']);
-        if ($check !== false) {
-            if (move_uploaded_file($_FILES['profile_picture']['tmp_name'], $target_file)) {
-                $profile_picture_update = ", profile_picture = :profile_picture";
-                $params[':profile_picture'] = $target_file;
-            }
-        }
-    }
+    //     // Check if image file is a actual image
+    //     $check = getimagesize($_FILES['profile_picture']['tmp_name']);
+    //     if ($check !== false) {
+    //         if (move_uploaded_file($_FILES['profile_picture']['tmp_name'], $target_file)) {
+    //             $profile_picture_update = ", profile_picture = :profile_picture";
+    //             $params[':profile_picture'] = $target_file;
+    //         }
+    //     }
+    // }
     
     // Update user information
     $update_fields = [];
@@ -110,20 +110,20 @@ if (!empty($_POST['current_password']) && !empty($_POST['new_password'])) {
 }
 
 // Handle profile picture update
-if (isset($_FILES['profile_picture']) && $_FILES['profile_picture']['error'] == 0) {
-    $upload_dir = "uploads/profiles/";
-    if (!file_exists($upload_dir)) {
-        mkdir($upload_dir, 0777, true);
-    }
+// if (isset($_FILES['profile_picture']) && $_FILES['profile_picture']['error'] == 0) {
+//     $upload_dir = "uploads/profiles/";
+//     if (!file_exists($upload_dir)) {
+//         mkdir($upload_dir, 0777, true);
+//     }
 
-    $file_name = $user_id . "_" . time() . "_" . basename($_FILES['profile_picture']['name']);
-    $target_file = $upload_dir . $file_name;
+//     $file_name = $user_id . "_" . time() . "_" . basename($_FILES['profile_picture']['name']);
+//     $target_file = $upload_dir . $file_name;
 
-    if (move_uploaded_file($_FILES['profile_picture']['tmp_name'], $target_file)) {
-        $update_fields[] = "profile_picture = :profile_picture";
-        $params[':profile_picture'] = $target_file;
-    }
-}
+//     if (move_uploaded_file($_FILES['profile_picture']['tmp_name'], $target_file)) {
+//         $update_fields[] = "profile_picture = :profile_picture";
+//         $params[':profile_picture'] = $target_file;
+//     }
+// }
 
     try {
         // If there are fields to update, build the query dynamically
