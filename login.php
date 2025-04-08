@@ -900,9 +900,6 @@ function handleForgotPassword($conn) {
                 .finally(() => {
                     // Re-enable button
                     resendButton.disabled = false;
-                    res  => {
-                    // Re-enable button
-                    resendButton.disabled = false;
                     resendButton.innerHTML = 'Resend';
                 });
             });
