@@ -40,12 +40,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 handleLogin($conn);
                 break;
             case 'forgotPassword':
-                $result = handleForgotPassword($conn);
-                if ($result['success']) {
-                    echo "<div class='alert alert-success'>Password reset link sent to your email.</div>";
-                } elseif ($result['error']) {
-                    echo "<div class='alert alert-danger'>" . $result['error'] . "</div>";
-                }
+                handleForgotPassword($conn);
                 break;
         }
     }
@@ -634,6 +629,31 @@ function handleForgotPassword($conn) {
         </div>
     </div>
 
+    <!-- Forgot Password Modal -->
+    <div class="modal fade" id="forgotPasswordModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Reset Your Password</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p>Enter your email address and we'll send you a link to reset your password.</p>
+                    <form id="forgotPasswordForm" action="" method="POST">
+                        <input type="hidden" name="action" value="forgotPassword">
+                        <div class="mb-3">
+                            <input type="email" class="form-control" id="forgotPasswordEmail" name="email" required placeholder="Enter your email">
+                        </div>
+                        <div id="forgotPasswordMessage" class="alert d-none"></div>
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-primary" id="resetPasswordBtn">Send Reset Link</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
 <!-- JavaScript to Auto-Show the Modal If Registration Was Successful -->
 <?php if (isset($_SESSION['registration_success'])): ?>
     <script>
@@ -815,97 +835,72 @@ function handleForgotPassword($conn) {
             });
         }
 
-// Handle forgot password form submission
-const forgotPasswordForm = document.getElementById('forgotPasswordForm');
-if (forgotPasswordForm) {
-    forgotPasswordForm.addEventListener('submit', function(e) {
-        e.preventDefault();
-        
-        const email = document.getElementById('forgotPasswordEmail').value.trim();
-        const messageDiv = document.getElementById('forgotPasswordMessage');
-        const submitButton = document.getElementById('resetPasswordBtn');
-        
-        if (!email) {
-            showForgotPasswordMessage('Please enter your email address.', 'danger');
-            return;
-        }
-        
-        // Disable button during request
-        submitButton.disabled = true;
-        submitButton.innerHTML = 'Sending...';
-        
-        // Send AJAX request
-        fetch('process-forgot-password.php', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/x-www-form-urlencoded',
-            },
-            body: 'email=' + encodeURIComponent(email) + '&action=forgotPassword'
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                showForgotPasswordMessage('Password reset link has been sent to your email.', 'success');
-                document.getElementById('forgotPasswordEmail').value = '';
+        // Handle forgot password form submission
+        const forgotPasswordForm = document.getElementById('forgotPasswordForm');
+        if (forgotPasswordForm) {
+            forgotPasswordForm.addEventListener('submit', function(e) {
+                e.preventDefault();
                 
-                // Close modal after 3 seconds on success
-                setTimeout(() => {
-                    const modal = bootstrap.Modal.getInstance(document.getElementById('forgotPasswordModal'));
-                    if (modal) {
-                        modal.hide();
+                const email = document.getElementById('forgotPasswordEmail').value.trim();
+                const messageDiv = document.getElementById('forgotPasswordMessage');
+                const submitButton = document.getElementById('resetPasswordBtn');
+                
+                if (!email) {
+                    showForgotPasswordMessage('Please enter your email address.', 'danger');
+                    return;
+                }
+                
+                // Disable button during request
+                submitButton.disabled = true;
+                submitButton.innerHTML = 'Sending...';
+                
+                // Send AJAX request
+                fetch('process-forgot-password.php', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                    },
+                    body: 'email=' + encodeURIComponent(email) + '&action=forgotPassword'
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        showForgotPasswordMessage('Password reset link has been sent to your email.', 'success');
+                        document.getElementById('forgotPasswordEmail').value = '';
+                        
+                        // Close modal after 3 seconds on success
+                        setTimeout(() => {
+                            const modal = bootstrap.Modal.getInstance(document.getElementById('forgotPasswordModal'));
+                            if (modal) {
+                                modal.hide();
+                            }
+                        }, 3000);
+                    } else {
+                        showForgotPasswordMessage(data.error || 'An error occurred. Please try again.', 'danger');
                     }
-                }, 3000);
-            } else {
-                showForgotPasswordMessage(data.error || 'An error occurred. Please try again.', 'danger');
-            }
-        })
-        .catch(error => {
-            showForgotPasswordMessage('An error occurred. Please try again.', 'danger');
-            console.error('Error:', error);
-        })
-        .finally(() => {
-            // Re-enable button
-            submitButton.disabled = false;
-            submitButton.innerHTML = 'Send Reset Link';
-        });
-    });
-}
+                })
+                .catch(error => {
+                    showForgotPasswordMessage('An error occurred. Please try again.', 'danger');
+                    console.error('Error:', error);
+                })
+                .finally(() => {
+                    // Re-enable button
+                    submitButton.disabled = false;
+                    submitButton.innerHTML = 'Send Reset Link';
+                });
+            });
+        }
 
-function showForgotPasswordMessage(message, type) {
-    const messageDiv = document.getElementById('forgotPasswordMessage');
-    if (messageDiv) {
-        messageDiv.textContent = message;
-        messageDiv.className = `alert alert-${type}`;
-        messageDiv.classList.remove('d-none');
-    }
-}
+        function showForgotPasswordMessage(message, type) {
+            const messageDiv = document.getElementById('forgotPasswordMessage');
+            if (messageDiv) {
+                messageDiv.textContent = message;
+                messageDiv.className = `alert alert-${type}`;
+                messageDiv.classList.remove('d-none');
+            }
+        }
     });
 </script>
-
-<!-- Forgot Password Modal -->
-<div class="modal fade" id="forgotPasswordModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Reset Your Password</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                <p>Enter your email address and we'll send you a link to reset your password.</p>
-                <form id="forgotPasswordForm" action="" method="POST">
-                    <input type="hidden" name="action" value="forgotPassword">
-                    <div class="mb-3">
-                        <input type="email" class="form-control" id="forgotPasswordEmail" name="email" required placeholder="Enter your email">
-                    </div>
-                    <div id="forgotPasswordMessage" class="alert d-none"></div>
-                    <div class="d-grid">
-                        <button type="submit" class="btn btn-primary" id="resetPasswordBtn">Send Reset Link</button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
-</div>
 
 </body>
 </html>

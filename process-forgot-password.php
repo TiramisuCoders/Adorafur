@@ -10,22 +10,26 @@ include("connect.php");
 // Set header to return JSON
 header('Content-Type: application/json');
 
+// Initialize response
+$response = [
+    'success' => false,
+    'error' => ''
+];
+
 // Check if it's a POST request
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     if (isset($_POST['action']) && $_POST['action'] === 'forgotPassword') {
         $email = $_POST['email'] ?? '';
-        $error = null;
-        $success = false;
         
         if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
-            $error = 'Please enter a valid email address.';
+            $response['error'] = 'Please enter a valid email address.';
         } else {
             // Check if the email exists in the database
             $stmt = $conn->prepare("SELECT c_id FROM customer WHERE c_email = ?");
             $stmt->execute([$email]);
             
             if ($stmt->rowCount() === 0) {
-                $error = 'No account found with this email address.';
+                $response['error'] = 'No account found with this email address.';
             } else {
                 // Email exists, send password reset request to Supabase
                 $supabase_url = "https://ygbwanzobuielhttdzsw.supabase.co";
@@ -49,35 +53,34 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 
                 curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
                 
-                $response = curl_exec($ch);
+                $response_data = curl_exec($ch);
                 $http_code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
                 
                 // For debugging
-                error_log("Supabase Password Reset Response: " . $response);
+                error_log("Supabase Password Reset Response: " . $response_data);
                 error_log("HTTP Code: " . $http_code);
                 
                 curl_close($ch);
                 
                 if ($http_code === 200) {
-                    $success = true;
+                    $response['success'] = true;
                 } else {
-                    $response_data = json_decode($response, true);
-                    $error = $response_data['message'] ?? 'An error occurred while processing your request.';
+                    $error_data = json_decode($response_data, true);
+                    $response['error'] = isset($error_data['error_description']) 
+                        ? $error_data['error_description'] 
+                        : (isset($error_data['message']) 
+                            ? $error_data['message'] 
+                            : 'An error occurred while processing your request.');
                 }
             }
         }
-        
-        echo json_encode([
-            'success' => $success,
-            'error' => $error
-        ]);
-        exit;
+    } else {
+        $response['error'] = 'Invalid action.';
     }
+} else {
+    $response['error'] = 'Invalid request method.';
 }
 
-// If we get here, it's an invalid request
-echo json_encode([
-    'success' => false,
-    'error' => 'Invalid request'
-]);
+// Return JSON response
+echo json_encode($response);
 ?>
