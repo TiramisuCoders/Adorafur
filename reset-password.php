@@ -19,14 +19,16 @@ if (isset($_GET['token'])) {
 }
 
 // For debugging
-error_log("Token received: " . $token);
-
+error_log("Token received from GET: " . $token);
 
 // Check if form is submitted
 if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['action']) && $_POST['action'] === 'resetPassword') {
     $password = $_POST['password'] ?? '';
     $confirmPassword = $_POST['confirmPassword'] ?? '';
     $token = $_POST['token'] ?? '';
+    
+    // For debugging
+    error_log("Token received from POST: " . $token);
     
     // Validate password
     if (strlen($password) < 8 || strlen($password) > 12) {
@@ -45,12 +47,11 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['action']) && $_POST['a
         $supabase_key = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlnYndhbnpvYnVpZWxodHRkenN3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDM1MTY3NTMsImV4cCI6MjA1OTA5Mjc1M30.bIaP_7rfHyne5PQ_Wmt8qdMYFDzurdnEAUR7U2bxbDQ";
         
         $ch = curl_init();
-        curl_setopt($ch, CURLOPT_URL, $supabase_url . "/auth/v1/user/recovery");
+        curl_setopt($ch, CURLOPT_URL, $supabase_url . "/auth/v1/user");
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
-        curl_setopt($ch, CURLOPT_POST, 1);
+        curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "PUT");
         
         $data = [
-            'token' => $token,
             'password' => $password
         ];
         
@@ -58,7 +59,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['action']) && $_POST['a
         
         $headers = [
             'Content-Type: application/json',
-            'apikey: ' . $supabase_key
+            'apikey: ' . $supabase_key,
+            'Authorization: Bearer ' . $token
         ];
         
         curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
@@ -73,25 +75,40 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['action']) && $_POST['a
         curl_close($ch);
         
         if ($http_code === 200) {
-            // If Supabase update is successful, update the password in your database
-            $response_data = json_decode($response, true);
-            if (isset($response_data['email'])) {
-                $email = $response_data['email'];
-                
-                // Update password in your database
-                $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
-                $stmt = $conn->prepare("UPDATE customer SET c_password = ? WHERE c_email = ?");
-                if ($stmt->execute([$hashedPassword, $email])) {
-                    $success = true;
+            // If Supabase update is successful, get the user's email
+            $ch = curl_init();
+            curl_setopt($ch, CURLOPT_URL, $supabase_url . "/auth/v1/user");
+            curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+            
+            curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+            
+            $user_response = curl_exec($ch);
+            $user_http_code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+            
+            curl_close($ch);
+            
+            if ($user_http_code === 200) {
+                $user_data = json_decode($user_response, true);
+                if (isset($user_data['email'])) {
+                    $email = $user_data['email'];
+                    
+                    // Update password in your database
+                    $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
+                    $stmt = $conn->prepare("UPDATE customer SET c_password = ? WHERE c_email = ?");
+                    if ($stmt->execute([$hashedPassword, $email])) {
+                        $success = true;
+                    } else {
+                        $error = 'Failed to update password in database. Please contact support.';
+                    }
                 } else {
-                    $error = 'Failed to update password in database. Please contact support.';
+                    $error = 'Failed to retrieve user information. Please try again.';
                 }
             } else {
                 $error = 'Failed to retrieve user information. Please try again.';
             }
         } else {
             $response_data = json_decode($response, true);
-            $error = $response_data['error_description'] ?? ($response_data['message'] ?? 'Failed to reset password. The link may have expired.');
+            $error = $response_data['message'] ?? 'Failed to reset password. The link may have expired.';
         }
     }
 }
@@ -141,7 +158,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['action']) && $_POST['a
             border-radius: 5px;
         }
     </style>
-
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             // Extract token from URL hash
@@ -176,7 +192,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['action']) && $_POST['a
                     <div class="error"><?php echo $error; ?></div>
                 <?php endif; ?>
                 
-                <?php if (empty($token)): ?>
+                <?php if (empty($token) && !isset($_POST['token'])): ?>
                     <div class="alert alert-danger">
                         Invalid or missing reset token. Please request a new password reset link.
                     </div>
@@ -185,18 +201,18 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['action']) && $_POST['a
                     </div>
                 <?php else: ?>
                     <form method="POST" action="">
-                    <input type="hidden" name="action" value="resetPassword">
-                    <input type="hidden" id="token" name="token" value="<?php echo htmlspecialchars($token); ?>">
-                    
-                    <div class="mb-3 password-input">
-                        <label for="password" class="form-label">New Password</label>
-                        <input type="password" class="form-control" id="password" name="password" required>
-                        <i class="fas fa-eye password-toggle" id="passwordToggle"></i>
-                        <div class="password-requirements">
-                            Password must be 8-12 characters, containing 1 special character, 1 uppercase letter and 1 number.
-                        </div>
-                    </div>
+                        <input type="hidden" name="action" value="resetPassword">
+                        <input type="hidden" id="token" name="token" value="<?php echo htmlspecialchars($token); ?>">
                         
+                        <div class="mb-3 password-input">
+                            <label for="password" class="form-label">New Password</label>
+                            <input type="password" class="form-control" id="password" name="password" required>
+                            <i class="fas fa-eye password-toggle" id="passwordToggle"></i>
+                            <div class="password-requirements">
+                                Password must be 8-12 characters, containing 1 special character, 1 uppercase letter and 1 number.
+                            </div>
+                        </div>
+                            
                         <div class="mb-4 password-input">
                             <label for="confirmPassword" class="form-label">Confirm New Password</label>
                             <input type="password" class="form-control" id="confirmPassword" name="confirmPassword" required>
