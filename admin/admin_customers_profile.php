@@ -1,15 +1,5 @@
 <?php
 
-// Start session if not already started
-session_start();
-
-// Check if admin is logged in
-if (!isset($_SESSION['admin_id'])) {
-    // Redirect to login page if not logged in
-    header("Location: ../index.php");
-    exit();
-}
-
 if (!isset($_GET['id']) || empty($_GET['id'])) {
     // Redirect back to the customers list if no ID is provided
     header('Location: admin_navbar/admin_customers.php');
@@ -27,20 +17,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['memb-status'])) {
         // Get form data
         $membershipStatus = $_POST['memb-status'];
         $paymentMethod = $_POST['paymentMethod'] ?? '';
+        $amount = $_POST['membershipAmount'] ?? 0;
         $refNumber = $_POST['refNumber'] ?? '';
-        $adminId = $_SESSION['admin_id'] ?? null;
-
-        // Fetch the membership fee amount from the membership_status table
-        $membershipFeeSql = "SELECT membership_status, membership_rate FROM membership_status WHERE membership_status = :membership_status";
-        $membershipFeeStmt = $conn->prepare($membershipFeeSql);
-        $membershipFeeStmt->bindParam(':membership_status', $membershipStatus, PDO::PARAM_INT);
-        if (!$membershipFeeStmt->execute()) {
-            echo "<pre>";
-            print_r($membershipFeeStmt->errorInfo());
-            echo "</pre>";
-        }
-        $membershipFeeData = $membershipFeeStmt->fetch(PDO::FETCH_ASSOC);
-        $amount = $membershipFeeData['membership_rate'] ?? 0;
         
         // Update customer membership status
         $updateSql = "UPDATE customer SET c_membership_status = :status WHERE c_id = :id";
@@ -48,43 +26,30 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['memb-status'])) {
         $updateStmt->bindParam(':status', $membershipStatus, PDO::PARAM_STR);
         $updateStmt->bindParam(':id', $customerId, PDO::PARAM_INT);
         $updateStmt->execute();
-
-        // Insert payment record for membership fee
-        $paymentSql = "INSERT INTO payment (customer_id, admin_id, pay_amount, pay_method, pay_reference_number, pay_status, pay_category) 
-                       VALUES (:id, :admin_id, :amount, :method, :ref_number, 'Fully Paid', 'Membership Fee')";
-        $paymentStmt = $conn->prepare($paymentSql);
-        $paymentStmt->bindParam(':id', $customerId, PDO::PARAM_INT);
-        $paymentStmt->bindParam(':amount', $amount, PDO::PARAM_STR);
-        $paymentStmt->bindParam(':method', $paymentMethod, PDO::PARAM_STR);
-        $paymentStmt->bindParam(':ref_number', $refNumber, PDO::PARAM_STR);
-        $paymentStmt->bindParam(':admin_id', $adminId, PDO::PARAM_INT);
-        $paymentStmt->execute();
-
         
-        
-        // // Handle file upload if provided
-        // if (isset($_FILES['proofOfPayment']) && $_FILES['proofOfPayment']['error'] === UPLOAD_ERR_OK) {
-        //     $uploadDir = 'uploads/';
-        //     if (!is_dir($uploadDir)) {
-        //         mkdir($uploadDir, 0755, true);
-        //     }
+        // Handle file upload if provided
+        if (isset($_FILES['proofOfPayment']) && $_FILES['proofOfPayment']['error'] === UPLOAD_ERR_OK) {
+            $uploadDir = 'uploads/';
+            if (!is_dir($uploadDir)) {
+                mkdir($uploadDir, 0755, true);
+            }
             
-        //     $fileName = uniqid() . '_' . basename($_FILES['proofOfPayment']['name']);
-        //     $uploadFile = $uploadDir . $fileName;
+            $fileName = uniqid() . '_' . basename($_FILES['proofOfPayment']['name']);
+            $uploadFile = $uploadDir . $fileName;
             
-        //     if (move_uploaded_file($_FILES['proofOfPayment']['tmp_name'], $uploadFile)) {
-        //         // Insert payment record
-        //         $paymentSql = "INSERT INTO payment (customer_id, pay_amount, pay_method, pay_reference_number, pay_status, proof_of_payment) 
-        //                        VALUES (:customer_id, :amount, :method, :ref_number, 'Completed', :proof)";
-        //         $paymentStmt = $updatePdo->prepare($paymentSql);
-        //         $paymentStmt->bindParam(':customer_id', $customerId, PDO::PARAM_INT);
-        //         $paymentStmt->bindParam(':amount', $amount, PDO::PARAM_STR);
-        //         $paymentStmt->bindParam(':method', $paymentMethod, PDO::PARAM_STR);
-        //         $paymentStmt->bindParam(':ref_number', $refNumber, PDO::PARAM_STR);
-        //         $paymentStmt->bindParam(':proof', $uploadFile, PDO::PARAM_STR);
-        //         $paymentStmt->execute();
-        //     }
-        // }
+            if (move_uploaded_file($_FILES['proofOfPayment']['tmp_name'], $uploadFile)) {
+                // Insert payment record
+                $paymentSql = "INSERT INTO payment (customer_id, pay_amount, pay_method, pay_reference_number, pay_status, proof_of_payment) 
+                               VALUES (:customer_id, :amount, :method, :ref_number, 'Completed', :proof)";
+                $paymentStmt = $updatePdo->prepare($paymentSql);
+                $paymentStmt->bindParam(':customer_id', $customerId, PDO::PARAM_INT);
+                $paymentStmt->bindParam(':amount', $amount, PDO::PARAM_STR);
+                $paymentStmt->bindParam(':method', $paymentMethod, PDO::PARAM_STR);
+                $paymentStmt->bindParam(':ref_number', $refNumber, PDO::PARAM_STR);
+                $paymentStmt->bindParam(':proof', $uploadFile, PDO::PARAM_STR);
+                $paymentStmt->execute();
+            }
+        }
         
         // Redirect to refresh the page
         header("Location: admin_customers_profile.php?id=$customerId&updated=1");
@@ -186,7 +151,7 @@ if (empty($transactions)) {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin Customer Profile</title>
     <link rel="stylesheet" href="admin-css/admin_header1.css">
-    <link rel="stylesheet" href="admin-css/admin_customer_profile01.css">
+    <link rel="stylesheet" href="admin-css/admin_customer_profile1.css">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="icon" type="image/png" href="admin-pics/adorafur-logo.png">
     <style>
@@ -284,7 +249,7 @@ if (empty($transactions)) {
 
             <!-- Transactions Section -->
             <div class="transactions-box">
-                <div class="transac-header">Reservations History</div>
+                <div class="transac-header">Transactions</div>
                 <div class="dropdown">
                     <button class="btn btn-secondary dropdown-toggle" type="button" id="dropdownMenuButton" 
                         data-bs-toggle="dropdown" aria-expanded="false">
@@ -297,13 +262,11 @@ if (empty($transactions)) {
                     </ul>
                 </div>
                 
-                <div class="booking-table-container">
-                
                 <!-- Transactions Table -->
                 <table class="transactions-table" id="transactionsTable">
                     <thead>
                         <tr>
-                            <th>Booking ID</th>
+                            <th>Transaction ID</th>
                             <th>Service</th>
                             <th>Pet Name</th>
                             <th>Amount Paid</th>
@@ -320,13 +283,13 @@ if (empty($transactions)) {
                                     <td><?php echo htmlspecialchars($transaction['pet_name']); ?></td>
                                     <td>
                                         <div class="amount-container">
-                                            <span class="amount-value"><?php echo htmlspecialchars($transaction['pay_amount']); ?></span> <br>
+                                            <span class="amount-value"><?php echo htmlspecialchars($transaction['pay_amount']); ?></span>
                                             <span class="amount-status"><?php echo htmlspecialchars($transaction['pay_status']); ?></span>
                                         </div>
                                     </td>
                                     <td>
                                         <div class="ref-container">
-                                            <span><?php echo htmlspecialchars($transaction['pay_reference_number']); ?></span> <br>
+                                            <span><?php echo htmlspecialchars($transaction['pay_reference_number']); ?></span>
                                             <span class="ref-source"><?php echo htmlspecialchars($transaction['pay_method']); ?></span>
                                         </div>
                                     </td>
@@ -338,9 +301,8 @@ if (empty($transactions)) {
                                 <td colspan="6" style="text-align: center;">No transactions found</td>
                             </tr>
                         <?php endif; ?>
-                        </tbody>
-                    </table>
-                    </div>
+                    </tbody>
+                </table>
             </div>
         </div>
     </div>
@@ -378,12 +340,18 @@ if (empty($transactions)) {
         </div>
 
         <div style="width: 50%; padding-left: 10px;">
+            <div class="input-group">
+                <label for="membershipAmount">Amount</label>
+                <input type="text" name="membershipAmount" placeholder="Enter amount">
+            </div>
 
             <div class="input-group">
                 <label for="refNumber">Reference No.</label>
                 <input type="text" id="refNumber" name="refNumber" placeholder="Enter reference number">
             </div>
-            
+
+            <label for="proofofPayment">Proof of Payment</label>
+            <input type="file" id="proofOfPayment" name="proofOfPayment">
         </div>
     </div>
 

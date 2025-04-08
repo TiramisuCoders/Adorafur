@@ -53,7 +53,7 @@ function handleRegister($conn) {
 
     $firstname = htmlspecialchars($_POST['firstName'] ?? '');
     $lastname = htmlspecialchars($_POST['lastName'] ?? '');
-    $email = strtolower(htmlspecialchars($_POST['email'] ?? ''));
+    $email = htmlspecialchars($_POST['email'] ?? '');
     $contactNumber = htmlspecialchars($_POST['contactNumber'] ?? '');
     $password = $_POST['password'] ?? '';
     $repeatPassword = $_POST['repeatPassword'] ?? '';
@@ -114,21 +114,17 @@ function handleRegister($conn) {
         $hasError = true;
     } 
 
+    // Check if email already exists in database
     if (!$hasError && $email) {
-        // Convert email to lowercase before checking
-        $emailLower = strtolower($email);
-    
-        // Use LOWER() in SQL to compare in a case-insensitive way
-        $stmt = $conn->prepare("SELECT * FROM customer WHERE c_email ILIKE :email");
-        $stmt->bindParam(':email', $emailLower);
+        $stmt = $conn->prepare("SELECT * FROM customer WHERE c_email = :email");
+        $stmt->bindParam(':email', $email);
         $stmt->execute();
-    
+
         if ($stmt->rowCount() > 0) {
-            $email_error = 'Email already registered.';
+            $email_error= 'Email already registered.';
             $hasError = true;
         } 
     }
-    
 
     if (!$hasError) {
         // Create user in Supabase Auth via API
@@ -210,7 +206,7 @@ function handleLogin($conn) {
     global $login_email_error, $login_password_error;
     $hasError = false;
 
-    $email = strtolower($_POST['email'] ?? '');
+    $email = $_POST['email'] ?? '';
     $password = $_POST['password'] ?? '';
 
     // First check if the user is an admin
@@ -266,7 +262,7 @@ function handleLogin($conn) {
         // If Supabase Auth login is successful, proceed with database login
         if ($http_code === 200) {
             // Check customer login
-            $stmt = $conn->prepare("SELECT c_id, c_password FROM customer WHERE LOWER(c_email) = ?");
+            $stmt = $conn->prepare("SELECT c_id, c_password FROM customer WHERE c_email = ?");
             $stmt->execute([$email]);
             $customer = $stmt->fetch(PDO::FETCH_ASSOC);
 
@@ -281,7 +277,7 @@ function handleLogin($conn) {
                     $_SESSION['login_time'] = date('Y-m-d H:i:s');
                     $_SESSION['login_email'] = $email;
                     
-                    header("Location: Profile.php");
+                    header("Location: profile.php");
                     exit();
                 } else {
                     $login_password_error = 'Password mismatch between systems. Please contact support.';
@@ -335,7 +331,7 @@ function handleForgotPassword($conn) {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>LOG IN PAGE</title>
-    <link rel="stylesheet" href="log_in01.css">
+    <link rel="stylesheet" href="log_in1.css">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     
@@ -417,7 +413,7 @@ function handleForgotPassword($conn) {
                             <div id="loginPasswordError" class="error login-password-error mt-4 w-50 text-center" style="display: none;"></div>
                         </div>
 
-                        <button type="submit" id="loginbut" class="btn">Login</button>
+                        <button type="submit" id="loginbut" class="btn btn-primary">Login</button>
                         <p class="mt-3 text-center"><a href="#" data-bs-toggle="modal" data-bs-target="#registerModal" id="not-yet-register">Not yet registered?</a></p>
                         <!-- Add resend verification link -->
                         <div class="mb-3 d-flex flex-column justify-content-center">
@@ -449,7 +445,7 @@ function handleForgotPassword($conn) {
                                         <div class="col-6">
                                             <div class="mb-1">
                                                 <label for="firstName">First Name <span class="text-danger">*</span></label>
-                                                <input type="text" class="form-control" id="firstName" name="firstName" value="<?php echo $firstname?>"  placeholder="Enter First Name" required>
+                                                <input type="text" class="form-control" id="firstName" name="firstName" value="<?php echo $firstname?>" required>
                                                 <?php if ($firstname_error): ?>
                                                     <p class="error firstname-error"><?php echo $firstname_error; ?></p>
                                                 <?php endif; ?>
@@ -510,15 +506,9 @@ function handleForgotPassword($conn) {
                                             </div>
                                         </div>
                                         
-                                        <div class="row g-2">
-                                            <div class="col-6">
-                                                <button type="button" class="btn w-100" id="cancel-but" data-bs-dismiss="modal">Cancel</button>
-                                            </div>
-                                            <div class="col-6">
-                                                <button type="submit" class="btn create-button w-100" id="create-but">Create</button>
-                                            </div>
+                                        <div class="col-12">
+                                            <button type="submit" class="btn btn-primary create-button w-100" id="create-but">Create</button>
                                         </div>
-
                                     </div>
                                     
                                     <p class="text-center mt-4 mb-0">
@@ -532,8 +522,8 @@ function handleForgotPassword($conn) {
                         
                         <!-- Image Side -->
                         <div class="col-md-6 d-none d-md-block image-side p-0 position-relative">
-                        <!-- <button type="button" class="btn-close custom-close position-absolute" data-bs-dismiss="modal" aria-label="Close"></button> -->
-                        <img src="Register-dog.png" alt="Happy dog" class="dog-image">
+                            <button type="button" class="btn-close position-absolute" data-bs-dismiss="modal" aria-label="Close"></button>
+                            <img src="Register-dog.png" alt="Happy dog" class="dog-image">
                         </div>
 
                     </div>
