@@ -1,19 +1,27 @@
 <?php
-    // $firstName = '';
-    // $lastName = '';
-    $firstname = "";
-    $lastname = "";
-    $email = "";
-    $contactNumber = "";
-    $firstname_error = null;
-    $lastname_error = null;
-    $email_error = null; 
-    $contact_error = null;
-    $password_error = null;
+// Add this at the very top of login.php to handle password reset tokens
+if (isset($_GET['access_token']) && !empty($_GET['access_token'])) {
+    // This is a password reset request from Supabase
+    $token = $_GET['access_token'];
+    // Store token in session and redirect to a modal view
+    $_SESSION['reset_password_token'] = $token;
+    $_SESSION['show_reset_password_modal'] = true;
+}
 
-    // Login form variables
-    $login_email_error = null;
-    $login_password_error = null;
+// Rest of your existing login.php code continues below
+$firstname = "";
+$lastname = "";
+$email = "";
+$contactNumber = "";
+$firstname_error = null;
+$lastname_error = null;
+$email_error = null; 
+$contact_error = null;
+$password_error = null;
+
+// Login form variables
+$login_email_error = null;
+$login_password_error = null;
 
 // Start session at the very beginning
 if (session_status() == PHP_SESSION_NONE) {
@@ -40,10 +48,117 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 handleLogin($conn);
                 break;
             case 'forgotPassword':
-                handleForgotPassword($conn);
+                $result = handleForgotPassword($conn);
+                if ($result['success']) {
+                    echo "<div class='alert alert-success'>Password reset link sent to your email.</div>";
+                } elseif ($result['error']) {
+                    echo "<div class='alert alert-danger'>" . $result['error'] . "</div>";
+                }
                 break;
+                case 'resetPassword':
+                    $result = handleResetPassword($conn);
+                    
+                    // For AJAX requests, return JSON
+                    if (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && 
+                        strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest') {
+                        header('Content-Type: application/json');
+                        echo json_encode($result);
+                        exit;
+                    } else {
+                        // For regular form submissions
+                        if ($result['success']) {
+                            echo "<div class='alert alert-success'>Your password has been reset successfully.</div>";
+                        } elseif ($result['error']) {
+                            echo "<div class='alert alert-danger'>" . $result['error'] . "</div>";
+                        }
+                    }
+                    break;
         }
     }
+}
+
+// Add this new function to handle password resets
+function handleResetPassword($conn) {
+    $token = $_POST['token'] ?? '';
+    $password = $_POST['password'] ?? '';
+    $confirmPassword = $_POST['confirmPassword'] ?? '';
+    $error = null;
+    $success = false;
+    
+    // Validate password
+    if (strlen($password) < 8 || strlen($password) > 12) {
+        $error = 'Password must be between 8 and 12 characters.';
+    } elseif (!preg_match('/[A-Z]/', $password)) {
+        $error = 'Password must contain at least 1 uppercase letter.';
+    } elseif (!preg_match('/\d/', $password)) {
+        $error = 'Password must contain at least 1 number.';
+    } elseif (!preg_match('/[\W_]/', $password)) {
+        $error = 'Password must contain at least 1 special character.';
+    } elseif ($password !== $confirmPassword) {
+        $error = 'Passwords do not match.';
+    } else {
+        // Update password in Supabase
+        $supabase_url = "https://ygbwanzobuielhttdzsw.supabase.co";
+        $supabase_key = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlnYndhbnpvYnVpZWxodHRkenN3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDM1MTY3NTMsImV4cCI6MjA1OTA5Mjc1M30.bIaP_7rfHyne5PQ_Wmt8qdMYFDzurdnEAUR7U2bxbDQ";
+        
+        $ch = curl_init();
+        curl_setopt($ch, CURLOPT_URL, $supabase_url . "/auth/v1/user/recovery");
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+        curl_setopt($ch, CURLOPT_POST, 1);
+        
+        $data = [
+            'token' => $token,
+            'password' => $password
+        ];
+        
+        curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($data));
+        
+        $headers = [
+            'Content-Type: application/json',
+            'apikey: ' . $supabase_key
+        ];
+        
+        curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+        
+        $response = curl_exec($ch);
+        $http_code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        
+        // For debugging
+        error_log("Supabase Password Update Response: " . $response);
+        error_log("HTTP Code: " . $http_code);
+        
+        curl_close($ch);
+        
+        if ($http_code === 200) {
+            // If Supabase update is successful, update the password in your database
+            $response_data = json_decode($response, true);
+            if (isset($response_data['email'])) {
+                $email = $response_data['email'];
+                
+                // Update password in your database
+                $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
+                $stmt = $conn->prepare("UPDATE customer SET c_password = ? WHERE c_email = ?");
+                if ($stmt->execute([$hashedPassword, $email])) {
+                    $success = true;
+                    // Clear the session token
+                    unset($_SESSION['reset_password_token']);
+                    unset($_SESSION['show_reset_password_modal']);
+                } else {
+                    $error = 'Failed to update password in database. Please contact support.';
+                }
+            } else {
+                $error = 'Failed to retrieve user information. Please try again.';
+            }
+        } else {
+            $response_data = json_decode($response, true);
+            $error = $response_data['error_description'] ?? ($response_data['message'] ?? 'Failed to reset password. The link may have expired.');
+        }
+    }
+    
+    return [
+        'success' => $success,
+        'error' => $error
+    ];
 }
 
 function handleRegister($conn) {
@@ -209,104 +324,106 @@ function handleLogin($conn) {
     $email = $_POST['email'] ?? '';
     $password = $_POST['password'] ?? '';
 
-    // First, check if the user exists in Supabase Auth and is verified
-    $supabase_url = "https://ygbwanzobuielhttdzsw.supabase.co";
-    $supabase_key = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlnYndhbnpvYnVpZWxodHRkenN3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDM1MTY3NTMsImV4cCI6MjA1OTA5Mjc1M30.bIaP_7rfHyne5PQ_Wmt8qdMYFDzurdnEAUR7U2bxbDQ"; // Replace with your actual anon key
-    
-    $ch = curl_init();
-    curl_setopt($ch, CURLOPT_URL, $supabase_url . "/auth/v1/token?grant_type=password");
-    curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
-    curl_setopt($ch, CURLOPT_POST, 1);
-    
-    $auth_data = [
-        'email' => $email,
-        'password' => $password
-    ];
-    
-    curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($auth_data));
-    
-    $headers = [
-        'Content-Type: application/json',
-        'apikey: ' . $supabase_key
-    ];
-    
-    curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
-    
-    $response = curl_exec($ch);
-    $http_code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-    
-    // For debugging
-    error_log("Supabase Auth Login Response: " . $response);
-    error_log("HTTP Code: " . $http_code);
-    
-    curl_close($ch);
-    
-    // If Supabase Auth login is successful, proceed with your database login
-    if ($http_code === 200) {
-        // Check if user is an admin
-        $stmt = $conn->prepare("SELECT admin_id, admin_password FROM admin WHERE admin_email = ?");
-        $stmt->execute([$email]);
-        $admin = $stmt->fetch(PDO::FETCH_ASSOC);
+    // First check if the user is an admin
+    $stmt = $conn->prepare("SELECT admin_id, admin_password FROM admin WHERE admin_email = ?");
+    $stmt->execute([$email]);
+    $admin = $stmt->fetch(PDO::FETCH_ASSOC);
 
-        // If not an admin, check customer login
-        $stmt = $conn->prepare("SELECT c_id, c_password FROM customer WHERE c_email = ?");
-        $stmt->execute([$email]);
-        $customer = $stmt->fetch(PDO::FETCH_ASSOC);
-
-        // If admin exists, check admin password
-        if ($admin) {
-            if ($password === $admin['admin_password']) {
-                $_SESSION['admin_id'] = $admin['admin_id'];
-                header("Location: admin/admin_home.php");
-                exit();
-            } else {
-                $login_password_error = 'Wrong password';
-                $hasError = true;
-            }
-        } 
-        // If customer exists, check customer password
-        else if ($customer) {
-            // Since we've already verified with Supabase, we can skip password verification
-            // or keep it for double security
-            if (password_verify($password, $customer['c_password'])) {
-                $_SESSION['c_id'] = $customer['c_id'];
-                $_SESSION['customer_id'] = $customer['c_id'];
-                
-                $_SESSION['login_time'] = date('Y-m-d H:i:s');
-                $_SESSION['login_email'] = $email;
-                
-                header("Location: profile.php");
-                exit();
-            } else {
-                $login_password_error = 'Password mismatch between systems. Please contact support.';
-                $hasError = true;
-            }
+    // If admin exists, check admin password directly without Supabase
+    if ($admin) {
+        if ($password === $admin['admin_password']) {
+            $_SESSION['admin_id'] = $admin['admin_id'];
+            header("Location: admin/admin_home.php");
+            exit();
         } else {
-            // User exists in Supabase but not in our database
-            // This is an edge case - we should create the user in our database
-            $login_email_error = 'User exists in authentication system but not in database. Please register again.';
+            $login_password_error = 'Wrong password';
             $hasError = true;
         }
-    } else {
-        // Handle Supabase Auth error
-        $response_data = json_decode($response, true);
+    } 
+    // If not an admin, proceed with Supabase Auth for regular users
+    else {
+        // Check if user exists in Supabase Auth and is verified
+        $supabase_url = "https://ygbwanzobuielhttdzsw.supabase.co";
+        $supabase_key = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlnYndhbnpvYnVpZWxodHRkenN3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDM1MTY3NTMsImV4cCI6MjA1OTA5Mjc1M30.bIaP_7rfHyne5PQ_Wmt8qdMYFDzurdnEAUR7U2bxbDQ";
         
-        if (isset($response_data['error_description'])) {
-            if (strpos($response_data['error_description'], 'Email not confirmed') !== false) {
-                $login_email_error = 'Please verify your email before logging in.';
-            } else if (strpos($response_data['error_description'], 'Invalid login credentials') !== false) {
-                $login_password_error = 'Invalid email or password';
+        $ch = curl_init();
+        curl_setopt($ch, CURLOPT_URL, $supabase_url . "/auth/v1/token?grant_type=password");
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+        curl_setopt($ch, CURLOPT_POST, 1);
+        
+        $auth_data = [
+            'email' => $email,
+            'password' => $password
+        ];
+        
+        curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($auth_data));
+        
+        $headers = [
+            'Content-Type: application/json',
+            'apikey: ' . $supabase_key
+        ];
+        
+        curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+        
+        $response = curl_exec($ch);
+        $http_code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        
+        // For debugging
+        error_log("Supabase Auth Login Response: " . $response);
+        error_log("HTTP Code: " . $http_code);
+        
+        curl_close($ch);
+        
+        // If Supabase Auth login is successful, proceed with database login
+        if ($http_code === 200) {
+            // Check customer login
+            $stmt = $conn->prepare("SELECT c_id, c_password FROM customer WHERE c_email = ?");
+            $stmt->execute([$email]);
+            $customer = $stmt->fetch(PDO::FETCH_ASSOC);
+
+            // If customer exists, check customer password
+            if ($customer) {
+                // Since we've already verified with Supabase, we can skip password verification
+                // or keep it for double security
+                if (password_verify($password, $customer['c_password'])) {
+                    $_SESSION['c_id'] = $customer['c_id'];
+                    $_SESSION['customer_id'] = $customer['c_id'];
+                    
+                    $_SESSION['login_time'] = date('Y-m-d H:i:s');
+                    $_SESSION['login_email'] = $email;
+                    
+                    header("Location: profile.php");
+                    exit();
+                } else {
+                    $login_password_error = 'Password mismatch between systems. Please contact support.';
+                    $hasError = true;
+                }
             } else {
-                $login_password_error = $response_data['error_description'];
+                // User exists in Supabase but not in our database
+                $login_email_error = 'User exists in authentication system but not in database. Please register again.';
+                $hasError = true;
             }
-        } else if (isset($response_data['message'])) {
-            $login_password_error = $response_data['message'];
         } else {
-            // If we can't parse the error, show the raw response for debugging
-            $login_password_error = 'Authentication error: ' . substr($response, 0, 100) . '...';
+            // Handle Supabase Auth error
+            $response_data = json_decode($response, true);
+            
+            if (isset($response_data['error_description'])) {
+                if (strpos($response_data['error_description'], 'Email not confirmed') !== false) {
+                    $login_email_error = 'Please verify your email before logging in.';
+                } else if (strpos($response_data['error_description'], 'Invalid login credentials') !== false) {
+                    $login_password_error = 'Invalid email or password';
+                } else {
+                    $login_password_error = $response_data['error_description'];
+                }
+            } else if (isset($response_data['message'])) {
+                $login_password_error = $response_data['message'];
+            } else {
+                // If we can't parse the error, show the raw response for debugging
+                $login_password_error = 'Authentication error: ' . substr($response, 0, 100) . '...';
+            }
+            
+            $hasError = true;
         }
-        
-        $hasError = true;
     }
 
     if ($hasError) {
@@ -317,9 +434,62 @@ function handleLogin($conn) {
 }
 
 function handleForgotPassword($conn) {
-    // Your forgot password logic here
-    // This is just a placeholder
-    echo "Password reset functionality not implemented yet.";
+    $email = $_POST['email'] ?? '';
+    $error = null;
+    $success = false;
+    
+    if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+        $error = 'Please enter a valid email address.';
+    } else {
+        // Check if the email exists in the database
+        $stmt = $conn->prepare("SELECT c_id FROM customer WHERE c_email = ?");
+        $stmt->execute([$email]);
+        
+        if ($stmt->rowCount() === 0) {
+            $error = 'No account found with this email address.';
+        } else {
+            // Email exists, send password reset request to Supabase
+            $supabase_url = "https://ygbwanzobuielhttdzsw.supabase.co";
+            $supabase_key = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlnYndhbnpvYnVpZWxodHRkenN3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDM1MTY3NTMsImV4cCI6MjA1OTA5Mjc1M30.bIaP_7rfHyne5PQ_Wmt8qdMYFDzurdnEAUR7U2bxbDQ";
+            
+            $ch = curl_init();
+            curl_setopt($ch, CURLOPT_URL, $supabase_url . "/auth/v1/recover");
+            curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+            curl_setopt($ch, CURLOPT_POST, 1);
+            
+            // Add the redirect URL to your login.php page
+            $data = [
+                'email' => $email,
+                'redirect_to' => 'http://' . $_SERVER['HTTP_HOST'] . dirname($_SERVER['PHP_SELF']) . '/login.php'
+            ];
+            
+            curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($data));
+            
+            $headers = [
+                'Content-Type: application/json',
+                'apikey: ' . $supabase_key
+            ];
+            
+            curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+            
+            $response = curl_exec($ch);
+            $http_code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+            
+            curl_close($ch);
+            
+            if ($http_code === 200) {
+                $success = true;
+            } else {
+                $response_data = json_decode($response, true);
+                $error = $response_data['message'] ?? 'An error occurred while processing your request.';
+            }
+        }
+    }
+    
+    return [
+        'success' => $success,
+        'error' => $error
+    ];
 }
 ?>
 
@@ -411,15 +581,15 @@ function handleForgotPassword($conn) {
                             <div id="loginPasswordError" class="error login-password-error mt-4 w-50 text-center" style="display: none;"></div>
                         </div>
 
+                        <button type="submit" id="loginbut" class="btn btn-primary">Login</button>
+                        <p class="mt-3 text-center"><a href="#" data-bs-toggle="modal" data-bs-target="#registerModal" id="not-yet-register">Not yet registered?</a></p>
+                        <p class="mt-2 text-center"><a href="#" data-bs-toggle="modal" data-bs-target="#forgotPasswordModal" id="forgot-password-link">Forgot Password?</a></p>
                         <!-- Add resend verification link -->
                         <div class="mb-3 d-flex flex-column justify-content-center">
                             <p class="text-center mt-2">
                                 <a href="#" id="resendVerificationLink">Didn't receive verification email?</a>
                             </p>
                         </div>
-
-                        <button type="submit" id="loginbut" class="btn btn-primary">Login</button>
-                        <p class="mt-3 text-center"><a href="#" data-bs-toggle="modal" data-bs-target="#registerModal" id="not-yet-register">Not yet registered?</a></p>
                     </form>
                 </div>
             </div>
@@ -576,6 +746,71 @@ function handleForgotPassword($conn) {
         </div>
     </div>
 
+    <!-- Forgot Password Modal -->
+    <div class="modal fade" id="forgotPasswordModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Reset Your Password</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p>Enter your email address and we'll send you a link to reset your password.</p>
+                    <form id="forgotPasswordForm" action="" method="POST">
+                        <input type="hidden" name="action" value="forgotPassword">
+                        <div class="mb-3">
+                            <input type="email" class="form-control" id="forgotPasswordEmail" name="email" required placeholder="Enter your email">
+                        </div>
+                        <div id="forgotPasswordMessage" class="alert d-none"></div>
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-primary" id="resetPasswordBtn">Send Reset Link</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Reset Password Modal -->
+    <div class="modal fade" id="resetPasswordModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Set New Password</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p>Please enter your new password below:</p>
+                    <form id="resetPasswordForm" action="" method="POST">
+                        <input type="hidden" name="action" value="resetPassword">
+                        <input type="hidden" name="token" id="resetPasswordToken" value="">
+                        
+                        <div class="mb-3 password-input">
+                            <label for="resetPassword" class="form-label">New Password</label>
+                            <input type="password" class="form-control" id="resetPassword" name="password" required>
+                            <i class="fas fa-eye password-toggle" id="resetPasswordToggle"></i>
+                            <div class="password-requirements">
+                                Password must be 8-12 characters, containing 1 special character, 1 uppercase letter and 1 number.
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3 password-input">
+                            <label for="resetConfirmPassword" class="form-label">Confirm New Password</label>
+                            <input type="password" class="form-control" id="resetConfirmPassword" name="confirmPassword" required>
+                            <i class="fas fa-eye password-toggle" id="resetConfirmPasswordToggle"></i>
+                        </div>
+                        
+                        <div id="resetPasswordMessage" class="alert d-none"></div>
+                        
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-primary" id="submitResetPasswordBtn">Reset Password</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
 <!-- JavaScript to Auto-Show the Modal If Registration Was Successful -->
 <?php if (isset($_SESSION['registration_success'])): ?>
     <script>
@@ -587,6 +822,19 @@ function handleForgotPassword($conn) {
     <?php unset($_SESSION['registration_success']); // Remove session variable after showing modal ?>
 <?php endif; ?>
 
+<!-- JavaScript to Auto-Show the Reset Password Modal if token is present -->
+<?php if (isset($_SESSION['show_reset_password_modal']) && isset($_SESSION['reset_password_token'])): ?>
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            // Set the token in the form
+            document.getElementById('resetPasswordToken').value = "<?php echo htmlspecialchars($_SESSION['reset_password_token']); ?>";
+            
+            // Show the reset password modal
+            var resetPasswordModal = new bootstrap.Modal(document.getElementById('resetPasswordModal'));
+            resetPasswordModal.show();
+        });
+    </script>
+<?php endif; ?>
 
 <!-- JavaScript to handle modals and password toggles -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
@@ -677,9 +925,13 @@ function handleForgotPassword($conn) {
         const passwordToggle = document.getElementById('passwordToggle');
         const repeatPasswordToggle = document.getElementById('repeatPasswordToggle');
         const loginPasswordToggle = document.getElementById('loginPasswordToggle');
+        const resetPasswordToggle = document.getElementById('resetPasswordToggle');
+        const resetConfirmPasswordToggle = document.getElementById('resetConfirmPasswordToggle');
         const passwordField = document.getElementById('password');
         const repeatPasswordField = document.getElementById('repeatPassword');
         const loginPasswordField = document.getElementById('loginPassword');
+        const resetPasswordField = document.getElementById('resetPassword');
+        const resetConfirmPasswordField = document.getElementById('resetConfirmPassword');
         
         // Function to toggle password visibility
         function togglePasswordVisibility(passwordField, toggleIcon) {
@@ -712,6 +964,18 @@ function handleForgotPassword($conn) {
         if (loginPasswordToggle && loginPasswordField) {
             loginPasswordToggle.addEventListener('click', function() {
                 togglePasswordVisibility(loginPasswordField, loginPasswordToggle);
+            });
+        }
+        
+        if (resetPasswordToggle && resetPasswordField) {
+            resetPasswordToggle.addEventListener('click', function() {
+                togglePasswordVisibility(resetPasswordField, resetPasswordToggle);
+            });
+        }
+        
+        if (resetConfirmPasswordToggle && resetConfirmPasswordField) {
+            resetConfirmPasswordToggle.addEventListener('click', function() {
+                togglePasswordVisibility(resetConfirmPasswordField, resetConfirmPasswordToggle);
             });
         }
         
@@ -756,9 +1020,152 @@ function handleForgotPassword($conn) {
                 }, 500);
             });
         }
+
+        // Handle forgot password form submission
+        const forgotPasswordForm = document.getElementById('forgotPasswordForm');
+        if (forgotPasswordForm) {
+            forgotPasswordForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                const email = document.getElementById('forgotPasswordEmail').value.trim();
+                const messageDiv = document.getElementById('forgotPasswordMessage');
+                const submitButton = document.getElementById('resetPasswordBtn');
+                
+                if (!email) {
+                    showForgotPasswordMessage('Please enter your email address.', 'danger');
+                    return;
+                }
+                
+                // Disable button during request
+                submitButton.disabled = true;
+                submitButton.innerHTML = 'Sending...';
+                
+                // Send AJAX request
+                fetch('process-forgot-password.php', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                    },
+                    body: 'email=' + encodeURIComponent(email) + '&action=forgotPassword'
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        showForgotPasswordMessage('Password reset link has been sent to your email.', 'success');
+                        document.getElementById('forgotPasswordEmail').value = '';
+                        
+                        // Close modal after 3 seconds on success
+                        setTimeout(() => {
+                            const modal = bootstrap.Modal.getInstance(document.getElementById('forgotPasswordModal'));
+                            if (modal) {
+                                modal.hide();
+                            }
+                        }, 3000);
+                    } else {
+                        showForgotPasswordMessage(data.error || 'An error occurred. Please try again.', 'danger');
+                    }
+                })
+                .catch(error => {
+                    showForgotPasswordMessage('An error occurred. Please try again.', 'danger');
+                    console.error('Error:', error);
+                })
+                .finally(() => {
+                    // Re-enable button
+                    submitButton.disabled = false;
+                    submitButton.innerHTML = 'Send Reset Link';
+                });
+            });
+        }
+
+        // Handle reset password form submission
+        const resetPasswordForm = document.getElementById('resetPasswordForm');
+        if (resetPasswordForm) {
+            resetPasswordForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                const password = document.getElementById('resetPassword').value;
+                const confirmPassword = document.getElementById('resetConfirmPassword').value;
+                const token = document.getElementById('resetPasswordToken').value;
+                const messageDiv = document.getElementById('resetPasswordMessage');
+                const submitButton = document.getElementById('submitResetPasswordBtn');
+                
+                if (!password || !confirmPassword) {
+                    showResetPasswordMessage('Please fill in all fields.', 'danger');
+                    return;
+                }
+                
+                // Disable button during request
+                submitButton.disabled = true;
+                submitButton.innerHTML = 'Processing...';
+                
+                // Send AJAX request
+                fetch('login.php', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                        'X-Requested-With': 'XMLHttpRequest'  // Add this header to identify AJAX requests
+                    },
+                    body: 'action=resetPassword&token=' + encodeURIComponent(token) + 
+                        '&password=' + encodeURIComponent(password) + 
+                        '&confirmPassword=' + encodeURIComponent(confirmPassword)
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        showResetPasswordMessage('Your password has been reset successfully.', 'success');
+                        
+                        // Clear form
+                        document.getElementById('resetPassword').value = '';
+                        document.getElementById('resetConfirmPassword').value = '';
+                        
+                        // Close modal after 3 seconds on success
+                        setTimeout(() => {
+                            const modal = bootstrap.Modal.getInstance(document.getElementById('resetPasswordModal'));
+                            if (modal) {
+                                modal.hide();
+                            }
+                            
+                            // Show login modal
+                            setTimeout(() => {
+                                const loginModal = new bootstrap.Modal(document.getElementById('loginModal'));
+                                loginModal.show();
+                            }, 500);
+                        }, 3000);
+                    } else {
+                        showResetPasswordMessage(data.error || 'An error occurred. Please try again.', 'danger');
+                    }
+                })
+                .catch(error => {
+                    showResetPasswordMessage('An error occurred. Please try again.', 'danger');
+                    console.error('Error:', error);
+                })
+                .finally(() => {
+                    // Re-enable button
+                    submitButton.disabled = false;
+                    submitButton.innerHTML = 'Reset Password';
+                });
+            });
+        }
+
+        function showForgotPasswordMessage(message, type) {
+            const messageDiv = document.getElementById('forgotPasswordMessage');
+            if (messageDiv) {
+                messageDiv.textContent = message;
+                messageDiv.className = `alert alert-${type}`;
+                messageDiv.classList.remove('d-none');
+            }
+        }
+        
+        function showResetPasswordMessage(message, type) {
+            const messageDiv = document.getElementById('resetPasswordMessage');
+            if (messageDiv) {
+                messageDiv.textContent = message;
+                messageDiv.className = `alert alert-${type}`;
+                messageDiv.classList.remove('d-none');
+            }
+        }
     });
 </script>
-
 
 </body>
 </html>

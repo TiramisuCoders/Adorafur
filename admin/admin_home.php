@@ -11,6 +11,7 @@ $sql = "SELECT
             CONCAT(c.c_first_name, ' ', c.c_last_name) AS owner_name,
             c.c_contact_number AS owner_num,
             pay.pay_status AS pay_status,
+            
             pay.pay_method AS pay_mop,
             pay.pay_reference_number AS pay_reference_number,
             DATE(b.booking_check_in) AS b_in,
@@ -19,15 +20,14 @@ $sql = "SELECT
         JOIN pet p ON b.pet_id = p.pet_id
         JOIN customer c ON p.customer_id = c.c_id
         JOIN service s ON b.service_id = s.service_id
-        JOIN payment pay ON b.payment_id = pay.pay_id
+        JOIN payment pay ON b.booking_id = pay.booking_id
         WHERE b.booking_status <> 'Cancelled'
         ORDER BY
             CASE
-                WHEN b.booking_check_in >= CURDATE() THEN 1  -- Future & today's bookings first
+                WHEN b.booking_check_in >= CURRENT_DATE THEN 1  -- Future & today's bookings first
                 ELSE 2  -- Past bookings last
             END,
             b.booking_check_in ASC;";
-
 
 try {
     $stmt = $conn->prepare($sql);  // Prepare the query
@@ -51,13 +51,12 @@ try {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/png" href="admin-pics/adorafur-logo.png">
     <link rel="stylesheet" href="admin-css/admin_header01.css">
     <link rel="stylesheet" href="admin-css/admin_home.css">
-
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="admin.js"></script>
-
     <title>Admin Homepage</title>
 
     <script>
@@ -72,7 +71,6 @@ try {
         }
     }
 </script>
-   
 </head>
 
 <body style="background-color: #eee;">
@@ -98,9 +96,6 @@ try {
         </div>
         <!-- HEADER -->
         <div class="header-img-container">
-            <button id="notificationButton">
-                <img class="notifications" src="admin-pics/notification-bell.png" alt="Notifications" />
-            </button>
         </div>
     </nav>
 
@@ -118,7 +113,7 @@ try {
         <div class="reservations-container">
         <table class="reservations">
             <?php
-            if (!empty($reservations)) { // Check if there are results
+            if ($stmt->rowCount() > 0) { // Check if there are results
                 echo '
                 <thead class="attributes">
                     <th class="id">ID</th>
@@ -147,8 +142,10 @@ try {
                         data-check-in="<?php echo htmlspecialchars($fetch_reservations['b_in']); ?>"
                         data-check-out="<?php echo htmlspecialchars($fetch_reservations['b_out']); ?>"
                         data-payment-status="<?php echo htmlspecialchars($fetch_reservations['pay_status']); ?>"
-                        data-mop="<?php echo htmlspecialchars($fetch_reservations['pay_mop'])?>"
-                        data-reference-number="<?php echo htmlspecialchars($fetch_reservations['pay_reference_number'])?>"
+                        data-mop="<?php echo htmlspecialchars($fetch_reservations['pay_mop']); ?>"
+                        data-reference-number="<?php echo htmlspecialchars($fetch_reservations['pay_reference_number']); ?>"
+                        
+                        
 
                            <strong> <?php echo htmlspecialchars($fetch_reservations['b_id']); ?> </strong>
                         </button>
@@ -213,13 +210,15 @@ try {
                     </div>
 
                     <div class="button-group">
-                        <button class="button" id="saveButton">Save</button>
-                        <button class="button" id="cancelButton" onclick="document.querySelector('.modal-overlay').style.display='none'">Cancel</button>
+                        <button class="button" id="saveButton" onclick="saveBooking()">Save</button>
+                        <button type="button" class="btn" id="cancelButton" data-bs-dismiss="modal">Cancel</button>
                     </div>
                 </div>
             </div>
             <div class="modal-body">
                 <form id="updateBookingForm">
+                <input type="hidden" name="booking_id" id="bookingId">
+
                     <div class="row">
                         <!-- Left Column -->
                         <div class="col-md-6">
@@ -262,15 +261,15 @@ try {
                         <div class="col-md-6">
                             <div class="mb-3">
                                 <label class="form-label">Balance:</label>
-                                <input type="text" class="form-control" name="balance" id="balance">
+                                <input type="text" class="form-control" name="balance" id="payBalance">
                             </div>
                             <div class="mb-3">
                                 <label class="form-label">Mode of Payment:</label>
-                                <input type="text" class="form-control" name="paymentMode" id="paymentMode">
+                                <input type="text" class="form-control" name="paymentMode" id="paymentMode" readonly>
                             </div>
                             <div class="mb-3">
                                 <label class="form-label">Reference No:</label>
-                                <input type="text" class="form-control" name="referenceNo" id="referenceNo">
+                                <input type="text" class="form-control" name="referenceNo" id="referenceNo" readonly>
                             </div>
                             <div class="mb-3">
                                 <div class="form-group">
@@ -286,8 +285,8 @@ try {
                             <div class="mb-3">
                                 <label class="form-label">Payment Status:</label>
                                 <select class="form-control" name="paymentStatus" id="paymentStatus">
-                                        <option value="downpayment">Downpayment</option>
-                                        <option value="fully_paid">Fully Paid</option>
+                                        <option value="Down Payment">Down Payment</option>
+                                        <option value="Fully Paid">Fully Paid</option>
                                     </select>
                             </div>
                              <!-- Add Payment Section -->
@@ -310,9 +309,7 @@ try {
                                                     <option value="cash">Cash</option>
                                                     <option value="gcash">GCash</option>
                                                     <option value="maya">Maya</option>
-                                                    <option value="others">Others</option>
                                                 </select>
-                                                <input type="text" class="form-control mt-2 d-none" name="otherPaymentMode" id="otherPaymentMode" placeholder="Please specify">
                                                 </div>
                                                 <div class="col-md-6">
                                                     <div class="form-group">
@@ -331,7 +328,7 @@ try {
                                                 </div>
                                             </div>
                                             <div class="mt-3">
-                                                <button type="button" class="btn btn-secondary w-100" onclick="document.getElementById('addPayment').value='yes'; document.getElementById('updateBookingForm').submit();">Save Payment</button>
+                                                <button type="button" class="btn btn-success w-100" onclick="savePayment()">Save Payment</button>
                                             </div>
                                         </div>
                                     </div>
@@ -428,29 +425,43 @@ document.addEventListener('DOMContentLoaded', function() {
         document.getElementById('checkIn').value = button.getAttribute('data-check-in');
         document.getElementById('checkOut').value = button.getAttribute('data-check-out');
         document.getElementById('paymentStatus').value = button.getAttribute('data-payment-status');
-
+        document.getElementById('paymentMode').value = button.getAttribute('data-mop');
+        document.getElementById('referenceNo').value = button.getAttribute('data-reference-number');
+        document.getElementById('payBalance').value = button.getAttribute('data-pay-balance');
 
         // Fetch additional booking data
         fetch('get_booking_data.php?booking_id=' + bookingId)
             .then(response => response.json())
             .then(data => {
-                // Populate additional fields that weren't available in the table
-                document.getElementById('balance').value = data.payment_amount;
-                document.getElementById('paymentMode').value = data.payment_method;
-                document.getElementById('referenceNo').value = data.payment_reference_number;
-                // ... populate other fields as needed
+                if (data.booking_status) {
+                    var bookingStatusSelect = document.getElementById('bookingStatusUpdate');
+                    var bookingStatus = data.booking_status.toLowerCase();
+                    
+                    // Find the matching option
+                    for (var i = 0; i < bookingStatusSelect.options.length; i++) {
+                        if (bookingStatusSelect.options[i].value === bookingStatus) {
+                            bookingStatusSelect.selectedIndex = i;
+                            break;
+                        }
+                    }
+                }
             })
             .catch(error => console.error('Error:', error));
     });
 
-
     document.getElementById('saveButton').addEventListener('click', function (e) {
         e.preventDefault();
-
 
         var formData = new FormData(document.getElementById('updateBookingForm'));
         formData.append('booking_id', document.getElementById('modalBookingId').textContent);
 
+        // Check if the payment form is expanded/visible
+        var paymentFormCollapsed = document.getElementById('paymentForm').classList.contains('show');
+        if (paymentFormCollapsed) {
+            formData.append('addPayment', 'yes');
+        } else {
+            formData.append('addPayment', 'no');
+        }
 
         fetch('update_booking.php', {
             method: 'POST',
@@ -460,7 +471,6 @@ document.addEventListener('DOMContentLoaded', function() {
         .then(result => {
             if (result.success) {
                 alert('Booking updated successfully!');
-                // Optionally, refresh the page or update the table
                 location.reload();
             } else {
                 alert('Error updating booking.');
@@ -471,6 +481,39 @@ document.addEventListener('DOMContentLoaded', function() {
             alert('Error updating the booking!');
         });
     });
+
+    function openModal(bookingId, currentStatus) {
+    document.getElementById('bookingId').value = bookingId;
+    document.getElementById('bookingStatus').value = currentStatus;
+    const myModal = new bootstrap.Modal(document.getElementById('bookingModal'));
+    myModal.show();
+    }
+
+    function saveBooking() {
+    const formData = new FormData(document.getElementById('bookingForm'));
+    fetch('update_booking.php', {
+        method: 'POST',
+        body: formData
+    })
+    .then(res => res.text())
+    .then(data => {
+        alert('Booking updated!');
+        location.reload();
+    });
+    }
+
+    function savePayment() {
+    const formData = new FormData(document.getElementById('bookingForm'));
+    fetch('add_payment.php', {
+        method: 'POST',
+        body: formData
+    })
+    .then(res => res.text())
+    .then(data => {
+        alert('Payment added!');
+        location.reload();
+    });
+    }
 });
 
 // Notification Modal JavaScript

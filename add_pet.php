@@ -1,5 +1,7 @@
 <?php
 
+// At the top of add_pet.php, add:
+error_log("POST data: " . print_r($_POST, true));
 
 error_reporting(E_ALL);
 ini_set('display_errors', 1);
@@ -10,7 +12,7 @@ if (session_status() == PHP_SESSION_NONE) {
 include("connect.php");
 
 if (!isset($_SESSION['c_id'])) {
-    header("Location: login.php");
+    header("Location: index..php");
     exit();
 }
 
@@ -20,6 +22,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     // error_log("Received POST data: " . print_r($_POST, true));
     // error_log("Received FILES data: " . print_r($_FILES, true));
 
+    $hasError = false;
 
     $pet_id = $_POST['pet_id'];
     
@@ -28,7 +31,17 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $breed = $_POST['breed'];
     $years = isset($_POST['pet_age_years']) ? intval($_POST['pet_age_years']) : 0;
     $months = isset($_POST['pet_age_months']) ? intval($_POST['pet_age_months']) : 0;
-    $age = $years . " years " . $months . " mos";
+
+    if ($years > 0 && $months > 0) {
+        $age = "$years years $months mos";
+    } elseif ($years > 0) {
+        $age = "$years years";
+    } elseif ($months > 0) {
+        $age = "$months mos";
+    } else {
+        $age = "0 mos"; 
+    }
+
     $gender = $_POST['gender'];
     $description = $_POST['description'];
     $special_instructions = $_POST['special_instructions'];
@@ -36,6 +49,63 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $date_administered = $_POST['date_administered'];
     $expiry_date = $_POST['expiry_date'];
 
+    // Initialize error variables
+    $pet_photo_error = null;
+    $vaccination_file_error = null;
+    $date_administered_error = null;
+
+    error_log("PET PHOTO FILE SIZE: " . $_FILES['pet_photo']['size']);  // <- Add this line
+
+    // Validate pet photo file size
+    if (isset($_FILES['pet_photo']) && $_FILES['pet_photo']['size'] > 0) {
+        if ($_FILES['pet_photo']['size'] > 5242880) {
+            $pet_photo_error = "File is too large. Maximum size is 5MB.";
+            $hasError = true;
+        }
+    }
+    // Validate vaccination file size
+    if (isset($_FILES['vaccination_file']) && $_FILES['vaccination_file']['size'] > 0) {
+        if ($_FILES['vaccination_file']['size'] > 5242880) {
+            $vaccination_file_error = "File is too large. Maximum size is 5MB.";
+            $hasError = true;
+        }
+    }
+    
+    // Validate date administered
+    if (!empty($date_administered)) {
+        $current_date = date('Y-m-d');
+        
+        if ($date_administered == $current_date) {
+            $date_administered_error = "Date administered cannot be the current date.";
+            $hasError = true;
+        }
+    }
+    
+
+    // If there are errors, store them in session and redirect back
+    if ($hasError) {
+        $_SESSION['pet_register_error'] = true;
+        $_SESSION['pet_photo_error'] = $pet_photo_error;
+        $_SESSION['vaccination_file_error'] = $vaccination_file_error;
+        $_SESSION['date_administered_error'] = $date_administered_error;
+        
+        // Store form data in session to repopulate the form
+        $_SESSION['pet_form_data'] = [
+            'pet_name' => $pet_name,
+            'pet_size' => $pet_size,
+            'breed' => $breed,
+            'age' => $age,
+            'gender' => $gender,
+            'description' => $description,
+            'vaccination_status' => $vaccination_status,
+            'date_administered' => $date_administered,
+            'expiry_date' => $expiry_date,
+            'special_instructions' => $special_instructions
+        ];
+        
+        header("Location: Profile.php");
+        exit();
+    }
     
     // Map pet size values to database values
     $petSizeMap = [
@@ -54,7 +124,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     // Handle pet photo upload
     $image_path = "";
     if (isset($_FILES['pet_photo']) && $_FILES['pet_photo']['error'] == 0) {
-        $upload_dir = "Pet-Pictures";
+        $upload_dir = "uploads/pets";
         
         // Create directory if it doesn't exist
         if (!file_exists($upload_dir)) {

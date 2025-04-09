@@ -19,6 +19,22 @@ if (isset($_SESSION['success_message'])) {
     echo '<div class="alert alert-danger">' . $_SESSION['error_message'] . '</div>';
     unset($_SESSION['error_message']);
 }
+
+
+// Initialize error variables for pet registration
+$pet_photo_error = $_SESSION['pet_photo_error'] ?? null;
+$vaccination_file_error = $_SESSION['vaccination_file_error'] ?? null;
+$date_administered_error = $_SESSION['date_administered_error'] ?? null;
+
+// Get stored form data if available
+$pet_form_data = $_SESSION['pet_form_data'] ?? [];
+
+// Clear session variables
+unset($_SESSION['pet_photo_error']);
+unset($_SESSION['vaccination_file_error']);
+unset($_SESSION['date_administered_error']);
+unset($_SESSION['pet_form_data']);
+
 // Get user ID from session
 $user_id = $_SESSION['c_id'];
 
@@ -41,7 +57,7 @@ $pets = $pet_stmt->fetchAll(PDO::FETCH_ASSOC);
 // Fetch current reservations
 $current_reservations_query = "SELECT b.*, p.*, pay.pay_status, s.service_name FROM bookings b
                                 LEFT JOIN pet p on p.pet_id = b.pet_id
-                                LEFT JOIN payment pay on pay.pay_id = b.payment_id
+                                LEFT JOIN payment pay on pay.booking_id = b.booking_id
                                 LEFT JOIN service s on s.service_id = b.service_id
                                 WHERE p.customer_id = :c_id AND b.booking_status != 'Completed' AND b.booking_status != 'Cancelled' ORDER BY booking_check_in  DESC";
 
@@ -53,7 +69,7 @@ $current_reservations = $current_reservations_stmt->fetchAll(PDO::FETCH_ASSOC);
 // Fetch reservation history
 $history_query = "SELECT b.*, p.*, pay.pay_status, s.service_name FROM bookings b
                                 LEFT JOIN pet p on p.pet_id = b.pet_id
-                                LEFT JOIN payment pay on pay.pay_id = b.payment_id
+                                LEFT JOIN payment pay on pay.booking_id = b.booking_id
                                 LEFT JOIN service s on s.service_id = b.service_id
                                 WHERE p.customer_id = :c_id AND (b.booking_status = 'Completed' OR b.booking_status = 'Cancelled') ORDER BY booking_check_in DESC";
 $history_stmt = $conn->prepare($history_query);
@@ -61,10 +77,6 @@ $history_stmt->bindParam(':c_id', $user_id);
 $history_stmt->execute();
 $reservation_history = $history_stmt->fetchAll(PDO::FETCH_ASSOC);
 
-// Handle profile picture path
-$profile_picture = isset($fetch_cust_info['profile_picture']) && !empty($fetch_cust_info['profile_picture']) 
-    ? $fetch_cust_info['profile_picture'] 
-    : "Profile-Pics/profile_icon.png";
 ?>
 
 <!DOCTYPE html>
@@ -79,6 +91,23 @@ $profile_picture = isset($fetch_cust_info['profile_picture']) && !empty($fetch_c
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+    <style>
+        .error {
+        color: #af4242;
+        background-color: #fde8ec;
+        padding: 10px;
+        display: block;
+        transform: translateY(-20px);
+        margin-bottom: 10px;
+        font-size: 14px;
+        margin-top: 22px;
+    }
+    
+    /* Add these styles to show/hide errors */
+    <?php if ($pet_photo_error): ?> .pet-photo-error { display: block; } <?php endif; ?>
+    <?php if ($vaccination_file_error): ?> .vaccination-file-error { display: block; } <?php endif; ?>
+    <?php if ($date_administered_error): ?> .date-administered-error { display: block; } <?php endif; ?>
+    </style>
 </head>
 <body>
 
@@ -107,7 +136,6 @@ include 'header.php'; ?>
 
             <div class="user-deets">
                 <div class="pfp">
-                    <img src="<?php echo $profile_picture; ?>" alt="Profile Picture" class="profile-icon">
                     <h6 class="cusID">CUSTOMER ID</h6>
                     <h6 class="cusNum">NO. <?php echo $fetch_cust_info['c_id']; ?></h6>
                     <h6 class="cusMem"><?php echo $fetch_cust_info['membership_status']; ?> Member</h6>
@@ -333,7 +361,14 @@ include 'header.php'; ?>
                                 </div>
                                 <div class="col-md-6">
                                     <label class="form-label">AGE</label>
-                                    <input type="text" class="form-control" name="age" id="edit_pet_age" >
+                                    <div class="row g-2">
+                                        <div class="col-6">
+                                            <input type="number" class="form-control" name="pet_age_years" id="edit_pet_age_years" placeholder="Years" min="0">
+                                        </div>
+                                        <div class="col-6">
+                                            <input type="number" class="form-control" name="pet_age_months" id="edit_pet_age_months" placeholder="Months" min="0" max="11">
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                             
@@ -432,26 +467,26 @@ include 'header.php'; ?>
                                 <div class="col-md-6">
                                     <div class="mb-3">
                                         <label class="form-label">NAME</label>
-                                        <input type="text" name="pet_name" class="form-control" required>
+                                        <input type="text" name="pet_name" class="form-control" required value="<?php echo htmlspecialchars($pet_form_data['pet_name'] ?? ''); ?>">
                                     </div>
                                     
                                     <div class="mb-3">
                                         <label class="form-label">PET SIZE</label>
                                         <div class="radio-group">
                                             <div>
-                                                <input type="radio" name="pet_size" id="small_dog" value="small_dog" required>
+                                                <input type="radio" name="pet_size" id="small_dog" value="small_dog" required <?php echo (isset($pet_form_data['pet_size']) && $pet_form_data['pet_size'] == 'small_dog') ? 'checked' : ''; ?>>
                                                 <label for="small_dog" id="pet-size">Small Dog</label>
                                             </div>
                                             <div>
-                                                <input type="radio" name="pet_size" id="large_dog" value="large_dog">
-                                                <label for="large_dog" id="pet-size">Large Dog</label>
-                                            </div>
-                                            <div>
-                                                <input type="radio" name="pet_size" id="regular_dog" value="regular_dog">
+                                                <input type="radio" name="pet_size" id="regular_dog" value="regular_dog"  <?php echo (isset($pet_form_data['pet_size']) && $pet_form_data['pet_size'] == 'regular_dog') ? 'checked' : ''; ?>>
                                                 <label for="regular_dog" id="pet-size">Regular Dog</label>
                                             </div>
                                             <div>
-                                                <input type="radio" name="pet_size" id="regular_cat" value="regular_cat">
+                                                <input type="radio" name="pet_size" id="large_dog" value="large_dog" <?php echo (isset($pet_form_data['pet_size']) && $pet_form_data['pet_size'] == 'large_dog') ? 'checked' : ''; ?>>
+                                                <label for="large_dog" id="pet-size">Large Dog</label>
+                                            </div>
+                                            <div>
+                                                <input type="radio" name="pet_size" id="regular_cat" value="regular_cat" <?php echo (isset($pet_form_data['pet_size']) && $pet_form_data['pet_size'] == 'regular_cat') ? 'checked' : ''; ?>>
                                                 <label for="regular_cat" id="pet-size">Regular Cat</label>
                                             </div>
                                         </div>
@@ -459,23 +494,31 @@ include 'header.php'; ?>
                                     
                                     <div class="mb-3">
                                         <label class="form-label">BREED</label>
-                                        <input type="text" name="breed" class="form-control" placeholder="Type Breed Here" required>
+                                        <input type="text" name="breed" class="form-control" placeholder="Type Breed Here" required  value="<?php echo htmlspecialchars($pet_form_data['breed'] ?? ''); ?>">
                                     </div>
                                     
                                     <div class="mb-3">
                                         <label class="form-label">AGE</label>
-                                        <input type="number" name="age" class="form-control" placeholder="Type Age Here" required>
+                                        <div class="row g-2">
+                                            <div class="col-6">
+                                                <input type="number" name="age_years" class="form-control" placeholder="Years" min="0" required>
+                                            </div>
+                                            <div class="col-6">
+                                                <input type="number" name="age_months" class="form-control" placeholder="Months" min="0" max="11" required>
+                                            </div>
+                                        </div>
                                     </div>
+
 
                                     <div class="mb-3">
                                         <label class="form-label">GENDER</label>
                                         <div class="radio-group">
                                             <div>
-                                                <input type="radio" name="gender" id="male" value="male" required>
+                                                <input type="radio" name="gender" id="male" value="male" required<?php echo (isset($pet_form_data['gender']) && $pet_form_data['gender'] == 'male') ? 'checked' : ''; ?>>
                                                 <label for="male" id="pet-gender">Male</label>
                                             </div>
                                             <div>
-                                                <input type="radio" name="gender" id="female" value="female">
+                                                <input type="radio" name="gender" id="female" value="female" <?php echo (isset($pet_form_data['gender']) && $pet_form_data['gender'] == 'female') ? 'checked' : ''; ?>>
                                                 <label for="female" id="pet-gender">Female</label>
                                             </div>
                                         </div>
@@ -483,7 +526,7 @@ include 'header.php'; ?>
                                     
                                     <div class="mb-3">
                                         <label class="form-label">DESCRIPTION</label>
-                                        <textarea name="description" class="form-control" placeholder="e.x. White Spots" rows="3" id="petDescription" required></textarea>
+                                        <textarea name="description" class="form-control" placeholder="e.x. White Spots" rows="3" id="petDescription" required><?php echo htmlspecialchars($pet_form_data['description'] ?? ''); ?></textarea>
                                     </div>
                                 </div>
                                 
@@ -491,20 +534,29 @@ include 'header.php'; ?>
                                 <div class="col-md-6">
                                     <div class="mb-3">
                                         <label class="form-label">PET PROFILE PHOTO</label>
-                                        <input type="file" name="pet_photo" class="form-control" accept="image/*,application/pdf">
+                                        <input type="file" name="pet_photo" class="form-control" accept="image/*,application/pdf" >
+                                        <div class="form-text">File size must be less than 5MB.</div>
+                                        <?php if ($pet_photo_error): ?>
+                                            <p class="error pet-photo-error"><?php echo $pet_photo_error; ?></p>
+                                        <?php endif; ?>
+                                        <div id="petPhotoError" class="error pet-photo-error" style="display: none;"></div>
                                     </div>
                                     
                                     <div class="mb-3">
                                         <label class="form-label">VACCINATION STATUS</label>
-                                        <input type="file" name="vaccination_file" class="form-control mb-2" accept="image/*,application/pdf" required>
-                                        
+                                        <input type="file" name="vaccination_file" class="form-control mb-2" accept="image/*,application/pdf" required  id="vaccinationFileInput">
+                                        <div class="form-text">File size must be less than 5MB.</div>
+                                        <?php if ($vaccination_file_error): ?>
+                                            <p class="error vaccination-file-error"><?php echo $vaccination_file_error; ?></p>
+                                        <?php endif; ?>
+                                        <div id="vaccinationFileError" class="error vaccination-file-error" style="display: none;"></div>
                                         <div class="radio-group">
                                             <div>
-                                                <input type="radio" name="vaccination_status" id="vaccinated" value="vaccinated" required>
+                                                <input type="radio" name="vaccination_status" id="vaccinated" value="vaccinated" required> <?php echo (isset($pet_form_data['vaccination_status']) && $pet_form_data['vaccination_status'] == 'vaccinated') ? 'checked' : ''; ?>
                                                 <label for="vaccinated">Vaccinated</label>
                                             </div>
                                             <div>
-                                                <input type="radio" name="vaccination_status" id="not_vaccinated" value="not_vaccinated">
+                                                <input type="radio" name="vaccination_status" id="not_vaccinated" value="not_vaccinated"> <?php echo (isset($pet_form_data['vaccination_status']) && $pet_form_data['vaccination_status'] == 'not_vaccinated') ? 'checked' : ''; ?>
                                                 <label for="not_vaccinated">Not Vaccinated</label>
                                             </div>
                                         </div>
@@ -512,17 +564,21 @@ include 'header.php'; ?>
                                     
                                     <div class="mb-3">
                                         <label class="form-label">DATE ADMINISTERED</label>
-                                        <input type="date" name="date_administered" class="form-control" required >
+                                        <input type="date" name="date_administered" class="form-control" required id="dateAdministeredInput" value="<?php echo htmlspecialchars($pet_form_data['date_administered'] ?? ''); ?>">
+                                        <?php if ($date_administered_error): ?>
+                                            <p class="error date-administered-error"><?php echo $date_administered_error; ?></p>
+                                        <?php endif; ?>
+                                        <div id="dateAdministeredError" class="error date-administered-error" style="display: none;"></div>
                                     </div>
                                     
                                     <div class="mb-3">
                                         <label class="form-label">EXPIRY DATE</label>
-                                        <input type="date" name="expiry_date" class="form-control" required>
+                                        <input type="date" name="expiry_date" class="form-control" required value="<?php echo htmlspecialchars($pet_form_data['expiry_date'] ?? ''); ?>">
                                     </div>
                                     
                                     <div class="mb-3">
                                         <label class="form-label">SPECIAL INSTRUCTIONS</label>
-                                        <textarea name="special_instructions" class="form-control" placeholder="e.x. Medications" rows="3" id="petInstruction" required></textarea>
+                                        <textarea name="special_instructions" class="form-control" placeholder="e.x. Medications" rows="3" id="petInstruction" required><?php echo htmlspecialchars($pet_form_data['special_instructions'] ?? ''); ?></textarea>
                                     </div>
                                 </div>
                             </div>
@@ -638,10 +694,7 @@ include 'header.php'; ?>
                 </div>
 
                 <form action="update_profile.php" method="POST" enctype="multipart/form-data">
-                    <div class="mb-3 text-center">
-                        <img src="<?php echo $profile_picture; ?>" alt="Profile Picture" class="profile-icon mb-2" style="width: 100px; height: 100px; border-radius: 50%;">
-                        <input type="file" name="profile_picture" class="form-control" accept="image/*">
-                    </div>
+                    
                     
                     <div class="row mb-3">
                         <div class="col-md-6">
@@ -721,13 +774,23 @@ document.addEventListener('DOMContentLoaded', function() {
                     document.getElementById('edit_pet_name').value = data.pet_name || '';
                     document.getElementById('edit_pet_breed').value = data.pet_breed || '';
                     document.getElementById('edit_pet_size').value = data.pet_size || '';
-                    document.getElementById('edit_pet_age').value = data.pet_age || '';
                     document.getElementById('gender-dropdown').value = data.pet_gender || '';
                     document.getElementById('petDescription').value = data.pet_description || '';
                     document.getElementById('petInstruction').value = data.pet_special_instructions || '';
                     document.getElementById('vaccination_status').value = data.pet_vaccination_status || '';
                     document.getElementById('date_administered').value = data.pet_vaccination_date_administered || '';
                     document.getElementById('expiry_date').value = data.pet_expiry_date || '';
+
+                    // Parse the age string into years and months
+                    const ageString = data.pet_age || '';
+                    const yearMatch = ageString.match(/(\d+)\s+years?/);
+                    const monthMatch = ageString.match(/(\d+)\s+mos?/);
+                    
+                    const years = yearMatch ? yearMatch[1] : '0';
+                    const months = monthMatch ? monthMatch[1] : '0';
+                    
+                    document.getElementById('edit_pet_age_years').value = years;
+                    document.getElementById('edit_pet_age_months').value = months;
                     
                     if (data.pet_picture) {
                         document.getElementById('pet-image-preview').src = data.pet_picture;
@@ -773,6 +836,108 @@ document.addEventListener('DOMContentLoaded', function() {
                 reader.readAsDataURL(file);
             }
         });
+    }
+
+    <?php
+    $pet_photo_error = isset($pet_photo_error) ? $pet_photo_error : false;
+    $vaccination_file_error = isset($vaccination_file_error) ? $vaccination_file_error : false;
+    $date_administered_error = isset($date_administered_error) ? $date_administered_error : false;
+    if (isset($_SESSION['pet_register_error']) || $pet_photo_error || $vaccination_file_error || $date_administered_error): ?>
+        var regPetModal = new bootstrap.Modal(document.getElementById('regPetModal'));
+        regPetModal.show();
+        <?php unset($_SESSION['pet_register_error']); ?>
+    <?php endif; ?>
+    
+    // Client-side validation for file size and date
+    const petPhotoInput = document.getElementById('petPhotoInput');
+    const vaccinationFileInput = document.getElementById('vaccinationFileInput');
+    const dateAdministeredInput = document.getElementById('dateAdministeredInput');
+    const petRegistrationForm = document.getElementById('petRegistrationForm');
+    
+    if (petPhotoInput) {
+        petPhotoInput.addEventListener('change', function() {
+            validateFileSize(this, 'petPhotoError');
+        });
+    }
+    
+    if (vaccinationFileInput) {
+        vaccinationFileInput.addEventListener('change', function() {
+            validateFileSize(this, 'vaccinationFileError');
+        });
+    }
+    
+    if (dateAdministeredInput) {
+        dateAdministeredInput.addEventListener('change', function() {
+            validateDate(this);
+        });
+    }
+    
+    if (petRegistrationForm) {
+        petRegistrationForm.addEventListener('submit', (e) => {
+            let hasError = false;
+            
+            // Validate file sizes
+            if (petPhotoInput && petPhotoInput.files.length > 0) {
+                if (!validateFileSize(petPhotoInput, 'petPhotoError')) {
+                    hasError = true;
+                }
+            }
+            
+            if (vaccinationFileInput && vaccinationFileInput.files.length > 0) {
+                if (!validateFileSize(vaccinationFileInput, 'vaccinationFileError')) {
+                    hasError = true;
+                }
+            }
+            
+            // Validate date
+            if (dateAdministeredInput && !validateDate(dateAdministeredInput)) {
+                hasError = true;
+            }
+            
+            if (hasError) {
+                e.preventDefault(); // Prevent form submission if there are errors
+            }
+        });
+    }
+    
+    function validateFileSize(input, errorElementId) {
+        const maxSize = 26214400; // 25MB in bytes
+        const errorElement = document.getElementById(errorElementId);
+        
+        // Clear previous error
+        errorElement.style.display = 'none';
+        errorElement.textContent = '';
+        
+        if (input.files.length > 0) {
+            const fileSize = input.files[0].size;
+            
+            if (fileSize > maxSize) {
+                errorElement.textContent = 'File is too large. Maximum size is 25MB.';
+                errorElement.style.display = 'block';
+                input.value = ''; // Clear the file input
+                return false;
+            }
+        }
+        
+        return true;
+    }
+    
+    function validateDate(input) {
+        const selectedDate = input.value;
+        const today = new Date().toISOString().split('T')[0];
+        const errorElement = document.getElementById('dateAdministeredError');
+        
+        // Clear previous error
+        errorElement.style.display = 'none';
+        errorElement.textContent = '';
+        
+        if (selectedDate === today) {
+            errorElement.textContent = 'Date administered cannot be the current date.';
+            errorElement.style.display = 'block';
+            return false;
+        }
+        
+        return true;
     }
 });
 </script>

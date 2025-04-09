@@ -7,6 +7,7 @@
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
   <link rel="stylesheet" href="header.css">
+
 </head>
 <body>
   <!-- HEADER IMAGES -->
@@ -29,12 +30,12 @@
 
       <div class="sidebar offcanvas offcanvas-start" tabindex="-1" id="offcanvasNavbar" aria-labelledby="offcanvasNavbarLabel">
         
-        <div class="offcanvas-header text-white border-bottom">
-          <img src="logo.png" alt="LOGO" class="log">
+      <div class="offcanvas-header text-white border-bottom">
+          <img src="Header-Pics/logo.png" alt="LOGO" class="log">
           <button type="button" class="btn-close btn-close-white shadow-none" data-bs-dismiss="offcanvas" aria-label="Close"></button>
         </div>
 
-        <div class="offcanvas-body">
+        <div class="offcanvas-body"  style="background-color: #D98D62;">
           <ul class="navbar-nav justify-content-between flex-grow-1 pe-3">
             
             <!-- ABOUT US -->
@@ -74,7 +75,7 @@
             <?php if (isset($_SESSION['c_id'])): ?>
                                 <!-- If the user is logged in -->
               <li class="nav-item dropdown">
-                <a href="profile.php" class="nav-link <?php echo ($activePage == 'profile') ? 'active' : ''; ?> dropdown-toggle">PROFILE</a>
+                <a href="Profile.php" class="nav-link <?php echo ($activePage == 'profile') ? 'active' : ''; ?> dropdown-toggle">PROFILE</a>
                 <ul class="dropdown-menu">
                   <li><a class="dropdown-item" href="logout.php">Logout</a></li>
                 </ul>
