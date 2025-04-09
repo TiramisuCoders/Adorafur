@@ -5,7 +5,8 @@
   
   #loginModal .modal-content,
   #registerModal .modal-content,
-  #congratsModal .modal-content {
+  #congratsModal .modal-content,
+  #fpassModal, #resendModal, #setnewPass {
     background-color: #F7E2CF;
   }
   
@@ -107,4 +108,55 @@ input[type="password"]::-ms-reveal,
 input[type="password"]::-webkit-credentials-auto-fill-button,
 input[type="password"]::-webkit-textfield-decoration-container {
     display: none !important;
+}
+
+#resetPasswordBtn{
+  border-radius: 7px;
+  width: 180px;
+  background-color: #421D11;
+  margin-top: 15px;
+}
+
+.d-grid{
+  display: flex;
+  justify-content: center;
+}
+
+#mod-title{
+  color: #421D11;
+  font-size: 25px;
+}
+
+#reset-body{
+  font-size: 17px;
+  margin: 7px;
+}
+
+#reset-p {
+  margin-top: 0;
+  margin-bottom: 25px;
+  font-size: 18px;
+}
+
+#resend-footer{
+  display: flex;
+  justify-content: center;
+  gap: 7px;
+}
+
+#resendButton{
+  background-color: #421D11;
+  width: 125px;
+}
+
+#close-resendBtn{
+    background-color: #b69c93;
+    width: 125px;
+}
+
+#submitResetPasswordBtn{
+  border-radius: 7px;
+  width: 180px;
+  background-color: #421D11;
+  margin-top: 15px;
 }
