@@ -67,6 +67,7 @@ if (!isset($_SESSION['admin_id'])) {
         <span class="icon"><i class="fa-solid fa-magnifying-glass"></i></span>
       </div>
       
+      <div class="customer-list-container">
       <table class="customer-list">
         <thead class="customer-pet">
           <th class="name">Customer Name</th>
@@ -123,6 +124,7 @@ if (!isset($_SESSION['admin_id'])) {
             
         </tbody>
       </table>  
+      </div>
 
     </div>
 

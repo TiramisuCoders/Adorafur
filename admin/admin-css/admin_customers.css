@@ -62,3 +62,9 @@
   color: black;
   font-weight: bold;
 }
+
+.customer-list-container{
+  width: 100%;
+    max-height: 760px; /* Set a height for scrolling */
+    overflow-y: auto; 
+}
