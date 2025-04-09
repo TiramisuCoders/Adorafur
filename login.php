@@ -419,7 +419,7 @@ function handleLogin($conn) {
                 $login_password_error = $response_data['message'];
             } else {
                 // If we can't parse the error, show the raw response for debugging
-                $login_password_error = 'Authentication error: ' . substr($response, 0, 100) . '...';
+                $login_password_error = 'Invalid Credentials';
             }
             
             $hasError = true;
