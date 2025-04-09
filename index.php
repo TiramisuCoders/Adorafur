@@ -4,10 +4,30 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="header1.css">
-    <link rel="stylesheet" href="home.css">
+    <link rel="stylesheet" href="home1.css">
     <script src="script.js" defer></script>
     <link rel="icon" type="image/png" href="Header-Pics/logo.png">
     <title>Adorafur Home</title>
+
+    <script>
+    // In index.php, keep this code as is - it's correct
+    document.addEventListener('DOMContentLoaded', function() {
+    // Check if we have an access_token in the URL hash
+    if (window.location.hash && window.location.hash.includes('access_token=')) {
+        // Extract the token from the URL hash
+        const hashParams = new URLSearchParams(window.location.hash.substring(1));
+        const accessToken = hashParams.get('access_token');
+        const type = hashParams.get('type');
+        
+        // Only proceed if this is a recovery (password reset) token
+        if (accessToken && type === 'recovery') {
+            // Redirect to the reset-password.php page with the token as a query parameter
+            window.location.href = 'reset-password.php?token=' + encodeURIComponent(accessToken);
+        }
+    }
+});
+    </script>
+
 </head>
 <body>
 
@@ -39,7 +59,7 @@ include 'header.php'; ?>
                 <!-- Slide 2 -->
                 <div class="slide">
                     <img src="Home-Pics/slideshow2.png" alt="Slide 2">
-                </div>
+                </div>  
                 <!-- Slide 3 -->
                 <div class="slide">
                     <img src="Home-Pics/slideshow3.png" alt="Slide 3">
@@ -256,31 +276,37 @@ include 'header.php'; ?>
         </div><!--third-section-->
     </div><!--Home-->
 
+
     <div class="time-sec">  
-        <img src="Home-Pics/second-cloud.png" alt="">      
+        <img src="Home-Pics/second-cloud.png" alt="">    
+        
+
         <div class="service-box daycare">
             <div class="content">
                 <div class="icon-box">
-                    <img src="Home-Pics/sun.png" class="icon" />
-                    <span class="hover-text1">7AM 12PM</span>
+                    <img src="Home-Pics/sun1.png" class="icon" />
+                    <span class="hover-text1">7AM <br> 12PM</span>
                 </div>
                 <div class="text-content">
                     <h2>DAYCARE</h2>
-                    <p class="default-txt">Our daycare service is the perfect spot for your pet to have a blast while you're away. No overnight stays, just pure daytime enjoyment!</p>
+                    <p class="default-txt">Our daycare service is the perfect spot for your pet to have a blast while you're away. 
+                        No overnight stays, just pure daytime enjoyment!</p>
                 </div>
             </div>
         </div>
 
+
         <div class="service-box hotel">
             <div class="content">
                 <div class="icon-box">
-                    <img src="Home-Pics/moon.png"  class="icon"/>
+                    <img src="Home-Pics/moon1.png"  class="icon"/>
                     <span class="hover-text1">24/7</span>
 
                 </div>
                 <div class="text-content">
                     <h2>PET HOTEL</h2>
-                    <p class="default-txt">From playful days to peaceful nights, we're here to make sure they feel right at home, around the clock!</p>
+                    <p class="default-txt">From playful days to peaceful nights, we're here to make sure they feel right at home, 
+                        around the clock!</p>
                 </div>
             </div>
         </div>

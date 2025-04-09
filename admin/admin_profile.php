@@ -5,7 +5,7 @@ session_start();
 // Check if admin is logged in
 if (!isset($_SESSION['admin_id'])) {
     // Redirect to login page if not logged in
-    header("Location: ../index.php");
+    header("Location: admin_login.php");
     exit();
 }
 
@@ -38,7 +38,7 @@ try {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="admin-css/admin_header1.css">
+    <link rel="stylesheet" href="admin-css/admin_header01.css">
     <link rel="stylesheet" href="admin-css/admin_profile1.css">
     <link rel="icon" type="image/png" href="admin-pics/adorafur-logo.png">
     <script src="admin.js"></script>

@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="admin-css/admin_header1.css">
-    <link rel="stylesheet" href="admin-css/admin_customers01.css">
+    <link rel="stylesheet" href="admin-css/admin_header01.css">
+    <link rel="stylesheet" href="admin-css/admin_customers.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
     <link rel="icon" type="image/png" href="admin-pics/adorafur-logo.png">
       
@@ -55,9 +55,9 @@
 
       <div class="search-box">
         <input type="text" id="searchInput" placeholder="Search">
+        <span class="icon"><i class="fa-solid fa-magnifying-glass"></i></span>
       </div>
       
-      <div class="customer-list-container">
       <table class="customer-list">
         <thead class="customer-pet">
           <th class="name">Customer Name</th>
@@ -114,7 +114,6 @@
             
         </tbody>
       </table>  
-      </div>
 
     </div>
 

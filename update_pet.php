@@ -22,13 +22,33 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $name = $_POST['name'];
     $breed = $_POST['breed'];
     $pet_size = $_POST['pet_size'];
-    $age = $_POST['age'];
     $gender = $_POST['gender'];
     $description = $_POST['description'];
     $special_instructions = $_POST['special_instructions'];
     $vaccination_status = $_POST['vaccination_status'];
-    $date_administered = $_POST['date_administered'];
-    $expiry_date = $_POST['expiry_date'];
+    
+    // Handle date fields properly - use null if empty
+    $date_administered = !empty($_POST['date_administered']) ? $_POST['date_administered'] : null;
+    $expiry_date = !empty($_POST['expiry_date']) ? $_POST['expiry_date'] : null;
+    
+    $age_years = isset($_POST['pet_age_years']) ? intval($_POST['pet_age_years']) : 0;
+    $age_months = isset($_POST['pet_age_months']) ? intval($_POST['pet_age_months']) : 0;
+    
+    // Format the age string
+    $age = '';
+    if ($age_years > 0) {
+        $age .= $age_years . ' ' . ($age_years == 1 ? 'year' : 'years');
+    }
+    if ($age_months > 0) {
+        if ($age_years > 0) {
+            $age .= ' ';
+        }
+        $age .= $age_months . ' mos';
+    }
+    if (empty($age)) {
+        $age = '0 years';
+    }
+    
     
     // Verify pet belongs to user
     $verify_query = "SELECT pet_id FROM pet WHERE pet_id = :pet_id AND customer_id = :c_id";
@@ -101,7 +121,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $stmt->execute($params);
         
         if ($stmt->rowCount() > 0) {
-            $_SESSION['success_message'] = "Pet information updated successfully";
+            // $_SESSION['success_message'] = "Pet information updated successfully";
         } else {
             error_log("Pet update failed without throwing an exception");
             $_SESSION['error_message'] = "No changes were made to the pet information";
