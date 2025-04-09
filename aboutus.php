@@ -119,7 +119,7 @@ include 'header.php'; ?>
 
     <div class="sec-four" id = "time">
         <div class="sec-four-img">
-            <img src="AboutUs-Pics/get_started-cat.png" alt="">
+            <img src="AboutUs-Pics/get_started-cat.png" alt="" class="aboutUsCat">
         </div>
 
         <div class="sec-four-txt">
