@@ -15,7 +15,7 @@ header('Pragma: no-cache');
 header('Content-Type: application/json');
 
 // Include database connection
-include 'db_connection.php';
+include '../connection.php';
 
 try {
     // Log request information
