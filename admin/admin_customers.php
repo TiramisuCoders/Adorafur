@@ -3,9 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="admin-css/admin_header1.css">
-    <link rel="stylesheet" href="admin-css/admin_customer.css">
+    <link rel="stylesheet" href="admin-css/admin_header01.css">
+    <link rel="stylesheet" href="admin-css/admin_customers.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <link rel="icon" type="image/png" href="admin-pics/adorafur-logo.png">
       
     <script src="admin.js"></script>
     <title>Admin Customers</title>
@@ -40,9 +41,6 @@
 
       <!-- HEADER -->
       <div class="header-img-container">
-            <button id="notificationButton">
-                <img class="notifications" src="admin-pics/notification-bell.png" alt="Notifications" />
-            </button>
         </div>
 
     </nav>
@@ -77,14 +75,17 @@
       $sql = "SELECT 
                 c.c_id, 
                 CONCAT(c.c_first_name, ' ', c.c_last_name) AS owner_name,
-                GROUP_CONCAT(p.pet_name SEPARATOR ', ') AS pet_names,
-                c.c_membership_status as membership_status,
-                p.*
+                STRING_AGG(p.pet_name, ', ') AS pet_names,
+                m.membership_status as membership_status,
+                c.c_membership_register as membership_register,
+                c.c_membership_expiry as membership_expiry
                 FROM customer c
                 LEFT JOIN 
                   pet p ON c.c_id = p.customer_id
+                LEFT JOIN 
+                  membership_status m ON m.membership_id = c.c_membership_status
                 GROUP BY 
-                  c.c_id, c.c_first_name";
+                  c.c_id, c.c_first_name, m.membership_status";
               
               // Prepare and execute the statement
       $stmt = $conn->prepare($sql);
@@ -98,8 +99,8 @@
           echo "<td class='pets-name'>". htmlspecialchars($row["pet_names"] ?? 'No pets') ."</td>";
           echo "<td class='mem-status'>". htmlspecialchars($row["membership_status"] ?? 'None') . "</td>";
           echo "<td class='dates'>";
-          echo "<strong>Registered Date:</strong>". ($row["pet_vaccination_date_administered"] ? date('m/d/Y', strtotime($row["pet_vaccination_date_administered"])) : 'N/A') ."<br>";
-          echo "<strong>Expiry Date:</strong>" . ($row["pet_vaccination_date_expiry"] ? date('m/d/Y', strtotime($row["pet_vaccination_date_expiry"])) : 'N/A');
+          echo "<strong>Registered Date:</strong>". ($row["membership_register"] ? date('m/d/Y', strtotime($row["membership_register"])) : 'N/A') ."<br>";
+          echo "<strong>Expiry Date:</strong>" . ($row["membership_expiry"] ? date('m/d/Y', strtotime($row["membership_expiry"])) : 'N/A');
           echo "</td>";
           echo "</tr>";
         }

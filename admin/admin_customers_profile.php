@@ -101,7 +101,6 @@ try {
     $pets = $petsStmt->fetchAll(PDO::FETCH_ASSOC);
 
     
-    // Query to fetch transactions for this customer
     $transactionsSql = "SELECT 
         t.booking_id,
         s.service_name,
@@ -121,7 +120,7 @@ try {
     JOIN 
         customer c ON p.customer_id = c.c_id 
     JOIN 
-        payment pay ON pay.pay_id = t.payment_id
+        payment pay ON pay.booking_id = t.booking_id
     WHERE 
         c.c_id = :customer_id
     ORDER BY 
@@ -154,6 +153,7 @@ if (empty($transactions)) {
     <link rel="stylesheet" href="admin-css/admin_header1.css">
     <link rel="stylesheet" href="admin-css/admin_customer_profile1.css">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="icon" type="image/png" href="admin-pics/adorafur-logo.png">
     <style>
         body { background: #e8e8e8; }
     </style>
@@ -188,9 +188,6 @@ if (empty($transactions)) {
 
       <!-- HEADER -->
       <div class="header-img-container">
-            <button id="notificationButton">
-                <img class="notifications" src="admin-pics/notification-bell.png" alt="Notifications" />
-            </button>
         </div>
 
     </nav>
@@ -328,10 +325,7 @@ if (empty($transactions)) {
                 <option value="gcash">GCash</option>
                 <option value="maya">Maya</option>
                 <option value="cash">Cash</option>
-                <option value="others">Others</option>
             </select>
-
-            <input type="text" id="otherPaymentMethod" name="otherPaymentMethod" placeholder="Enter payment method" style="display: none;">
             
             <br>
             <label for="membershipStatus">Membership Status:</label><br>
@@ -371,24 +365,6 @@ if (empty($transactions)) {
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        // JavaScript for real-time clock
-        function updateClock() {
-            const now = new Date();
-            const options = { 
-                weekday: 'long', 
-                year: 'numeric', 
-                month: 'long', 
-                day: 'numeric',
-                hour: '2-digit',
-                minute: '2-digit',
-                second: '2-digit'
-            };
-            document.getElementById('real-time-clock').textContent = now.toLocaleDateString('en-US', options);
-        }
-        
-        // Update clock immediately and then every second
-        updateClock();
-        setInterval(updateClock, 1000);
         
         // JavaScript for modal functionality
         var modal = document.getElementById("membershipModal");
