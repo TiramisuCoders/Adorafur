@@ -5,6 +5,9 @@ ini_set('display_errors', 1);
 ini_set('log_errors', 1);
 ini_set('error_log', 'php_errors.log');
 
+// Start session
+session_start();
+
 // Set headers to prevent caching
 header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
 header('Cache-Control: post-check=0, pre-check=0', false);
@@ -12,8 +15,7 @@ header('Pragma: no-cache');
 header('Content-Type: application/json');
 
 // Include database connection
-require_once '../connect.php';
-session_start();
+include 'db_connection.php';
 
 try {
     // Log request information
@@ -23,6 +25,7 @@ try {
     // Ensure admin ID is retrieved from session
     $admin_id = $_SESSION['admin_id'] ?? null;
     if (!$admin_id) {
+        error_log("No admin_id found in session: " . print_r($_SESSION, true));
         throw new Exception("Unauthorized access. Please log in.");
     }
 
