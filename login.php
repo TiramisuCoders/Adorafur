@@ -614,7 +614,7 @@ function handleForgotPassword($conn) {
                                         <div class="col-6">
                                             <div class="mb-1">
                                                 <label for="firstName">First Name <span class="text-danger">*</span></label>
-                                                <input type="text" class="form-control" id="firstName" name="firstName" value="<?php echo $firstname?>" required>
+                                                <input type="text" class="form-control" id="firstName" name="firstName" value="<?php echo $firstname?>" placeholder="Enter First Name" required>
                                                 <?php if ($firstname_error): ?>
                                                     <p class="error firstname-error"><?php echo $firstname_error; ?></p>
                                                 <?php endif; ?>
@@ -675,9 +675,15 @@ function handleForgotPassword($conn) {
                                             </div>
                                         </div>
                                         
-                                        <div class="col-12">
-                                            <button type="submit" class="btn btn-primary create-button w-100" id="create-but">Create</button>
-                                        </div>
+                                        <div class="row g-2">
+                                             <div class="col-6">
+                                                 <button type="button" class="btn w-100" id="cancel-but" data-bs-dismiss="modal">Cancel</button>
+                                             </div>
+                                             <div class="col-6">
+                                                 <button type="submit" class="btn create-button w-100" id="create-but">Create</button>
+                                             </div>
+                                         </div>
+
                                     </div>
                                     
                                     <p class="text-center mt-4 mb-0">
@@ -691,7 +697,6 @@ function handleForgotPassword($conn) {
                         
                         <!-- Image Side -->
                         <div class="col-md-6 d-none d-md-block image-side p-0 position-relative">
-                            <button type="button" class="btn-close position-absolute" data-bs-dismiss="modal" aria-label="Close"></button>
                             <img src="Register-dog.png" alt="Happy dog" class="dog-image">
                         </div>
 
