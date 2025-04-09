@@ -587,7 +587,7 @@ function handleForgotPassword($conn) {
                         <!-- Add resend verification link -->
                         <div class="mb-3 d-flex flex-column justify-content-center">
                             <p class="text-center mt-2">
-                                <a href="#" id="resendVerificationLink">Didn't receive verification email?</a>
+                                <a href="#" data-bs-toggle="modal" id="resendVerificationLink">Didn't receive verification email?</a>
                             </p>
                         </div>
                     </form>
@@ -730,20 +730,20 @@ function handleForgotPassword($conn) {
     <!-- Resend Verification Modal -->
     <div class="modal fade" id="resendVerificationModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content">
+            <div class="modal-content" id="resendModal">
                 <div class="modal-header">
-                    <h5 class="modal-title">Resend Verification Email</h5>
+                    <h5 class="modal-title" id="mod-title">Resend Verification Email</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
-                    <p>Please enter your email address to receive a new verification link:</p>
+                    <p id="reset-p">Please enter your email address to receive a new verification link:</p>
                     <div class="mb-3">
                         <input type="email" class="form-control" id="resendEmail" placeholder="Enter your email">
                     </div>
                     <div id="resendMessage" class="alert d-none"></div>
                 </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <div class="modal-footer" id="resend-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" id="close-resendBtn">Close</button>
                     <button type="button" class="btn btn-primary" id="resendButton">Resend</button>
                 </div>
             </div>
@@ -753,13 +753,13 @@ function handleForgotPassword($conn) {
     <!-- Forgot Password Modal -->
     <div class="modal fade" id="forgotPasswordModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content">
+            <div class="modal-content" id="fpassModal">
                 <div class="modal-header">
-                    <h5 class="modal-title">Reset Your Password</h5>
+                    <h5 class="modal-title" id="mod-title">Reset Your Password</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
-                <div class="modal-body">
-                    <p>Enter your email address and we'll send you a link to reset your password.</p>
+                <div class="modal-body" id="reset-body">
+                    <p id="reset-p">Enter your email address and we'll send you a link to reset your password.</p>
                     <form id="forgotPasswordForm" action="" method="POST">
                         <input type="hidden" name="action" value="forgotPassword">
                         <div class="mb-3">
@@ -778,9 +778,9 @@ function handleForgotPassword($conn) {
     <!-- Reset Password Modal -->
     <div class="modal fade" id="resetPasswordModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content">
+            <div class="modal-content" id="setnewPass">
                 <div class="modal-header">
-                    <h5 class="modal-title">Set New Password</h5>
+                    <h5 class="modal-title" id="mod-title">Set New Password</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
@@ -849,21 +849,35 @@ function handleForgotPassword($conn) {
         const resendButton = document.getElementById('resendButton');
         const resendMessage = document.getElementById('resendMessage');
         
+        // Find the event listener for the resendLink and replace it with this improved version
+        // Look for this code around line 700-720 in the JavaScript section
+
         if (resendLink) {
             resendLink.addEventListener('click', function(e) {
                 e.preventDefault();
                 
-                // Close login modal
-                const loginModal = bootstrap.Modal.getInstance(document.getElementById('loginModal'));
+                // Close login modal properly
+                const loginModalEl = document.getElementById('loginModal');
+                const loginModal = bootstrap.Modal.getInstance(loginModalEl);
                 if (loginModal) {
                     loginModal.hide();
+                    
+                    // Wait for the modal to fully close before opening the new one
+                    loginModalEl.addEventListener('hidden.bs.modal', function handler() {
+                        // Remove the event listener to prevent multiple triggers
+                        loginModalEl.removeEventListener('hidden.bs.modal', handler);
+                        
+                        // Now open the resend verification modal
+                        const resendModal = new bootstrap.Modal(document.getElementById('resendVerificationModal'));
+                        resendModal.show();
+                    });
+                } else {
+                    // If for some reason the modal instance isn't found, still try to show the resend modal
+                    setTimeout(() => {
+                        const resendModal = new bootstrap.Modal(document.getElementById('resendVerificationModal'));
+                        resendModal.show();
+                    }, 300);
                 }
-                
-                // Show resend verification modal
-                setTimeout(() => {
-                    const resendModal = new bootstrap.Modal(document.getElementById('resendVerificationModal'));
-                    resendModal.show();
-                }, 500);
             });
         }
         
