@@ -206,7 +206,8 @@ include 'header.php'; ?>
                                                     </div>
 
                                                     <div class="tDeets2-2">
-                                                        <button class="btn" data-bs-target="#req-to-cancel-modal" data-bs-toggle="modal" id="reqtoCancel-but" data-booking-id="<?php echo $reservation['booking_id']; ?>">Request to Cancel</button>
+                                                <button class="btn" data-bs-target="#request-to-cancel" data-bs-toggle="modal" id="reqtoCancel-but" data-booking-id="<?php echo $reservation['booking_id']; ?>">Request to Cancel</button>
+                                                        
                                                     </div>
                                                 </div>
                                             </div>
@@ -582,21 +583,101 @@ include 'header.php'; ?>
     </div>
 </div>
 
-
 <!-- REQUEST TO CANCEL MODAL -->
-<div class="modal fade" id="req-to-cancel-modal" aria-hidden="true" aria-labelledby="exampleModalToggleLabel" tabindex="-1">
+<div class="modal" id="request-to-cancel" aria-hidden="true" aria-labelledby="exampleModalToggleLabel" tabindex="-1">
     <div class="modal-dialog modal-lg modal-dialog-centered">
         <div class="modal-content" id="req-to-cancel">
+            <div class="modal-header" id="mheader">
+                <h1 class="modal-title fs-5" id="req-to-cancel-title">Are you sure you want to cancel?</h1>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
             
-            <form action="cancel_booking.php" method="POST">
+            <div class="modal-body" id="mbody-req-to-cancel">
+                <div class="mbody-text">
+                    <p id="req-to-cancel-mbody-text">
+                        We're sorry to see you go! Please confirm if you'd like to cancel your booking.
+                        If you need assistance, feel free to reach out to us.
+                    </p>
+                    
+                    <div class="d-flex flex-wrap gap-3">
+                        <div>
+                            <input type="radio" name="reason" value="Change of Plans" id="ChangeOfPlans" required>
+                            <label for="ChangeOfPlans">Change of Plans</label>
+                        </div>
+
+                        <div>
+                            <input type="radio" name="reason" value="Personal Emergency" id="PersonalEmergency">
+                            <label for="PersonalEmergency">Personal Emergency</label>
+                        </div>
+
+                        <div>
+                            <input type="radio" name="reason" value="Scheduling Conflict" id="SchedulingConflict">
+                            <label for="SchedulingConflict">Scheduling Conflict</label>
+                        </div>
+
+                        <div>
+                            <input type="radio" name="reason" value="Dissatisfaction with Services" id="DissatisfactionWithServices">
+                            <label for="DissatisfactionWithServices">Dissatisfaction with Services</label>
+                        </div>
+
+                        <div class="d-flex align-items-center">
+                            <input type="radio" name="reason" value="Other" id="Others">
+                            <label for="Others" class="me-2">Other Specify:</label>
+                            <textarea class="form-control" id="message-text" name="other_reason"></textarea>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="modal-footer d-flex justify-content-center align-items-center" id="mfooter">
+                <button class="btn" id="confirm-but" data-bs-target="#process-cancellation" data-bs-toggle="modal" type="button">
+                    Proceed to Cancel
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal" id="process-cancellation" aria-hidden="true" aria-labelledby="exampleModalToggleLabel2" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content" id="process-cancel">
+            <div class="modal-header" id="mheader">
+                <h1 class="modal-title fs-5" id="process-cancellation-title">Your Cancellation is Being Processed</h1>
+            </div>
+
+            <div class="modal-body" id="mbody-process-cancellation">
+                We're processing your refund now. Kindly wait a moment, and we'll notify you once it's complete.
+                Thank you for your patience!
+            </div>
+            
+            <div class="modal-footer d-flex justify-content-center align-items-center" id="mfooter">
+                <form action="cancel_booking.php" method="POST">
+                    <input type="hidden" name="booking_id" id="confirm_cancel_booking_id">
+                    <input type="hidden" name="reason" id="confirm_cancel_reason">
+                    <input type="hidden" name="other_reason" id="confirm_cancel_other_reason">
+                    <button type="submit" class="btn" id="confirm-but">Confirm</button>
+                    <button type="button" class="btn" data-bs-dismiss="modal" id="cancel-but">Cancel</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<!-- 
+<div class="modal" tabindex="-1" id="request-to-cancel" role="dialog">
+  <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
+    <div class="modal-content" id="req-to-cancel">
+
+    <form action="cancel_booking.php" method="POST">
+                <input type="hidden" name="booking_id" id="cancel  method="POST">
                 <input type="hidden" name="booking_id" id="cancel_booking_id">
                 
-                <div class="modal-header" id="mheader">
+    <div class="modal-header" id="mheader">
                     <h1 class="modal-title fs-5" id="req-to-cancel-title">Are you sure you want to cancel?</h1>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
-                
-                <div class="modal-body" id="mbody-req-to-cancel">
+      <div class="modal-body" id="mbody-req-to-cancel">
                     <div class="mbody-text">
                         <p id="req-to-cancel-mbody-text">
                             We're sorry to see you go! Please confirm if you'd like to cancel your booking.
@@ -626,48 +707,42 @@ include 'header.php'; ?>
 
                             <div class="d-flex align-items-center">
                                 <input type="radio" name="reason" value="Other" id="Others">
-                                <label for="Others" class="me-  value="Other" id="Others">
                                 <label for="Others" class="me-2">Other Specify:</label>
                                 <textarea class="form-control" id="message-text" name="other_reason"></textarea>
                             </div>
                         </div>
                     </div>
                 </div>
-                
-                <div class="modal-footer d-flex justify-content-center align-items-center" id="mfooter">
-                    <button class="btn" id="confirm-but" data-bs-target="#process-cancellation" data-bs-toggle="modal" data-bs-dismiss="modal" type="button">
+      <div class="modal-footer d-flex justify-content-center align-items-center" id="mfooter">
+                    <button class="btn" id="confirm-but" data-bs-target="#cancellation" data-bs-toggle="modal" type="button" >
                         Proceed to Cancel
                     </button>
                 </div>
-            </form>
-        </div>
+                </form>
     </div>
+  </div>
 </div>
 
-<div class="modal fade" id="process-cancellation" aria-hidden="true" aria-labelledby="exampleModalToggleLabel2" tabindex="-1">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content" id="process-cancel">
-            <div class="modal-header" id="mheader">
+<div class="modal" id="cancellation" aria-hidden="true" aria-labelledby="exampleModalToggleLabel2" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+    <div class="modal-header" id="mheader">
                 <h1 class="modal-title fs-5" id="process-cancellation-title">Your Cancellation is Being Processed</h1>
             </div>
-
             <div class="modal-body" id="mbody-process-cancellation">
                 We're processing your refund now. Kindly wait a moment, and we'll notify you once it's complete.
                 Thank you for your patience!
             </div>
-            
             <div class="modal-footer d-flex justify-content-center align-items-center" id="mfooter">
-                <form action="cancel_booking.php" method="POST">
-                    <input type="hidden" name="booking_id" id="confirm_cancel_booking_id">
-                    <input type="hidden" name="reason" id="confirm_cancel_reason">
-                    <input type="hidden" name="other_reason" id="confirm_cancel_other_reason">
-                    <button type="submit" class="btn" id="confirm-but">Confirm</button>
-                    <button type="button" class="btn" data-bs-dismiss="modal" id="cancel-but">Cancel</button>
-                </form>
+                <button type="button" class="btn" data-bs-dismiss="modal" id="confirm-but">Confirm</button>
+                <button type="button" class="btn" data-bs-dismiss="modal" id="cancel-but">Cancel</button>
             </div>
-        </div>
     </div>
-</div>
+  </div>
+</div> -->
+
+
+
 <!-- EDIT USER INFORMATION -->
 <div class="modal fade" id="editProfileModal" tabindex="-1" aria-labelledby="editProfileModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-xl modal-dialog-centered">
@@ -742,6 +817,7 @@ include 'header.php'; ?>
 <!-- JavaScript for handling modal data -->
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+
     // Handle View & Edit Pet Modal
     const veModal = document.getElementById('veModal');
     if (veModal) {
@@ -925,43 +1001,42 @@ document.addEventListener('DOMContentLoaded', function() {
         
         return true;
     }
+    const reqToCancelButtons = document.querySelectorAll('[data-bs-target="#request-to-cancel"]')
+  reqToCancelButtons.forEach((button) => {
+    button.addEventListener("click", function () {
+      const bookingId = this.getAttribute("data-booking-id")
+      // Store the booking ID in a global variable or localStorage
+      window.cancelBookingId = bookingId
+    })
+  })
 
-    
-// Transfer booking ID to confirmation modal
-const reqToCancelModal = document.getElementById('req-to-cancel-modal');
-if (reqToCancelModal) {
-    reqToCancelModal.addEventListener('show.bs.modal', function(event) {
-        const button = event.relatedTarget;
-        const bookingId = button.getAttribute('data-booking-id');
-        document.getElementById('cancel_booking_id').value = bookingId;
-    });
-}
+  // Handle the transfer to the confirmation modal
+  const proceedButton = document.querySelector('[data-bs-target="#process-cancellation"]')
+  if (proceedButton) {
+    proceedButton.addEventListener("click", () => {
+      // Get the booking ID from the global variable
+      const bookingId = window.cancelBookingId
 
-// Transfer booking ID to the confirmation step
-const processCancellationModal = document.getElementById('process-cancellation');
-if (processCancellationModal) {
-    processCancellationModal.addEventListener('show.bs.modal', function() {
-        // Get the booking ID from the first modal
-        const bookingId = document.getElementById('cancel_booking_id').value;
-        document.getElementById('confirm_cancel_booking_id').value = bookingId;
-        
-        // Get the selected reason
-        const reasonInputs = document.querySelectorAll('input[name="reason"]');
-        let selectedReason = '';
-        reasonInputs.forEach(input => {
-            if (input.checked) {
-                selectedReason = input.value;
-            }
-        });
-        document.getElementById('confirm_cancel_reason').value = selectedReason;
-        
-        // Get the other reason if applicable
-        if (selectedReason === 'Other') {
-            const otherReason = document.getElementById('message-text').value;
-            document.getElementById('confirm_cancel_other_reason').value = otherReason;
+      // Set the booking ID in the confirmation form
+      document.getElementById("confirm_cancel_booking_id").value = bookingId
+
+      // Get the selected reason
+      const reasonInputs = document.querySelectorAll('input[name="reason"]')
+      let selectedReason = ""
+      reasonInputs.forEach((input) => {
+        if (input.checked) {
+          selectedReason = input.value
         }
-    });
-}
+      })
+      document.getElementById("confirm_cancel_reason").value = selectedReason
+
+      // Get the other reason if applicable
+      if (selectedReason === "Other") {
+        const otherReason = document.getElementById("message-text").value
+        document.getElementById("confirm_cancel_other_reason").value = otherReason
+      }
+    })
+  }
 });
 </script>
 
