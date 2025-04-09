@@ -32,21 +32,14 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $expiry_date = !empty($_POST['expiry_date']) ? $_POST['expiry_date'] : null;
     
     $age_years = isset($_POST['pet_age_years']) ? intval($_POST['pet_age_years']) : 0;
-    $age_months = isset($_POST['pet_age_months']) ? intval($_POST['pet_age_months']) : 0;
-    
+
     // Format the age string
-    $age = '';
-    if ($age_years > 0) {
-        $age .= $age_years . ' ' . ($age_years == 1 ? 'year' : 'years');
-    }
-    if ($age_months > 0) {
-        if ($age_years > 0) {
-            $age .= ' ';
-        }
-        $age .= $age_months . ' mos';
-    }
-    if (empty($age)) {
-        $age = '0 years';
+    if ($age_years == 1) {
+        $age = "1 year";
+    } elseif ($age_years > 1) {
+        $age = "$age_years years";
+    } else {
+        $age = "0 years";
     }
     
     
@@ -59,7 +52,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     
     if ($verify_stmt->rowCount() == 0) {
         $_SESSION['error_message'] = "You don't have permission to edit this pet";
-        header("Location: profile.php");
+        header("Location: Profile.php");
         exit();
     }
     

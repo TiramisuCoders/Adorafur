@@ -1,10 +1,27 @@
 <?php
-session_start();
-include 'db_connection.php';
+// Enable error reporting for debugging
+error_reporting(E_ALL);
+ini_set('display_errors', 1);
+ini_set('log_errors', 1);
+ini_set('error_log', 'php_errors.log');
 
+// Start session
+session_start();
+
+// Set headers to prevent caching
+header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+header('Cache-Control: post-check=0, pre-check=0', false);
+header('Pragma: no-cache');
 header('Content-Type: application/json');
 
+// Include database connection
+require_once '../connect.php';
+
 try {
+    // Log request information
+    error_log("fetch_bookings.php called with: " . json_encode($_GET));
+    error_log("Session data: " . json_encode($_SESSION));
+    
     // Ensure admin ID is retrieved from session
     $admin_id = $_SESSION['admin_id'] ?? null;
     if (!$admin_id) {
@@ -15,12 +32,12 @@ try {
     // Get date range from request
     $start_date = $_GET['start_date'] ?? null;
     $end_date = $_GET['end_date'] ?? null;
-    
-    error_log("Fetching bookings for admin_id: $admin_id, date range: $start_date to $end_date");
 
     if (!$start_date || !$end_date) {
         throw new Exception("Start date and end date are required.");
     }
+
+    error_log("Fetching bookings for admin_id: $admin_id, date range: $start_date to $end_date");
 
     // Fetch bookings for the specified date range
     $query = "SELECT b.booking_id, b.booking_status, 
@@ -70,10 +87,10 @@ try {
     ]);
 
 } catch (Exception $e) {
-    error_log("Error fetching bookings: " . $e->getMessage());
+    error_log("Error in fetch_bookings.php: " . $e->getMessage());
     echo json_encode([
-        "success" => false,
-        "message" => $e->getMessage()
+        "success" => false, 
+        "error" => $e->getMessage()
     ]);
 }
 ?>
