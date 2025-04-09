@@ -267,13 +267,14 @@
 
 
 section{
-    min-height: 100vh;
-    width: 80%;
-    margin: 0 auto;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    top: 900px;
+  min-height: auto; /* Remove fixed height */
+  width: 90%; /* Use percentage instead of fixed width */
+  max-width: 1200px; /* Add a max-width for larger screens */
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 20px 0;
   }
 
 /*  .faqs-space{
@@ -281,12 +282,11 @@ section{
 }*/
 
 .faq {
-    font-family: "BalooTammudu2-Regular", sans-serif;
-    width: 1150px;
-    margin-top: 2rem;
-    padding-bottom: 1rem;
-    border-bottom: 0.5px solid #cccccc;
-    cursor: pointer;
+  width: 100%; /* Use full width instead of fixed pixels */
+  margin-top: 2rem;
+  padding-bottom: 1rem;
+  border-bottom: 0.5px solid #cccccc;
+  cursor: pointer;
 }
 
 .question{
@@ -297,11 +297,12 @@ section{
 }
 
 .question h3{
-    width: 1000px;
-    font-family: "BalooTammudu2-Regular", sans-serif;
-    color: #ab643c;
-    font-size: 1.8rem;
-
+  width: auto; /* Remove fixed width */
+  max-width: 90%; /* Prevent text from touching the icon */
+  font-family: "BalooTammudu2-Regular", sans-serif;
+  color: #ab643c;
+  font-size: clamp(1.2rem, 3vw, 1.8rem); /* Responsive font size */
+  margin-right: 10px; /* Add space between text and icon */
 }
 
 .answer {
@@ -311,14 +312,15 @@ section{
 }
 
 .answer p{
-    font-family: "BalooTammudu2-Regular", sans-serif;
-    width: 1000px;
-    text-align: justify;
-    text-justify: inter-word;
-    color: #421d11;
-    padding-top: 1rem;
-    line-height: 1.6;
-    font-size: 1.4rem;
+  width: 100%;
+  margin: 0 auto;
+  text-align: justify;
+  text-justify: inter-word;
+  color: #421d11;
+  padding: 1rem clamp(1rem, 4vw, 2rem) 0 clamp(1rem, 4vw, 2rem);
+  line-height: 1.6;
+  font-size: clamp(1rem, 2.5vw, 1.4rem);
+
 }
 
 .faq.active .answer{
@@ -338,6 +340,11 @@ section{
     transition: opacity 0.3s ease;  /* Smooth transition */
 }
 
+.icon {
+  flex-shrink: 0; /* Prevent icon from shrinking */
+  margin-left: 10px; /* Add space between text and icon */
+}
+
 /* When active, hide the plus sign and show the minus sign */
 .icon.active .plus {
     opacity: 0;  /* Hide the plus sign */
@@ -347,58 +354,40 @@ section{
     opacity: 1;  /* Show the minus sign */
 }
 
-/* For tablets and smaller screens */
+/* Responsive adjustments for medium screens */
 @media (max-width: 1300px) {
-  /* Image container and title */
-  .faqs-img-container {
-      margin-bottom: 20px;
+  .question {
+      align-items: flex-start; /* Align items to the top for better spacing */
   }
-
-  /* FAQ Section */
-  .faq-section {
-      width: 100%;
-      padding: 10px;
-  }
-
-  /* FAQ Item */
-  .faq {
-      width: 100%;
-      padding: 10px;
-      margin-top: 10px; /* Small margin between items */
-  }
-
+  
   .question h3 {
-      font-size: 1.5rem; /* Adjust question font size */
+      font-size: clamp(1rem, 4vw, 1.5rem); /* Smaller font on medium screens */
+      line-height: 1.4; /* Improve line height for readability */
   }
-
+  
   .answer p {
-      font-size: 1.2rem; /* Smaller font size for mobile */
+      font-size: clamp(0.9rem, 3.5vw, 1.2rem); /* Smaller font on medium screens */
   }
-
-  .faqs-img {
-      width: 100%; /* Make sure the image scales down */
-      height: auto;
+  
+  .icon {
+      margin-top: 5px; /* Align icon with first line of text */
   }
 }
 
-/* For extra small screens (e.g., mobile phones) */
+/* Responsive adjustments for small screens */
 @media (max-width: 480px) {
-
-  /* FAQ Section */
-
-  .faq-section {
-      padding: 5px;
+  section {
+      width: 95%; /* Use more width on very small screens */
+      padding: 10px 0;
   }
-
-  .faq {
-      padding: 8px;
-  }
-
+  
   .question h3 {
-      font-size: 1.3rem; /* Slightly smaller font for small screens */
+      font-size: clamp(0.9rem, 4.5vw, 1.2rem); /* Even smaller font on small screens */
+      line-height: 1.3;
   }
-
+  
   .answer p {
-      font-size: 1.1rem; /* Even smaller font for small screens */
+      font-size: clamp(0.8rem, 4vw, 1rem); /* Even smaller font on small screens */
+      line-height: 1.5;
   }
 }

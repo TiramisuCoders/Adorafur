@@ -474,7 +474,7 @@ input[type="radio"] {
     color: #421D11;
     border-radius: 5px;
     width: auto;
-    padding: 5px;
+    padding: 10px;
 }
 
 
@@ -484,9 +484,7 @@ input[type="radio"] {
     border: none;
     border-radius: 5px;
     width: auto;
-    padding: 5px;
-
-
+    padding: 10px;
 }
 
 
