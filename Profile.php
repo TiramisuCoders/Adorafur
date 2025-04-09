@@ -194,7 +194,7 @@ include 'header.php'; ?>
                                                     </div>
 
                                                     <div class="tDeets1-2">
-                                                        <p class="price"><?php echo $reservation['booking_payment_amount']; ?></p>
+                                                        <p class="price"><?php echo $reservation['booking_total_amount']; ?></p>
                                                     </div>
                                                 </div>
 
@@ -246,7 +246,7 @@ include 'header.php'; ?>
                                                     </div>
 
                                                     <div class="tDeets1-2">
-                                                        <p class="price"><?php echo $history['booking_payment_amount']; ?></p>
+                                                        <p class="price"><?php echo $history['booking_total_amount']; ?></p>
                                                     </div>
                                                 </div>
 
@@ -582,6 +582,7 @@ include 'header.php'; ?>
     </div>
 </div>
 
+
 <!-- REQUEST TO CANCEL MODAL -->
 <div class="modal fade" id="req-to-cancel-modal" aria-hidden="true" aria-labelledby="exampleModalToggleLabel" tabindex="-1">
     <div class="modal-dialog modal-lg modal-dialog-centered">
@@ -634,7 +635,7 @@ include 'header.php'; ?>
                 </div>
                 
                 <div class="modal-footer d-flex justify-content-center align-items-center" id="mfooter">
-                    <button class="btn" id="confirm-but" data-bs-target="#process-cancellation" data-bs-toggle="modal" type="button">
+                    <button class="btn" id="confirm-but" data-bs-target="#process-cancellation" data-bs-toggle="modal" data-bs-dismiss="modal" type="button">
                         Proceed to Cancel
                     </button>
                 </div>
@@ -656,13 +657,17 @@ include 'header.php'; ?>
             </div>
             
             <div class="modal-footer d-flex justify-content-center align-items-center" id="mfooter">
-                <button type="button" class="btn" data-bs-dismiss="modal" id="confirm-but">Confirm</button>
-                <button type="button" class="btn" data-bs-dismiss="modal" id="cancel-but">Cancel</button>
+                <form action="cancel_booking.php" method="POST">
+                    <input type="hidden" name="booking_id" id="confirm_cancel_booking_id">
+                    <input type="hidden" name="reason" id="confirm_cancel_reason">
+                    <input type="hidden" name="other_reason" id="confirm_cancel_other_reason">
+                    <button type="submit" class="btn" id="confirm-but">Confirm</button>
+                    <button type="button" class="btn" data-bs-dismiss="modal" id="cancel-but">Cancel</button>
+                </form>
             </div>
         </div>
     </div>
 </div>
-
 <!-- EDIT USER INFORMATION -->
 <div class="modal fade" id="editProfileModal" tabindex="-1" aria-labelledby="editProfileModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-xl modal-dialog-centered">
@@ -671,7 +676,6 @@ include 'header.php'; ?>
                 <div class="paw-prints">
                     <img src="Profile-Pics.png" alt="">
                 </div>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
                 
             <div class="modal-body" id="mbody">
@@ -714,7 +718,7 @@ include 'header.php'; ?>
                         <input type="url" class="form-control" name="socials" value="<?php echo isset($fetch_cust_info['c_mode_of_communication']) ? htmlspecialchars($fetch_cust_info['c_mode_of_communication']) : ''; ?>">
                     </div>
 
-                    <div class="row mb-4">
+                    <!-- <div class="row mb-4">
                         <div class="col-md-6">
                             <label class="form-label">CURRENT PASSWORD</label>
                             <input type="password" class="form-control" name="current_password">
@@ -723,7 +727,7 @@ include 'header.php'; ?>
                             <label class="form-label">NEW PASSWORD</label>
                             <input type="password" class="form-control" name="new_password">
                         </div>
-                    </div>
+                    </div> -->
 
                     <div class="modal-footer d-flex justify-content-center align-items-center" id="mfooter">
                         <button type="button" class="btn" data-bs-dismiss="modal" id="cancel-but">Cancel</button>
@@ -921,6 +925,43 @@ document.addEventListener('DOMContentLoaded', function() {
         
         return true;
     }
+
+    
+// Transfer booking ID to confirmation modal
+const reqToCancelModal = document.getElementById('req-to-cancel-modal');
+if (reqToCancelModal) {
+    reqToCancelModal.addEventListener('show.bs.modal', function(event) {
+        const button = event.relatedTarget;
+        const bookingId = button.getAttribute('data-booking-id');
+        document.getElementById('cancel_booking_id').value = bookingId;
+    });
+}
+
+// Transfer booking ID to the confirmation step
+const processCancellationModal = document.getElementById('process-cancellation');
+if (processCancellationModal) {
+    processCancellationModal.addEventListener('show.bs.modal', function() {
+        // Get the booking ID from the first modal
+        const bookingId = document.getElementById('cancel_booking_id').value;
+        document.getElementById('confirm_cancel_booking_id').value = bookingId;
+        
+        // Get the selected reason
+        const reasonInputs = document.querySelectorAll('input[name="reason"]');
+        let selectedReason = '';
+        reasonInputs.forEach(input => {
+            if (input.checked) {
+                selectedReason = input.value;
+            }
+        });
+        document.getElementById('confirm_cancel_reason').value = selectedReason;
+        
+        // Get the other reason if applicable
+        if (selectedReason === 'Other') {
+            const otherReason = document.getElementById('message-text').value;
+            document.getElementById('confirm_cancel_other_reason').value = otherReason;
+        }
+    });
+}
 });
 </script>
 
