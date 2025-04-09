@@ -499,7 +499,7 @@ function handleForgotPassword($conn) {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>LOG IN PAGE</title>
-    <link rel="stylesheet" href="log_in1.css">
+    <link rel="stylesheet" href="log_in01.css">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     
@@ -614,7 +614,7 @@ function handleForgotPassword($conn) {
                                         <div class="col-6">
                                             <div class="mb-1">
                                                 <label for="firstName">First Name <span class="text-danger">*</span></label>
-                                                <input type="text" class="form-control" id="firstName" name="firstName" value="<?php echo $firstname?>" required>
+                                                <input type="text" class="form-control" id="firstName" name="firstName" value="<?php echo $firstname?>" placeholder="Enter First Name" required>
                                                 <?php if ($firstname_error): ?>
                                                     <p class="error firstname-error"><?php echo $firstname_error; ?></p>
                                                 <?php endif; ?>
@@ -696,7 +696,6 @@ function handleForgotPassword($conn) {
                         
                         <!-- Image Side -->
                         <div class="col-md-6 d-none d-md-block image-side p-0 position-relative">
-                            <!-- <button type="button" class="btn-close position-absolute" data-bs-dismiss="modal" aria-label="Close"></button> -->
                             <img src="Register-dog.png" alt="Happy dog" class="dog-image">
                         </div>
 
