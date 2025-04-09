@@ -132,16 +132,17 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["complete_booking"])) 
                                 date("H:i:s", strtotime($bookingData["checkOutTime"]));
                 
                 // Insert into bookings table
-                $bookingStmt = $conn->prepare("INSERT INTO bookings (pet_id, service_id, payment_id, admin_id, 
-                                             booking_status, booking_check_in, booking_check_out) 
-                                             VALUES (:pet_id, :service_id, :payment_id, 1, 
-                                             'Confirmed', :check_in, :check_out)");
-                
-                $bookingStmt->bindParam(":pet_id", $petId, PDO::PARAM_INT);
-                $bookingStmt->bindParam(":service_id", $serviceId, PDO::PARAM_INT);
-                $bookingStmt->bindParam(":payment_id", $paymentId, PDO::PARAM_INT);
-                $bookingStmt->bindParam(":check_in", $checkInDate);
-                $bookingStmt->bindParam(":check_out", $checkOutDate);
+                $bookingStmt = $conn->prepare("INSERT INTO bookings (pet_id, service_id, admin_id, 
+                             booking_status, booking_check_in, booking_check_out, booking_total_amount) 
+                             VALUES (:pet_id, :service_id, 1, 
+                             'Pending', :check_in, :check_out, :booking_amount)");
+
+                            $bookingStmt->bindParam(":pet_id", $petId, PDO::PARAM_INT);
+                            $bookingStmt->bindParam(":service_id", $serviceId, PDO::PARAM_INT);
+                            // Remove this line: $bookingStmt->bindParam(":payment_id", $paymentId, PDO::PARAM_INT);
+                            $bookingStmt->bindParam(":check_in", $checkInDate);
+                            $bookingStmt->bindParam(":check_out", $checkOutDate);
+                            $bookingStmt->bindParam(":booking_amount", $pet["price"]); // Add this line to include the pet's price
                 
                 $bookingStmt->execute();
             }
