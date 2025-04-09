@@ -5,7 +5,8 @@
   
   #loginModal .modal-content,
   #registerModal .modal-content,
-  #congratsModal .modal-content {
+  #congratsModal .modal-content,
+  #fpassModal, #resendModal, #setnewPass {
     background-color: #F7E2CF;
   }
   
@@ -59,8 +60,7 @@
     background-color: #421D11;
   }
   
-  #not-yet-register, #sign-in, 
-  #forgot-password-link, #resendVerificationLink{
+  #not-yet-register, #sign-in{
     color: #421D11;
   }
   
@@ -110,23 +110,53 @@ input[type="password"]::-webkit-textfield-decoration-container {
     display: none !important;
 }
 
-
-#create-but, #loginbut{
+#resetPasswordBtn{
+  border-radius: 7px;
+  width: 180px;
   background-color: #421D11;
-  color: #fff;
-  border: none;
+  margin-top: 15px;
 }
 
-#create-but:hover, #loginbut:hover {
-  background-color: #2f150c;
+.d-grid{
+  display: flex;
+  justify-content: center;
 }
 
-#cancel-but {
-  background-color: #fff;
-  color: #000;
-  border: 1px solid #ccc;
+#mod-title{
+  color: #421D11;
+  font-size: 25px;
 }
 
-#cancel-but:hover {
-  background-color: #f2f2f2;
+#reset-body{
+  font-size: 17px;
+  margin: 7px;
+}
+
+#reset-p {
+  margin-top: 0;
+  margin-bottom: 25px;
+  font-size: 18px;
+}
+
+#resend-footer{
+  display: flex;
+  justify-content: center;
+  gap: 7px;
+}
+
+#resendButton{
+  background-color: #421D11;
+  width: 125px;
+}
+
+#close-resendBtn{
+    background-color: #b69c93;
+    width: 125px;
+}
+
+#submitResetPasswordBtn{
+  border-radius: 7px;
+  width: 180px;
+  background-color: #421D11;
+  margin-top: 15px;
 }

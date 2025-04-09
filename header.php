@@ -87,6 +87,13 @@
                 </li>
               <?php endif; ?>
 
+              <!-- Replace your current exit button with this -->
+              <li class="nav-item exit-nav-item">
+                <a href="#" class="nav-link exit-button" data-bs-dismiss="offcanvas">
+                  EXIT
+                </a>
+              </li>
+
           </ul>
         </div>
       </div>
@@ -107,6 +114,26 @@
         });
       });
     });
+
+function closeNavbar() {
+  // For Bootstrap 5 offcanvas
+  var offcanvasElement = document.querySelector('.offcanvas');
+  if (offcanvasElement) {
+    var offcanvasInstance = bootstrap.Offcanvas.getInstance(offcanvasElement);
+    if (offcanvasInstance) {
+      offcanvasInstance.hide();
+    }
+  }
+  
+  // For Bootstrap 4 or custom mobile menu
+  var navbarToggler = document.querySelector('.navbar-toggler');
+  if (navbarToggler && navbarToggler.getAttribute('aria-expanded') === 'true') {
+    navbarToggler.click();
+  }
+  
+  return false; // Prevent default link behavior
+}
+
   </script>
   
 </body>

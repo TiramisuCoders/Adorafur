@@ -302,8 +302,6 @@
 
 
 @media (max-width: 1024px) {
-
-
     .inner-hr, .story{
         flex-direction: column;
     }
@@ -325,13 +323,6 @@
 
 
     }
-
-
-
-
 }
-
-
-
 
 
