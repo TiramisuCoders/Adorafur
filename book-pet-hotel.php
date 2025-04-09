@@ -577,7 +577,7 @@ $transactionNo = 'TRX'.time().rand(1000, 9999);
     </script>
     
     <!-- Include the external JavaScript file -->
-    <script src="book.js"></script>
+    <script src="books.js"></script>
 </body>
 </html>
 
