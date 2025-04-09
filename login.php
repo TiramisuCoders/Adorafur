@@ -696,7 +696,6 @@ function handleForgotPassword($conn) {
                         
                         <!-- Image Side -->
                         <div class="col-md-6 d-none d-md-block image-side p-0 position-relative">
-                            <button type="button" class="btn-close position-absolute" data-bs-dismiss="modal" aria-label="Close"></button>
                             <img src="Register-dog.png" alt="Happy dog" class="dog-image">
                         </div>
 
