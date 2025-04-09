@@ -2,6 +2,9 @@
 // Start session
 session_start();
 
+// Include database connection
+include("connect.php");
+
 // Initialize response
 $response = [
     'success' => false,
@@ -12,9 +15,28 @@ $response = [
 if (isset($_POST['email']) && !empty($_POST['email'])) {
     $email = $_POST['email'];
     
+    // Validate email format
+    if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+        $response['message'] = 'Please enter a valid email address.';
+        header('Content-Type: application/json');
+        echo json_encode($response);
+        exit;
+    }
+    
+    // Check if the email exists in the database
+    $stmt = $conn->prepare("SELECT c_id FROM customer WHERE c_email = ?");
+    $stmt->execute([$email]);
+    
+    if ($stmt->rowCount() === 0) {
+        $response['message'] = 'No account found with this email address.';
+        header('Content-Type: application/json');
+        echo json_encode($response);
+        exit;
+    }
+    
     // Supabase API details
     $supabase_url = "https://ygbwanzobuielhttdzsw.supabase.co";
-    $supabase_key = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."; // Replace with your actual anon key
+    $supabase_key = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlnYndhbnpvYnVpZWxodHRkenN3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDM1MTY3NTMsImV4cCI6MjA1OTA5Mjc1M30.bIaP_7rfHyne5PQ_Wmt8qdMYFDzurdnEAUR7U2bxbDQ";
     
     // Send request to Supabase to resend confirmation email
     $ch = curl_init();
@@ -36,6 +58,10 @@ if (isset($_POST['email']) && !empty($_POST['email'])) {
     $response_data = curl_exec($ch);
     $http_code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
     
+    // For debugging
+    error_log("Supabase Resend Verification Response: " . $response_data);
+    error_log("HTTP Code: " . $http_code);
+    
     curl_close($ch);
     
     if ($http_code === 200) {
@@ -45,7 +71,9 @@ if (isset($_POST['email']) && !empty($_POST['email'])) {
         $error_data = json_decode($response_data, true);
         $response['message'] = isset($error_data['error_description']) 
             ? $error_data['error_description'] 
-            : "Error sending verification email. Please try again.";
+            : (isset($error_data['message']) 
+                ? $error_data['message'] 
+                : "Error sending verification email. Please try again.");
     }
 } else {
     $response['message'] = "Email is required.";

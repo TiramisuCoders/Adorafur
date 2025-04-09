@@ -1,30 +1,22 @@
 <?php
-// Enable error reporting for debugging
-error_reporting(E_ALL);
-ini_set('display_errors', 1);
-ini_set('log_errors', 1);
-ini_set('error_log', 'php_errors.log');
-
-// Set headers to prevent caching
-header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
-header('Cache-Control: post-check=0, pre-check=0', false);
-header('Pragma: no-cache');
-header('Content-Type: application/json');
-
-// Include database connection
-require_once '../connect.php';
 session_start();
+include 'db_connection.php';
+
+header('Content-Type: application/json');
 
 try {
     // Ensure admin ID is retrieved from session
     $admin_id = $_SESSION['admin_id'] ?? null;
     if (!$admin_id) {
+        error_log("No admin_id found in session: " . print_r($_SESSION, true));
         throw new Exception("Unauthorized access. Please log in.");
     }
 
     // Get date range from request
     $start_date = $_GET['start_date'] ?? null;
     $end_date = $_GET['end_date'] ?? null;
+    
+    error_log("Fetching bookings for admin_id: $admin_id, date range: $start_date to $end_date");
 
     if (!$start_date || !$end_date) {
         throw new Exception("Start date and end date are required.");
@@ -70,16 +62,18 @@ try {
         $bookings[$bookingDate][] = $row;
     }
     
+    error_log("Found " . count($bookings) . " dates with bookings");
+    
     echo json_encode([
         "success" => true, 
         "data" => $bookings
     ]);
 
 } catch (Exception $e) {
-    error_log("Error in fetch_bookings.php: " . $e->getMessage());
+    error_log("Error fetching bookings: " . $e->getMessage());
     echo json_encode([
-        "success" => false, 
-        "error" => $e->getMessage()
+        "success" => false,
+        "message" => $e->getMessage()
     ]);
 }
 ?>

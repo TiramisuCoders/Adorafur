@@ -109,4 +109,3 @@ if (!isset($_SESSION['admin_id'])) {
     <script src="admin.js"></script>
 </body>
 </html>
-

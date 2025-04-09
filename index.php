@@ -8,6 +8,26 @@
     <script src="script.js" defer></script>
     <link rel="icon" type="image/png" href="Header-Pics/logo.png">
     <title>Adorafur Home</title>
+
+    <script>
+    // In index.php, keep this code as is - it's correct
+    document.addEventListener('DOMContentLoaded', function() {
+    // Check if we have an access_token in the URL hash
+    if (window.location.hash && window.location.hash.includes('access_token=')) {
+        // Extract the token from the URL hash
+        const hashParams = new URLSearchParams(window.location.hash.substring(1));
+        const accessToken = hashParams.get('access_token');
+        const type = hashParams.get('type');
+        
+        // Only proceed if this is a recovery (password reset) token
+        if (accessToken && type === 'recovery') {
+            // Redirect to the reset-password.php page with the token as a query parameter
+            window.location.href = 'reset-password.php?token=' + encodeURIComponent(accessToken);
+        }
+    }
+});
+    </script>
+
 </head>
 <body>
 
@@ -39,7 +59,7 @@ include 'header.php'; ?>
                 <!-- Slide 2 -->
                 <div class="slide">
                     <img src="Home-Pics/slideshow2.png" alt="Slide 2">
-                </div>
+                </div>  
                 <!-- Slide 3 -->
                 <div class="slide">
                     <img src="Home-Pics/slideshow3.png" alt="Slide 3">
