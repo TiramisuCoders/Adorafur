@@ -173,14 +173,14 @@ function handleRegister($conn) {
     $password = $_POST['password'] ?? '';
     $repeatPassword = $_POST['repeatPassword'] ?? '';
     
-    // Validate first name
-    if (!preg_match("/^[a-zA-Z-' ]+$/", $firstname)) {
+    // Validate first name - MODIFIED to allow apostrophes
+    if (!preg_match("/^[a-zA-Z\s'-]+$/", $firstname)) {
         $firstname_error = 'First name must only contain letters, apostrophes, or dashes.';
         $hasError = true;
     }
 
-    // Validate last name
-    if (!preg_match("/^[a-zA-Z-' ]+$/", $lastname)) {
+    // Validate last name - MODIFIED to allow apostrophes
+    if (!preg_match("/^[a-zA-Z\s'-]+$/", $lastname)) {
         $lastname_error = 'Last name must only contain letters, apostrophes, or dashes.';
         $hasError = true;
     }
@@ -411,14 +411,15 @@ function handleLogin($conn) {
                 if (strpos($response_data['error_description'], 'Email not confirmed') !== false) {
                     $login_email_error = 'Please verify your email before logging in.';
                 } else if (strpos($response_data['error_description'], 'Invalid login credentials') !== false) {
-                    $login_password_error = 'Invalid email or password';
+                    // Changed error message to "Wrong Email" as requested
+                    $login_email_error = 'Wrong Email';
                 } else {
                     $login_password_error = $response_data['error_description'];
                 }
             } else if (isset($response_data['message'])) {
                 $login_password_error = $response_data['message'];
             } else {
-                // If we can't parse the error, show the raw response for debugging
+                // If we can't parse the error, show a simpler message
                 $login_password_error = 'Invalid Credentials';
             }
             
