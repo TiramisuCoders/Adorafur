@@ -51,51 +51,36 @@ function formatDateToISO(date) {
 
 // ✅ Renders the calendar
 function renderCalendar() {
-  try {
-    console.log("Rendering calendar...")
-    const weekDates = getWeekDates(currentDate)
-    const firstDayOfWeek = weekDates[0]
+  const weekDates = getWeekDates(currentDate)
+  const firstDayOfWeek = weekDates[0]
 
-    const weekRangeElement = document.getElementById("week-range")
-    if (weekRangeElement) {
-      weekRangeElement.textContent = firstDayOfWeek.toLocaleString("en-US", {
-        month: "long",
-        year: "numeric",
-      })
-    } else {
-      console.error("Week range element not found")
-    }
+  document.getElementById("week-range").textContent = firstDayOfWeek.toLocaleString("en-US", {
+    month: "long",
+    year: "numeric",
+  })
 
-    const calendar = document.getElementById("calendar")
-    if (!calendar) {
-      console.error("Calendar element not found")
-      return
-    }
+  const calendar = document.getElementById("calendar")
+  calendar.innerHTML = ""
 
-    calendar.innerHTML = ""
+  weekDates.forEach((date) => {
+    const dayDiv = document.createElement("div")
+    dayDiv.className = "day"
 
-    weekDates.forEach((date) => {
-      const dayDiv = document.createElement("div")
-      dayDiv.className = "day"
+    const dayText = document.createElement("div")
+    dayText.className = "day-name"
+    dayText.textContent = date.toLocaleDateString("en-US", { weekday: "long" }).toUpperCase()
 
-      const dayText = document.createElement("div")
-      dayText.className = "day-name"
-      dayText.textContent = date.toLocaleDateString("en-US", { weekday: "long" }).toUpperCase()
+    const dateText = document.createElement("div")
+    dateText.className = "day-number"
+    dateText.textContent = date.getDate().toString().padStart(2, "0")
 
-      const dateText = document.createElement("div")
-      dateText.className = "day-number"
-      dateText.textContent = date.getDate().toString().padStart(2, "0")
+    dayDiv.appendChild(dayText)
+    dayDiv.appendChild(dateText)
+    calendar.appendChild(dayDiv)
+  })
 
-      dayDiv.appendChild(dayText)
-      dayDiv.appendChild(dateText)
-      calendar.appendChild(dayDiv)
-    })
-
-    // Fetch and display bookings after rendering the calendar
-    fetchBookingsForWeek()
-  } catch (error) {
-    console.error("Error rendering calendar:", error)
-  }
+  // Fetch and display bookings after rendering the calendar
+  fetchBookingsForWeek()
 }
 
 // ✅ Changes the displayed week when clicking buttons
@@ -118,19 +103,11 @@ function fetchReminders() {
     tasksContainer.innerHTML = '<div class="sidebar-title">TASKS</div><div class="sidebar-textbox">Loading...</div>'
   }
 
-  // Use absolute path to ensure it works in all environments
-  const fetchUrl = window.location.pathname.includes("admin_bookings.php")
-    ? "fetch_reminders.php"
-    : "admin/fetch_reminders.php"
-
-  console.log("Fetching reminders from:", fetchUrl)
-
-  fetch(fetchUrl, {
+  fetch("fetch_reminders.php", {
     method: "GET",
     headers: {
       "Cache-Control": "no-cache",
     },
-    credentials: "same-origin",
   })
     .then((response) => {
       if (!response.ok) {
@@ -324,9 +301,9 @@ function fetchReminders() {
       // Show error message in the sidebar
       if (remindersContainer && tasksContainer) {
         remindersContainer.innerHTML =
-          '<div class="sidebar-title">REMINDERS</div><div class="sidebar-textbox error">Error loading reminders</div>'
+          '<div class="sidebar-title">UPCOMING REMINDERS</div><div class="sidebar-textbox error">Error loading reminders</div>'
         tasksContainer.innerHTML =
-          '<div class="sidebar-title">TASKS</div><div class="sidebar-textbox error">Error loading tasks</div>'
+          '<div class="sidebar-title">UPCOMING TASKS</div><div class="sidebar-textbox error">Error loading tasks</div>'
 
         // Still add the buttons so users can add new items
         const addReminderBtn = document.createElement("div")
@@ -373,6 +350,27 @@ function createActivityItem(activity, itemClass) {
 
   return item
 }
+
+// Add some CSS for the new date headers
+document.addEventListener("DOMContentLoaded", () => {
+  // Remove this code that adds styles dynamically
+  /*
+  const style = document.createElement('style');
+  style.textContent = `
+    .sidebar-date-header {
+      font-size: 0.9rem;
+      font-weight: bold;
+      margin: 10px 0 5px 5px;
+      color: #555;
+    }
+    
+    .sidebar-title {
+      margin-bottom: 10px;
+    }
+  `;
+  document.head.appendChild(style);
+  */
+})
 
 // Helper function to attach event listeners to add buttons
 function attachAddButtonListeners() {
@@ -466,17 +464,9 @@ function submitActivity() {
 
   console.log("Submitting activity:", { description, date, time, type })
 
-  // Use absolute path to ensure it works in all environments
-  const submitUrl = window.location.pathname.includes("admin_bookings.php")
-    ? "add_activity.php"
-    : "admin/add_activity.php"
-
-  console.log("Submitting to:", submitUrl)
-
-  fetch(submitUrl, {
+  fetch("add_activity.php", {
     method: "POST",
     body: formData,
-    credentials: "same-origin",
   })
     .then((response) => {
       console.log("Response status:", response.status)
@@ -510,262 +500,146 @@ function submitActivity() {
     })
 }
 
-// Function to fetch bookings for the current week - IMPROVED VERSION
+// Function to fetch bookings for the current week
 function fetchBookingsForWeek() {
-  try {
-    console.log("Starting fetchBookingsForWeek...")
-    const weekDates = getWeekDates(currentDate)
-    const startDate = formatDateToISO(weekDates[0])
-    const endDate = formatDateToISO(weekDates[6])
+  const weekDates = getWeekDates(currentDate)
+  const startDate = formatDateToISO(weekDates[0])
+  const endDate = formatDateToISO(weekDates[6])
 
-    console.log(`Fetching bookings from ${startDate} to ${endDate}`)
+  console.log(`Fetching bookings from ${startDate} to ${endDate}`)
 
-    // Show loading indicator in each day cell
-    document.querySelectorAll(".day").forEach((day) => {
-      const loadingDiv = document.createElement("div")
-      loadingDiv.className = "booking-loading"
-      loadingDiv.textContent = "Loading bookings..."
-      loadingDiv.style.fontSize = "12px"
-      loadingDiv.style.color = "#888"
-      loadingDiv.style.marginTop = "10px"
-      day.appendChild(loadingDiv)
+  // Show loading indicator in each day cell
+  document.querySelectorAll(".day").forEach((day) => {
+    const loadingDiv = document.createElement("div")
+    loadingDiv.className = "booking-loading"
+    loadingDiv.textContent = "Loading bookings..."
+    loadingDiv.style.fontSize = "12px"
+    loadingDiv.style.color = "#888"
+    loadingDiv.style.marginTop = "10px"
+    day.appendChild(loadingDiv)
+  })
+
+  fetch(`fetch_bookings.php?start_date=${startDate}&end_date=${endDate}`, {
+    method: "GET",
+    headers: {
+      "Cache-Control": "no-cache",
+    },
+  })
+    .then((response) => {
+      if (!response.ok) {
+        throw new Error(`HTTP error! Status: ${response.status}`)
+      }
+      return response.json()
     })
+    .then((responseData) => {
+      console.log("Bookings response:", responseData)
 
-    // Use absolute path to ensure it works in all environments
-    const fetchUrl = window.location.pathname.includes("admin_bookings.php")
-      ? `fetch_bookings.php?start_date=${startDate}&end_date=${endDate}`
-      : `admin/fetch_bookings.php?start_date=${startDate}&end_date=${endDate}`
+      // Remove loading indicators
+      document.querySelectorAll(".booking-loading").forEach((el) => el.remove())
 
-    console.log("Fetching bookings from:", fetchUrl)
-
-    fetch(fetchUrl, {
-      method: "GET",
-      headers: {
-        "Cache-Control": "no-cache",
-      },
-      credentials: "same-origin", // Important for session cookies
+      if (responseData.success) {
+        displayBookingsInCalendar(responseData.data, weekDates)
+      } else {
+        console.error("Error fetching bookings:", responseData.error)
+        throw new Error(responseData.error || "Failed to fetch bookings")
+      }
     })
-      .then((response) => {
-        console.log("Bookings response status:", response.status)
-        if (!response.ok) {
-          return response.text().then((text) => {
-            console.error("Response text:", text)
-            throw new Error(`HTTP error! Status: ${response.status}`)
-          })
-        }
-        return response.json()
+    .catch((error) => {
+      console.error("Error loading bookings:", error)
+
+      // Remove loading indicators
+      document.querySelectorAll(".booking-loading").forEach((el) => el.remove())
+
+      // Show error message in each day cell
+      document.querySelectorAll(".day").forEach((day) => {
+        const errorDiv = document.createElement("div")
+        errorDiv.className = "booking-error"
+        errorDiv.textContent = "Could not load bookings"
+        errorDiv.style.fontSize = "12px"
+        errorDiv.style.color = "#d32f2f"
+        errorDiv.style.marginTop = "10px"
+        day.appendChild(errorDiv)
       })
-      .then((responseData) => {
-        console.log("Bookings response:", responseData)
-
-        // Remove loading indicators
-        document.querySelectorAll(".booking-loading").forEach((el) => el.remove())
-
-        if (responseData.success) {
-          displayBookingsInCalendar(responseData.data, weekDates)
-        } else {
-          console.error("Error fetching bookings:", responseData.error)
-          throw new Error(responseData.error || "Failed to fetch bookings")
-        }
-      })
-      .catch((error) => {
-        console.error("Error loading bookings:", error)
-
-        // Remove loading indicators
-        document.querySelectorAll(".booking-loading").forEach((el) => el.remove())
-
-        // Show error message in each day cell
-        document.querySelectorAll(".day").forEach((day) => {
-          const errorDiv = document.createElement("div")
-          errorDiv.className = "booking-error"
-          errorDiv.textContent = "Could not load bookings"
-          errorDiv.style.fontSize = "12px"
-          errorDiv.style.color = "#d32f2f"
-          errorDiv.style.marginTop = "10px"
-          day.appendChild(errorDiv)
-        })
-      })
-  } catch (error) {
-    console.error("Exception in fetchBookingsForWeek:", error)
-  }
+    })
 }
 
-// Function to display bookings in the calendar - IMPROVED VERSION
+// Function to display bookings in the calendar
 function displayBookingsInCalendar(bookingsData, weekDates) {
-  try {
-    console.log("Displaying bookings:", bookingsData)
+  // Clear any existing booking elements
+  document.querySelectorAll(".bookings-container").forEach((el) => el.remove())
 
-    // Clear any existing booking elements
-    document.querySelectorAll(".bookings-container").forEach((el) => el.remove())
+  // Loop through each day in the week
+  weekDates.forEach((date, index) => {
+    const dateStr = formatDateToISO(date)
+    const dayElement = document.querySelectorAll(".day")[index]
 
-    // Check if bookingsData is empty
-    if (!bookingsData || Object.keys(bookingsData).length === 0) {
-      console.log("No bookings found for the selected week")
-      return
+    if (!dayElement) return
+
+    // Check if there are bookings for this date
+    const bookingsForDay = bookingsData[dateStr] || []
+
+    if (bookingsForDay.length > 0) {
+      // Create a container for bookings
+      const bookingsContainer = document.createElement("div")
+      bookingsContainer.className = "bookings-container"
+
+      // Add each booking
+      bookingsForDay.forEach((booking) => {
+        // Create a simple booking element
+        const bookingElement = document.createElement("div")
+        bookingElement.className = `booking-item booking-status-${booking.booking_status.toLowerCase()} booking-service-${booking.service_name.toLowerCase().replace(/\s+/g, "-")}`
+
+        // Add the booking content
+        bookingElement.innerHTML = `
+          <div class="booking-header">
+            <div class="booking-pet-name">${booking.pet_name}</div>
+          </div>
+          <div class="booking-times">
+            ${booking.formatted_check_in_time} - ${booking.formatted_check_out_time}
+          </div>
+          <div class="booking-status">${booking.booking_status}</div>
+        `
+
+        bookingsContainer.appendChild(bookingElement)
+      })
+
+      dayElement.appendChild(bookingsContainer)
     }
-
-    // Loop through each day in the week
-    weekDates.forEach((date, index) => {
-      const dateStr = formatDateToISO(date)
-      const dayElement = document.querySelectorAll(".day")[index]
-
-      if (!dayElement) {
-        console.error(`Day element not found for index ${index}`)
-        return
-      }
-
-      // Check if there are bookings for this date
-      const bookingsForDay = bookingsData[dateStr] || []
-
-      console.log(`Bookings for ${dateStr}:`, bookingsForDay)
-
-      if (bookingsForDay.length > 0) {
-        // Create a container for bookings
-        const bookingsContainer = document.createElement("div")
-        bookingsContainer.className = "bookings-container"
-
-        // Add each booking
-        bookingsForDay.forEach((booking) => {
-          try {
-            const bookingElement = createBookingElement(booking)
-            bookingsContainer.appendChild(bookingElement)
-          } catch (error) {
-            console.error("Error creating booking element:", error, booking)
-          }
-        })
-
-        dayElement.appendChild(bookingsContainer)
-      }
-    })
-  } catch (error) {
-    console.error("Exception in displayBookingsInCalendar:", error)
-  }
+  })
 }
 
-// Function to create a booking element - IMPROVED VERSION
-function createBookingElement(booking) {
-  try {
-    if (!booking) {
-      console.error("Invalid booking data:", booking)
-      return document.createElement("div") // Return empty div to prevent errors
-    }
-
-    // Get service type for styling and display
-    const serviceType = booking.service_name ? booking.service_name.toLowerCase() : "unknown"
-    const serviceVariant = booking.service_variant ? booking.service_variant : ""
-
-    // Create the booking element with service-specific class
-    const bookingElement = document.createElement("div")
-
-    // Build class name safely
-    let className = "booking-item"
-
-    if (booking.booking_status) {
-      className += ` booking-status-${booking.booking_status.toLowerCase()}`
-    }
-
-    if (serviceType && serviceType !== "unknown") {
-      className += ` booking-service-${serviceType.replace(/\s+/g, "-")}`
-    }
-
-    bookingElement.className = className
-
-    if (booking.booking_id) {
-      bookingElement.dataset.bookingId = booking.booking_id
-    }
-
-    if (serviceType) {
-      bookingElement.dataset.serviceType = serviceType
-    }
-
-    // Create the content with simplified service information
-    bookingElement.innerHTML = `
-      <div class="booking-header">
-        <div class="booking-pet-name">${booking.pet_name || "Unknown Pet"}</div>
-        <div class="service-badge" title="${booking.service_name || ""}${booking.service_variant ? " - " + booking.service_variant : ""}">
-          ${getServiceShortName(serviceType)}
-        </div>
-      </div>
-      <div class="booking-times">
-        <span class="booking-check-in">${booking.formatted_check_in_time || "N/A"}</span> - 
-        <span class="booking-check-out">${booking.formatted_check_out_time || "N/A"}</span>
-      </div>
-      <div class="booking-status">${booking.booking_status || "Unknown"}</div>
-    `
-
-    return bookingElement
-  } catch (error) {
-    console.error("Exception in createBookingElement:", error)
-    return document.createElement("div") // Return empty div to prevent errors
-  }
-}
-
-// Helper function to get shortened service name for display
-function getServiceShortName(serviceType) {
-  if (!serviceType) return "Service"
-
-  switch (serviceType.toLowerCase()) {
-    case "pet hotel":
-      return "Hotel"
-    case "pet daycare":
-      return "Daycare"
-    default:
-      return serviceType.charAt(0).toUpperCase() + serviceType.slice(1)
-  }
-}
-
-// ✅ Event Listeners - Improved initialization with error handling
+// ✅ Event Listeners - Improved initialization
 document.addEventListener("DOMContentLoaded", () => {
-  try {
-    console.log("DOM fully loaded - Starting initialization")
+  console.log("DOM fully loaded")
 
-    // Initialize clock
-    updateClock()
-    setInterval(updateClock, 1000)
-    console.log("Clock initialized")
+  // Initialize clock
+  updateClock()
+  setInterval(updateClock, 1000)
 
-    // Initialize date display
-    updateDateDisplay()
-    console.log("Date display initialized")
+  // Initialize date display
+  updateDateDisplay()
 
-    // Fetch reminders and tasks
-    fetchReminders()
-    console.log("Reminders fetch initiated")
+  // Fetch reminders and tasks
+  fetchReminders()
 
-    // Initialize calendar with bookings
-    renderCalendar()
-    console.log("Calendar rendering initiated")
+  // Initialize calendar with bookings
+  renderCalendar()
 
-    // Add event listener for submit button
-    const submitBtn = document.getElementById("submitActivityBtn")
-    if (submitBtn) {
-      submitBtn.addEventListener("click", submitActivity)
-      console.log("Submit button listener attached")
-    } else {
-      console.error("Submit button not found")
-    }
-
-    // Add event listener for close button
-    const closeBtn = document.querySelector(".close-btn")
-    if (closeBtn) {
-      closeBtn.addEventListener("click", closeSidebarModal)
-      console.log("Close button listener attached")
-    } else {
-      console.error("Close button not found")
-    }
-
-    console.log("Initialization complete")
-  } catch (error) {
-    console.error("Error during initialization:", error)
-
-    // Try to show an error message on the page
-    const clockElement = document.getElementById("real-time-clock")
-    if (clockElement) {
-      clockElement.textContent = "Error loading page"
-      clockElement.style.color = "red"
-    }
+  // Add event listener for submit button
+  const submitBtn = document.getElementById("submitActivityBtn")
+  if (submitBtn) {
+    submitBtn.addEventListener("click", submitActivity)
+    console.log("Submit button listener attached")
+  } else {
+    console.error("Submit button not found")
   }
-})
 
-// Add this line at the end to check if the script loaded
-console.log("admin.js loaded successfully at " + new Date().toLocaleTimeString())
+  // Add event listener for close button
+  const closeBtn = document.querySelector(".close-btn")
+  if (closeBtn) {
+    closeBtn.addEventListener("click", closeSidebarModal)
+    console.log("Close button listener attached")
+  }
+
+  console.log("Initialization complete")
+})
