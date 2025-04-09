@@ -202,3 +202,29 @@ hr{
   display: block;
 }
 
+/* Mobile Exit Button Styling */
+.exit-nav-item {
+  margin-top: 20px;
+  text-align: center;
+}
+
+.exit-button {
+  background-color: #4a2a20 !important;
+  color: white !important;
+  padding: 8px 20px !important;
+  border-radius: 5px;
+  display: inline-block;
+  transition: all 0.3s ease;
+}
+
+.exit-button:hover {
+  background-color: #4a2a20 !important;
+  transform: scale(1.05);
+}
+
+/* Hide on desktop */
+@media (min-width: 992px) {
+  .exit-nav-item {
+    display: none;
+  }
+}

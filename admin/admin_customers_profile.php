@@ -150,8 +150,8 @@ if (empty($transactions)) {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin Customer Profile</title>
-    <link rel="stylesheet" href="admin-css/admin_header1.css">
-    <link rel="stylesheet" href="admin-css/admin_customer_profile1.css">
+    <link rel="stylesheet" href="admin-css/admin_header01.css">
+    <link rel="stylesheet" href="admin-css/admin_customer_profile01.css">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="icon" type="image/png" href="admin-pics/adorafur-logo.png">
     <style>
@@ -247,9 +247,10 @@ if (empty($transactions)) {
 
             <div class="divider-line"></div>
 
+            
             <!-- Transactions Section -->
             <div class="transactions-box">
-                <div class="transac-header">Transactions</div>
+                <div class="transac-header">Reservations</div>
                 <div class="dropdown">
                     <button class="btn btn-secondary dropdown-toggle" type="button" id="dropdownMenuButton" 
                         data-bs-toggle="dropdown" aria-expanded="false">
@@ -262,11 +263,12 @@ if (empty($transactions)) {
                     </ul>
                 </div>
                 
+                <div class="booking-list-container">
                 <!-- Transactions Table -->
                 <table class="transactions-table" id="transactionsTable">
                     <thead>
                         <tr>
-                            <th>Transaction ID</th>
+                            <th>Booking ID</th>
                             <th>Service</th>
                             <th>Pet Name</th>
                             <th>Amount Paid</th>
@@ -283,13 +285,13 @@ if (empty($transactions)) {
                                     <td><?php echo htmlspecialchars($transaction['pet_name']); ?></td>
                                     <td>
                                         <div class="amount-container">
-                                            <span class="amount-value"><?php echo htmlspecialchars($transaction['pay_amount']); ?></span>
+                                            <span class="amount-value"><?php echo htmlspecialchars($transaction['pay_amount']); ?></span> <br>
                                             <span class="amount-status"><?php echo htmlspecialchars($transaction['pay_status']); ?></span>
                                         </div>
                                     </td>
                                     <td>
                                         <div class="ref-container">
-                                            <span><?php echo htmlspecialchars($transaction['pay_reference_number']); ?></span>
+                                            <span><?php echo htmlspecialchars($transaction['pay_reference_number']); ?></span> <br>
                                             <span class="ref-source"><?php echo htmlspecialchars($transaction['pay_method']); ?></span>
                                         </div>
                                     </td>
@@ -303,6 +305,7 @@ if (empty($transactions)) {
                         <?php endif; ?>
                     </tbody>
                 </table>
+                </div>
             </div>
         </div>
     </div>

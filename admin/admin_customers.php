@@ -1,3 +1,12 @@
+<?php
+session_start();
+// Check if admin is logged in
+if (!isset($_SESSION['admin_id'])) {
+  // Redirect to login page if not logged in
+  header("Location: ../index.php");
+  exit();
+}
+?>
 <!DOCTYPE html>
 <html lang="en" dir="ltr">
 <head>
@@ -58,6 +67,7 @@
         <span class="icon"><i class="fa-solid fa-magnifying-glass"></i></span>
       </div>
       
+      <div class="customer-list-container">
       <table class="customer-list">
         <thead class="customer-pet">
           <th class="name">Customer Name</th>
@@ -114,6 +124,7 @@
             
         </tbody>
       </table>  
+      </div>
 
     </div>
 
