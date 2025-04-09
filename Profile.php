@@ -327,7 +327,6 @@ include 'header.php'; ?>
         <div class="modal-content" id="view-and-edit">
             <div class="modal-header" id="mheader">
                 <h5 class="modal-title" id="petModalLabel">VIEW & EDIT PET INFORMATION</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
                 <form id="petForm" method="POST" action="update_pet.php" enctype="multipart/form-data">
@@ -360,15 +359,8 @@ include 'header.php'; ?>
                                     <input type="text" class="form-control" name="pet_size" id="edit_pet_size" >
                                 </div>
                                 <div class="col-md-6">
-                                    <label class="form-label">AGE</label>
-                                    <div class="row g-2">
-                                        <div class="col-6">
-                                            <input type="number" class="form-control" name="pet_age_years" id="edit_pet_age_years" placeholder="Years" min="0">
-                                        </div>
-                                        <div class="col-6">
-                                            <input type="number" class="form-control" name="pet_age_months" id="edit_pet_age_months" placeholder="Months" min="0" max="11">
-                                        </div>
-                                    </div>
+                                    <label class="form-label">AGE (YEARS)</label>
+                                    <input type="number" class="form-control" name="pet_age_years" id="edit_pet_age_years" placeholder="Years" min="0">
                                 </div>
                             </div>
                             
@@ -498,15 +490,8 @@ include 'header.php'; ?>
                                     </div>
                                     
                                     <div class="mb-3">
-                                        <label class="form-label">AGE</label>
-                                        <div class="row g-2">
-                                            <div class="col-6">
-                                                <input type="number" name="age_years" class="form-control" placeholder="Years" min="0" required>
-                                            </div>
-                                            <div class="col-6">
-                                                <input type="number" name="age_months" class="form-control" placeholder="Months" min="0" max="11" required>
-                                            </div>
-                                        </div>
+                                        <label class="form-label">AGE (YEARS)</label>
+                                        <input type="number" name="age_years" class="form-control" placeholder="Years" min="0" required value="<?php echo htmlspecialchars($pet_form_data['age_years'] ?? ''); ?>">
                                     </div>
 
 
@@ -549,6 +534,7 @@ include 'header.php'; ?>
                                         <?php if ($vaccination_file_error): ?>
                                             <p class="error vaccination-file-error"><?php echo $vaccination_file_error; ?></p>
                                         <?php endif; ?>
+
                                         <div id="vaccinationFileError" class="error vaccination-file-error" style="display: none;"></div>
                                         <div class="radio-group">
                                             <div>
@@ -775,21 +761,17 @@ document.addEventListener('DOMContentLoaded', function() {
                     document.getElementById('edit_pet_size').value = data.pet_size || '';
                     document.getElementById('gender-dropdown').value = data.pet_gender || '';
                     document.getElementById('petDescription').value = data.pet_description || '';
-                    document.getElementById('petInstruction').value = data.pet_special_instructions || '';
                     document.getElementById('vaccination_status').value = data.pet_vaccination_status || '';
                     document.getElementById('date_administered').value = data.pet_vaccination_date_administered || '';
-                    document.getElementById('expiry_date').value = data.pet_expiry_date || '';
+                    document.getElementById('petInstruction').value = data.pet_special_instruction || '';
+                    if (data.pet_vaccination_date_expiry) {
+                        document.getElementById('expiry_date').value = data.pet_vaccination_date_expiry;
+                    }
 
-                    // Parse the age string into years and months
                     const ageString = data.pet_age || '';
                     const yearMatch = ageString.match(/(\d+)\s+years?/);
-                    const monthMatch = ageString.match(/(\d+)\s+mos?/);
-                    
                     const years = yearMatch ? yearMatch[1] : '0';
-                    const months = monthMatch ? monthMatch[1] : '0';
-                    
                     document.getElementById('edit_pet_age_years').value = years;
-                    document.getElementById('edit_pet_age_months').value = months;
                     
                     if (data.pet_picture) {
                         document.getElementById('pet-image-preview').src = data.pet_picture;
