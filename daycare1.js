@@ -102,7 +102,58 @@ $(document).ready(() => {
     }
   }
 
-  // Handle date click
+  // Add this function after the renderCalendar function
+  function updateAvailableSlots(date) {
+    // Default maximum slots per day
+    const MAX_SLOTS = 10
+
+    if (!date) {
+      // If no date is selected, show default message
+      $(".available-slot").text("Available Slots: Select a date")
+      return
+    }
+
+    // Format date for the server
+    const formattedDate = date.toISOString().split("T")[0]
+
+    // Fetch current bookings for this date
+    $.ajax({
+      type: "POST",
+      url: "get-daycare-bookings.php",
+      data: { date: formattedDate },
+      dataType: "json",
+      success: (response) => {
+        if (response.success) {
+          // Calculate available slots
+          const bookedSlots = response.bookings || 0
+          const availableSlots = Math.max(0, MAX_SLOTS - bookedSlots)
+
+          // Update the display
+          $(".available-slot").html(`
+            Available Slots: <span class="slot-count">${availableSlots}</span>/${MAX_SLOTS}
+          `)
+
+          // Add visual indicator based on availability
+          if (availableSlots === 0) {
+            $(".available-slot").addClass("no-slots").removeClass("few-slots")
+          } else if (availableSlots <= 3) {
+            $(".available-slot").addClass("few-slots").removeClass("no-slots")
+          } else {
+            $(".available-slot").removeClass("few-slots no-slots")
+          }
+        }else {
+            console.error("Error fetching bookings:", response.message)
+            $(".available-slot").text("Available Slots: Select a date")
+          }
+        },
+        error: (xhr, status, error) => {
+          console.error("AJAX Error:", error)
+          $(".available-slot").text("Available Slots: Select a date")
+        },
+    })
+  }
+
+  // Modify the handleDateClick function to update available slots
   function handleDateClick(date, element) {
     // Clear previous selection
     $(".day").removeClass("selected-date")
@@ -120,6 +171,9 @@ $(document).ready(() => {
 
     // Enable time selection after date selection
     $(".checkin-out").removeClass("disabled-section")
+
+    // Update available slots for the selected date
+    updateAvailableSlots(date)
 
     // Update summary
     updateBookingSummary()

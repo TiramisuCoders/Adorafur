@@ -97,6 +97,21 @@ unset($_SESSION['pet_form_data']);
     <?php if ($vaccination_file_error): ?> .vaccination-file-error { display: block; } <?php endif; ?>
     <?php if ($date_administered_error): ?> .date-administered-error { display: block; } <?php endif; ?>
 
+    /* Add these styles for available slots */
+    .available-slot {
+        padding: 10px 15px;
+        border-radius: 5px;
+        font-weight: 600;
+        margin-bottom: 15px;
+        text-align: center;
+    }
+    
+    .slot-count {
+        font-size: 1.1em;
+        font-weight: 700;
+        color: #5a3e36;
+    }
+    
 </style>
 </head>
 
@@ -138,7 +153,6 @@ unset($_SESSION['pet_form_data']);
                     <div class="schedule-options">
                         <div class="available-slot" id="align-1">
                             Available Slots
-                            
                         </div>
                         <!-- Bootstrap Dropdown -->
                         <div class="selection-dropdown" id="align-1">
