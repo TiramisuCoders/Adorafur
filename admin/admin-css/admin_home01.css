@@ -353,3 +353,8 @@
     align-items: center;
     gap: 5px;
   }
+
+  #view-photo{
+    border-color: #A59F9F;
+    color: #A59F9F;
+  }
