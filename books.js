@@ -131,31 +131,26 @@ window.bookingData = {
         if (date > selectedDates.checkIn) {
           selectedDates.checkOut = date
   
-          // Store the formatted date strings for both dates
-          const checkInDateStr = selectedDates.checkIn.toISOString().split("T")[0]
-          const checkOutDateStr = date.toISOString().split("T")[0]
-  
-          // Clear all highlights first
-          $(".day").removeClass("highlighted selected-date")
-  
-          // Explicitly find and highlight both the check-in and check-out dates
-          $(`.day[data-date="${checkInDateStr}"]`).addClass("selected-date")
-          $(`.day[data-date="${checkOutDateStr}"]`).addClass("selected-date")
-  
           // Update booking data
           window.bookingData.checkOutDate = date.toLocaleDateString("en-US", {
             month: "long",
             day: "numeric",
           })
   
-          // Highlight dates in between
+          // Apply highlighting to dates in between
           $(".day").each(function () {
             const dateStr = $(this).attr("data-date")
             if (!dateStr) return
   
             const currentDate = new Date(dateStr)
-            if (currentDate > selectedDates.checkIn && currentDate < selectedDates.checkOut) {
-              $(this).addClass("highlighted")
+            const currentDateStr = currentDate.toISOString().split("T")[0]
+            const checkInDateStr = selectedDates.checkIn.toISOString().split("T")[0]
+            const checkOutDateStr = selectedDates.checkOut.toISOString().split("T")[0]
+  
+            if (currentDateStr === checkInDateStr || currentDateStr === checkOutDateStr) {
+              $(this).removeClass("highlighted").addClass("selected-date")
+            } else if (currentDate > selectedDates.checkIn && currentDate < selectedDates.checkOut) {
+              $(this).removeClass("selected-date").addClass("highlighted")
             }
           })
         }
@@ -580,20 +575,20 @@ window.bookingData = {
         })
   
       const newRow = `
-                <tr>
-                    <td data-label="Name">
-                        <select class="petSelect" onchange="updatePetDetails(this)">
-                            ${options}
-                        </select>
-                    </td>
-                    <td data-label="Breed"></td>
-                    <td data-label="Age"></td>
-                    <td data-label="Gender"></td>
-                    <td data-label="Size"></td>
-                    <td data-label="Price">₱0.00</td>
-                    <td><button type="button" onclick="removePetRow(this)" class="action-btn">(Remove)</button></td>
-                </tr>
-            `
+                  <tr>
+                      <td data-label="Name">
+                          <select class="petSelect" onchange="updatePetDetails(this)">
+                              ${options}
+                          </select>
+                      </td>
+                      <td data-label="Breed"></td>
+                      <td data-label="Age"></td>
+                      <td data-label="Gender"></td>
+                      <td data-label="Size"></td>
+                      <td data-label="Price">₱0.00</td>
+                      <td><button type="button" onclick="removePetRow(this)" class="action-btn">(Remove)</button></td>
+                  </tr>
+              `
   
       $("#petTableBody").append(newRow)
   
@@ -642,10 +637,10 @@ window.bookingData = {
   
           // Update the pet details section
           $("#petSummaryDetails").html(`
-                        <div class="info-row"><span class="label">Breed:</span><span class="value">${pet.breed || ""}</span></div>
-                        <div class="info-row"><span class="label">Gender:</span><span class="value">${pet.gender || ""}</span></div>
-                        <div class="info-row"><span class="label">Age:</span><span class="value">${pet.age ? pet.age + " y/o" : ""}</span></div>
-                    `)
+                          <div class="info-row"><span class="label">Breed:</span><span class="value">${pet.breed || ""}</span></div>
+                          <div class="info-row"><span class="label">Gender:</span><span class="value">${pet.gender || ""}</span></div>
+                          <div class="info-row"><span class="label">Age:</span><span class="value">${pet.age ? pet.age + " y/o" : ""}</span></div>
+                      `)
         }
         // If there are multiple pets
         else {
@@ -656,14 +651,14 @@ window.bookingData = {
           let petDetailsHtml = ""
           window.bookingData.pets.forEach((pet, index) => {
             petDetailsHtml += `
-                            <div class="pet-summary-item">
-                                <h4>${pet.name}</h4>
-                                <div class="info-row"><span class="label">Breed:</span><span class="value">${pet.breed || ""}</span></div>
-                                <div class="info-row"><span class="label">Gender:</span><span class="value">${pet.gender || ""}</span></div>
-                                <div class="info-row"><span class="label">Age:</span><span class="value">${pet.age ? pet.age + " y/o" : ""}</span></div>
-                                ${index < window.bookingData.pets.length - 1 ? "<hr>" : ""}
-                            </div>
-                        `
+                              <div class="pet-summary-item">
+                                  <h4>${pet.name}</h4>
+                                  <div class="info-row"><span class="label">Breed:</span><span class="value">${pet.breed || ""}</span></div>
+                                  <div class="info-row"><span class="label">Gender:</span><span class="value">${pet.gender || ""}</span></div>
+                                  <div class="info-row"><span class="label">Age:</span><span class="value">${pet.age ? pet.age + " y/o" : ""}</span></div>
+                                  ${index < window.bookingData.pets.length - 1 ? "<hr>" : ""}
+                              </div>
+                          `
           })
   
           // Update the pet details section
