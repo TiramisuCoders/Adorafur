@@ -804,6 +804,12 @@ window.bookingData = {
         return
       }
   
+      // Check if times are selected
+      if (!window.bookingData.checkInTime || !window.bookingData.checkOutTime) {
+        alert("Please select check-in and check-out times.")
+        return
+      }
+  
       // Get only the pets that are currently visible in the table
       const visiblePets = []
   
