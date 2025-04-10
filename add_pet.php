@@ -12,7 +12,7 @@ if (session_status() == PHP_SESSION_NONE) {
 include("connect.php");
 
 if (!isset($_SESSION['c_id'])) {
-    header("Location: index.php");
+    header("Location: index..php");
     exit();
 }
 
@@ -29,23 +29,25 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $pet_name = $_POST['pet_name'];
     $pet_size = $_POST['pet_size'];
     $breed = $_POST['breed'];
-    $years = isset($_POST['pet_age_years']) ? intval($_POST['pet_age_years']) : 
-         (isset($_POST['age_years']) ? intval($_POST['age_years']) : 0);
+    $years = isset($_POST['pet_age_years']) ? intval($_POST['pet_age_years']) : 0;
+    $months = isset($_POST['pet_age_months']) ? intval($_POST['pet_age_months']) : 0;
 
-    if ($years == 1) {
-        $age = "1 year";
-    } elseif ($years > 1) {
+    if ($years > 0 && $months > 0) {
+        $age = "$years years $months mos";
+    } elseif ($years > 0) {
         $age = "$years years";
+    } elseif ($months > 0) {
+        $age = "$months mos";
     } else {
-        $age = "0 years"; 
+        $age = "0 mos"; 
     }
 
     $gender = $_POST['gender'];
     $description = $_POST['description'];
-    $special_instructions = !empty($_POST['special_instructions']) ? $_POST['special_instructions'] : '';
+    $special_instructions = $_POST['special_instructions'];
     $vaccination_status = $_POST['vaccination_status'];
     $date_administered = $_POST['date_administered'];
-    $expiry_date = !empty($_POST['expiry_date']) ? $_POST['expiry_date'] : null;
+    $expiry_date = $_POST['expiry_date'];
 
     // Initialize error variables
     $pet_photo_error = null;
@@ -74,12 +76,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $current_date = date('Y-m-d');
         
         if ($date_administered == $current_date) {
-            $date_administered_error = "Date administered cannot be today.";
+            $date_administered_error = "Date administered cannot be the current date.";
             $hasError = true;
-        } 
-        
-        if ($date_administered > $current_date ){
-            $date_administered_error = "Invalid date.";
+        } else if ($date_administered > $current_date) {
+            $date_administered_error = "Date administered cannot be a future date.";
             $hasError = true;
         }
     }
@@ -97,7 +97,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             'pet_name' => $pet_name,
             'pet_size' => $pet_size,
             'breed' => $breed,
-            'age_years' => $years,
+            'age' => $age,
             'gender' => $gender,
             'description' => $description,
             'vaccination_status' => $vaccination_status,
@@ -122,7 +122,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $dbPetSize = isset($petSizeMap[$pet_size]) ? $petSizeMap[$pet_size] : $pet_size;
     
     // Log the conversion for debugging
-    // error_log("Original pet size: " . $pet_size . ", Converted to: " . $dbPetSize);
+    error_log("Original pet size: " . $pet_size . ", Converted to: " . $dbPetSize);
     
     // Handle pet photo upload
     $image_path = "";
@@ -237,7 +237,6 @@ if (isset($_SESSION['error_message'])) {
     error_log("No message set after processing");
 }
 
-$redirect_page = isset($_SESSION['redirect_page']) ? $_SESSION['redirect_page'] : 'profile.php'; // Default to 'profile.php'
-        header("Location: " . $redirect_page);
-        exit();
+header("Location: profile.php");
+exit();
 ?>
