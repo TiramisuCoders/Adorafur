@@ -114,18 +114,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             error_log("Payment update result: " . ($payment_result ? 'Success' : 'Failed'));
         }
         
-        // // Log the admin action
-        // $log_query = "INSERT INTO admin_logs (admin_id, action_type, action_details, booking_id) 
-        //               VALUES (:admin_id, 'update_booking', :action_details, :booking_id)";
-        // $log_params = [
-        //     ':admin_id' => $admin_id,
-        //     ':action_details' => 'Updated booking information',
-        //     ':booking_id' => $booking_id
-        // ];
-        
-        // $log_stmt = $conn->prepare($log_query);
-        // $log_stmt->execute($log_params);
-        
         // Commit transaction
         $conn->commit();
         

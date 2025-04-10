@@ -305,9 +305,9 @@ try {
                              <div class="card mt-4">
                                     <!-- Replace the card with this button -->
 <!-- <div class="mb-3"> -->
-    <button type="button" class="btn btn-primary w-100" onclick="openPaymentModal(document.getElementById('modalBookingId').textContent, document.getElementById('bookBalance').value)">
-        Add Payment
-    </button>
+                                <button type="button" class="btn btn-primary w-100" onclick="openPaymentModal(document.getElementById('modalBookingId').textContent, document.getElementById('bookBalance').value)">
+                                    Add Payment
+                                </button>
 <!-- </div> -->
                                     <!-- <div id="paymentForm" class="collapse">
                                         <div class="card-body">
@@ -437,12 +437,12 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
     function openModal(bookingId, currentStatus) {
-    document.getElementById('bookingId').value = bookingId;
-    document.getElementById('bookingStatus').value = currentStatus;
-    const myModal = new bootstrap.Modal(document.getElementById('bookingModal'));
-    myModal.show();
-    }
-});
+        document.getElementById('bookingId').value = bookingId;
+        document.getElementById('bookingStatus').value = currentStatus;
+        const myModal = new bootstrap.Modal(document.getElementById('bookingModal'));
+        myModal.show();
+        }
+    });
 
 function openPaymentModal(bookingId, currentBalance) {
   document.getElementById("paymentBookingId").value = bookingId
@@ -453,7 +453,7 @@ function openPaymentModal(bookingId, currentBalance) {
   document.getElementById("refNo").value = ""
 
   document.getElementById("otherPaymentMode").classList.add("d-none")
-\
+
   const paymentModal = new bootstrap.Modal(document.getElementById("addPaymentModal"))
   paymentModal.show()
 }
