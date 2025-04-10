@@ -491,21 +491,27 @@ document.addEventListener("DOMContentLoaded", () => {
       })
         .then((response) => response.json())
         .then((data) => {
-          if (data.success) {
-            const paymentModal = bootstrap.Modal.getInstance(document.getElementById("addPaymentModal"))
-            paymentModal.hide()
-
-            const newBalance = currentBalance - amountPaid
-            document.getElementById("bookBalance").value = newBalance.toFixed(2)
-
-            if (newBalance === 0) {
-              document.getElementById("paymentStatus").value = "Fully Paid"
+            if (data.success) {
+            // Update the UI with new values
+            if (data.booking_balance !== undefined) {
+                document.getElementById('bookBalance').value = data.booking_balance;
+                
+                // Update payment status if balance is zero
+                if (parseFloat(data.booking_balance) === 0) {
+                    document.getElementById('paymentStatus').value = 'Fully Paid';
+                } else if (parseFloat(data.booking_balance) > 0) {
+                    document.getElementById('paymentStatus').value = 'Down Payment';
+                }
+                
+                // Show notification
+                alert('Booking amount recalculated. New balance: ' + data.booking_balance);
+            } else {
+                console.error('Booking balance is undefined in the response');
+                alert('Error: Booking balance calculation failed');
             }
-
-            alert("Payment added successfully!")
-          } else {
-            alert("Error: " + data.message)
-          }
+        } else {
+            alert('Error: ' + (data.message || 'Unknown error occurred'));
+        }
         })
         .catch((error) => {
           console.error("Error:", error)
@@ -514,6 +520,68 @@ document.addEventListener("DOMContentLoaded", () => {
     })
   }
 })
+
+
+// Add event listeners to check-in and check-out date inputs to recalculate total amount and balance
+document.getElementById('checkIn').addEventListener('change', recalculateBookingAmount);
+document.getElementById('checkOut').addEventListener('change', recalculateBookingAmount);
+
+function recalculateBookingAmount() {
+    const checkIn = document.getElementById('checkIn').value;
+    const checkOut = document.getElementById('checkOut').value;
+    const bookingId = document.getElementById('modalBookingId').textContent;
+    const petSize = document.getElementById('petType').value;
+    const service = document.getElementById('service').value;
+    
+    // Validate dates
+    if (!checkIn || !checkOut) {
+        return;
+    }
+    
+    // Ensure check-out is after check-in
+    if (new Date(checkOut) <= new Date(checkIn)) {
+        alert('Check-out date must be after check-in date');
+        return;
+    }
+    
+    // Call API to recalculate amount
+    fetch('recalculate_booking.php', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: new URLSearchParams({
+            booking_id: bookingId,
+            check_in: checkIn,
+            check_out: checkOut,
+            pet_size: petSize,
+            service: service
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Update the UI with new values
+            document.getElementById('bookBalance').value = data.booking_balance;
+            
+            // Update payment status if balance is zero
+            if (parseFloat(data.booking_balance) === 0) {
+                document.getElementById('paymentStatus').value = 'Fully Paid';
+            } else if (parseFloat(data.booking_balance) > 0) {
+                document.getElementById('paymentStatus').value = 'Down Payment';
+            }
+            
+            // Show notification
+            alert('Booking amount recalculated. New balance: ' + data.booking_balance);
+        } else {
+            alert('Error: ' + data.message);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('An error occurred while recalculating the booking amount.');
+    });
+}
 
 </script>
 
@@ -576,4 +644,3 @@ document.addEventListener("DOMContentLoaded", () => {
 
 </body>
 </html>
-
