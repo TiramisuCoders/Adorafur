@@ -416,11 +416,11 @@ html, body {
 .third-section-title {
     color: #ab643c;
     font-size: clamp(32px, 5vw, 55px); /* Adjusts dynamically between 32px and 55px */
-    font-weight: 500;
     margin: 0 5%; /* Instead of fixed margins */
     text-align: center;
+    font-weight: bold;
+    line-height: 1.1; /* Try values between 1.0 - 1.4 depending on the font */
 }
-
 
 /* Description Styling */
 .third-section-desc {

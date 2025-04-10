@@ -31,6 +31,9 @@ try {
     error_log("Error fetching admin data: " . $e->getMessage());
     $error_message = "An error occurred while retrieving your profile information.";
 }
+
+// Include the create admin processing file
+require_once 'create_admin_modal.php';
 ?>
 
 <!DOCTYPE html>
@@ -40,7 +43,11 @@ try {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="admin-css/admin_header01.css">
     <link rel="stylesheet" href="admin-css/admin_profile1.css">
+    <link rel="stylesheet" href="admin-css/admin_modal.css">
     <link rel="icon" type="image/png" href="admin-pics/adorafur-logo.png">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Load Supabase JS library -->
+    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
     <script src="admin.js"></script>
 
     <title>Admin Profile</title>
@@ -91,7 +98,12 @@ try {
       <div class="profile-content">
         <?php if (isset($error_message)): ?>
             <div class="error-message"><?php echo htmlspecialchars($error_message); ?></div>
-        <?php else: ?>
+        <?php elseif (isset($_SESSION['success_message'])): ?>
+            <div class="success-message"><?php echo htmlspecialchars($_SESSION['success_message']); ?></div>
+            <?php unset($_SESSION['success_message']); ?>
+        <?php endif; ?>
+        
+        <?php if (!isset($error_message)): ?>
             <div class="profile-field">
               <div class="field-label">Name:</div>
               <div class="field-value"><?php echo htmlspecialchars($admin['admin_name']); ?></div>
@@ -106,12 +118,72 @@ try {
               <div class="field-label">Role:</div>
               <div class="field-value"><?php echo htmlspecialchars($admin['admin_position']); ?></div>
             </div>
+            
+            <!-- Add Create Admin Button -->
+            <button class="create-admin-btn" onclick="openModal()">Create New Admin</button>
         <?php endif; ?>
-        
-        
       </div>
     </div>
     
+    <!-- Create Admin Modal -->
+    <div id="createAdminModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">Create New Admin Account</h2>
+                <span class="close-modal" onclick="closeModal()">&times;</span>
+            </div>
+            
+            <form id="createAdminForm">
+                <div class="form-group">
+                    <label for="admin_name">Name</label>
+                    <input type="text" id="admin_name" name="admin_name" placeholder="Enter full name" value="<?php echo htmlspecialchars($admin_name ?? ''); ?>">
+                    <div class="error-message" id="name_error"><?php echo $name_error ?? ''; ?></div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="email">Email Address</label>
+                    <input type="email" id="email" name="email" placeholder="Enter email address" value="<?php echo htmlspecialchars($email ?? ''); ?>">
+                    <div class="error-message" id="email_error"><?php echo $email_error ?? ''; ?></div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="password">Password</label>
+                    <div class="password-field">
+                        <input type="password" id="password" name="password" placeholder="Enter password">
+                        <button type="button" id="passwordToggle" class="password-toggle">
+                            <i id="passwordEyeIcon" class="fa fa-eye"></i>
+                        </button>
+                    </div>
+                    <div class="error-message" id="password_error"><?php echo $password_error ?? ''; ?></div>
+                    <div class="password-requirements">Password must be 8-12 characters, containing a 1 special character, 1 uppercase and 1 number.</div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="repeatPassword">Confirm Password</label>
+                    <div class="password-field">
+                        <input type="password" id="repeatPassword" name="repeatPassword" placeholder="Confirm password">
+                        <button type="button" id="repeatPasswordToggle" class="password-toggle">
+                            <i id="repeatPasswordEyeIcon" class="fa fa-eye"></i>
+                        </button>
+                    </div>
+                    <div class="error-message" id="repeat_password_error"></div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="admin_position">Position</label>
+                    <input type="text" id="admin_position" name="admin_position" placeholder="Enter position (e.g., Manager, Supervisor)" value="<?php echo htmlspecialchars($position ?? ''); ?>">
+                    <div class="error-message" id="position_error"><?php echo $position_error ?? ''; ?></div>
+                </div>
+                
+                <div class="btn-container">
+                    <button type="button" class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+                    <button type="button" id="createAdminBtn" class="btn btn-primary">Create Admin</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <script src="admin_modal.js"></script>
     <script>
         // Update the clock and date
         function updateDateTime() {
@@ -125,7 +197,10 @@ try {
             
             // Update date
             const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
-            document.querySelector('.date-and-day').textContent = now.toLocaleDateString('en-US', options);
+            const dateElement = document.querySelector('.date-and-day');
+            if (dateElement) {
+                dateElement.textContent = now.toLocaleDateString('en-US', options);
+            }
         }
         
         // Initial update

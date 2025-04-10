@@ -55,24 +55,24 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                     echo "<div class='alert alert-danger'>" . $result['error'] . "</div>";
                 }
                 break;
-                case 'resetPassword':
-                    $result = handleResetPassword($conn);
-                    
-                    // For AJAX requests, return JSON
-                    if (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && 
-                        strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest') {
-                        header('Content-Type: application/json');
-                        echo json_encode($result);
-                        exit;
-                    } else {
-                        // For regular form submissions
-                        if ($result['success']) {
-                            echo "<div class='alert alert-success'>Your password has been reset successfully.</div>";
-                        } elseif ($result['error']) {
-                            echo "<div class='alert alert-danger'>" . $result['error'] . "</div>";
-                        }
+            case 'resetPassword':
+                $result = handleResetPassword($conn);
+                
+                // For AJAX requests, return JSON
+                if (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && 
+                    strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest') {
+                    header('Content-Type: application/json');
+                    echo json_encode($result);
+                    exit;
+                } else {
+                    // For regular form submissions
+                    if ($result['success']) {
+                        echo "<div class='alert alert-success'>Your password has been reset successfully.</div>";
+                    } elseif ($result['error']) {
+                        echo "<div class='alert alert-danger'>" . $result['error'] . "</div>";
                     }
-                    break;
+                }
+                break;
         }
     }
 }
@@ -135,17 +135,34 @@ function handleResetPassword($conn) {
             if (isset($response_data['email'])) {
                 $email = $response_data['email'];
                 
-                // Update password in your database
-                $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
-                $stmt = $conn->prepare("UPDATE customer SET c_password = ? WHERE c_email = ?");
-                if ($stmt->execute([$hashedPassword, $email])) {
-                    $success = true;
-                    // Clear the session token
-                    unset($_SESSION['reset_password_token']);
-                    unset($_SESSION['show_reset_password_modal']);
+                // Check if this is an admin email
+                $adminStmt = $conn->prepare("SELECT admin_id FROM admin WHERE admin_email = ?");
+                $adminStmt->execute([$email]);
+                
+                if ($adminStmt->rowCount() > 0) {
+                    // This is an admin, update admin password with hash
+                    $admin = $adminStmt->fetch(PDO::FETCH_ASSOC);
+                    $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
+                    $updateStmt = $conn->prepare("UPDATE admin SET admin_password = ? WHERE admin_id = ?");
+                    if ($updateStmt->execute([$hashedPassword, $admin['admin_id']])) {
+                        $success = true;
+                    } else {
+                        $error = 'Failed to update admin password in database. Please contact support.';
+                    }
                 } else {
-                    $error = 'Failed to update password in database. Please contact support.';
+                    // This is a customer, update customer password
+                    $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
+                    $stmt = $conn->prepare("UPDATE customer SET c_password = ? WHERE c_email = ?");
+                    if ($stmt->execute([$hashedPassword, $email])) {
+                        $success = true;
+                    } else {
+                        $error = 'Failed to update password in database. Please contact support.';
+                    }
                 }
+                
+                // Clear the session token
+                unset($_SESSION['reset_password_token']);
+                unset($_SESSION['show_reset_password_modal']);
             } else {
                 $error = 'Failed to retrieve user information. Please try again.';
             }
@@ -325,14 +342,148 @@ function handleLogin($conn) {
     $password = $_POST['password'] ?? '';
 
     // First check if the user is an admin
-    $stmt = $conn->prepare("SELECT admin_id, admin_password FROM admin WHERE admin_email = ?");
+    $stmt = $conn->prepare("SELECT admin_id, admin_name, admin_email, admin_password, admin_position, supabase_uid FROM admin WHERE admin_email = ?");
     $stmt->execute([$email]);
     $admin = $stmt->fetch(PDO::FETCH_ASSOC);
 
-    // If admin exists, check admin password directly without Supabase
+    // If admin exists, check admin password
     if ($admin) {
-        if ($password === $admin['admin_password']) {
+        $passwordMatches = false;
+        
+        // First try password_verify for hashed passwords
+        if (password_verify($password, $admin['admin_password'])) {
+            $passwordMatches = true;
+        } 
+        // Then try direct comparison for legacy plain text passwords
+        else if ($password === $admin['admin_password']) {
+            $passwordMatches = true;
+            
+            // Update the password to be hashed for future logins
+            $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
+            $updateStmt = $conn->prepare("UPDATE admin SET admin_password = ? WHERE admin_id = ?");
+            $updateStmt->execute([$hashedPassword, $admin['admin_id']]);
+        }
+        
+        if ($passwordMatches) {
+            // Check if admin has a Supabase UID
+            if (empty($admin['supabase_uid'])) {
+                // Admin doesn't have a Supabase UID, create one in Supabase
+                $supabase_url = "https://ygbwanzobuielhttdzsw.supabase.co";
+                $supabase_key = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlnYndhbnpvYnVpZWxodHRkenN3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDM1MTY3NTMsImV4cCI6MjA1OTA5Mjc1M30.bIaP_7rfHyne5PQ_Wmt8qdMYFDzurdnEAUR7U2bxbDQ";
+                
+                $ch = curl_init();
+                curl_setopt($ch, CURLOPT_URL, $supabase_url . "/auth/v1/signup");
+                curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+                curl_setopt($ch, CURLOPT_POST, 1);
+                
+                // Prepare the data for Supabase Auth with display name
+                $auth_data = [
+                    'email' => $email,
+                    'password' => $password,
+                    'data' => [
+                        'name' => $admin['admin_name'],
+                        'position' => $admin['admin_position'],
+                        'full_name' => $admin['admin_name'] // Add full_name for display name
+                    ],
+                    'email_confirm' => true // Skip email verification for admins
+                ];
+                
+                curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($auth_data));
+                
+                $headers = [
+                    'Content-Type: application/json',
+                    'apikey: ' . $supabase_key
+                ];
+                
+                curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+                
+                $response = curl_exec($ch);
+                $http_code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+                
+                curl_close($ch);
+                
+                // If Supabase user creation was successful, update admin with Supabase UID
+                if ($http_code === 200 || $http_code === 201) {
+                    $response_data = json_decode($response, true);
+                    if (isset($response_data['user']) && isset($response_data['user']['id'])) {
+                        $supabase_uid = $response_data['user']['id'];
+                        
+                        // Update admin with Supabase UID
+                        $updateStmt = $conn->prepare("UPDATE admin SET supabase_uid = ? WHERE admin_id = ?");
+                        $updateStmt->execute([$supabase_uid, $admin['admin_id']]);
+                    }
+                } else {
+                    // If user already exists in Supabase, try to sign in to get the UID
+                    $ch = curl_init();
+                    curl_setopt($ch, CURLOPT_URL, $supabase_url . "/auth/v1/token?grant_type=password");
+                    curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+                    curl_setopt($ch, CURLOPT_POST, 1);
+                    
+                    $auth_data = [
+                        'email' => $email,
+                        'password' => $password
+                    ];
+                    
+                    curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($auth_data));
+                    curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+                    
+                    $response = curl_exec($ch);
+                    $http_code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+                    
+                    curl_close($ch);
+                    
+                    if ($http_code === 200) {
+                        $response_data = json_decode($response, true);
+                        if (isset($response_data['user']) && isset($response_data['user']['id'])) {
+                            $supabase_uid = $response_data['user']['id'];
+                            
+                            // Update admin with Supabase UID
+                            $updateStmt = $conn->prepare("UPDATE admin SET supabase_uid = ? WHERE admin_id = ?");
+                            $updateStmt->execute([$supabase_uid, $admin['admin_id']]);
+                            
+                            // Update user metadata to include display name
+                            $ch = curl_init();
+                            curl_setopt($ch, CURLOPT_URL, $supabase_url . "/auth/v1/user");
+                            curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+                            curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "PUT");
+                            
+                            $update_data = [
+                                'data' => [
+                                    'name' => $admin['admin_name'],
+                                    'position' => $admin['admin_position'],
+                                    'full_name' => $admin['admin_name'] // Add full_name for display name
+                                ]
+                            ];
+                            
+                            curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($update_data));
+                            
+                            $auth_headers = [
+                                'Content-Type: application/json',
+                                'apikey: ' . $supabase_key,
+                                'Authorization: Bearer ' . $response_data['access_token']
+                            ];
+                            
+                            curl_setopt($ch, CURLOPT_HTTPHEADER, $auth_headers);
+                            
+                            $update_response = curl_exec($ch);
+                            $update_http_code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+                            
+                            curl_close($ch);
+                            
+                            // Log the update response for debugging
+                            error_log("Supabase User Metadata Update Response: " . $update_response);
+                            error_log("Update HTTP Code: " . $update_http_code);
+                        }
+                    }
+                }
+            }
+            
+            // Set session variables and redirect
             $_SESSION['admin_id'] = $admin['admin_id'];
+            $_SESSION['admin_name'] = $admin['admin_name'];
+            $_SESSION['admin_email'] = $admin['admin_email'];
+            $_SESSION['admin_position'] = $admin['admin_position'];
+            
             header("Location: admin/admin_home.php");
             exit();
         } else {
@@ -442,13 +593,24 @@ function handleForgotPassword($conn) {
     if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
         $error = 'Please enter a valid email address.';
     } else {
-        // Check if the email exists in the database
-        $stmt = $conn->prepare("SELECT c_id FROM customer WHERE c_email = ?");
-        $stmt->execute([$email]);
+        // Check if the email exists in the database (either admin or customer)
+        $isAdmin = false;
         
-        if ($stmt->rowCount() === 0) {
-            $error = 'No account found with this email address.';
+        // Check if email is an admin email
+        $adminStmt = $conn->prepare("SELECT admin_id FROM admin WHERE admin_email = ?");
+        $adminStmt->execute([$email]);
+        if ($adminStmt->rowCount() > 0) {
+            $isAdmin = true;
         } else {
+            // Check if email is a customer email
+            $customerStmt = $conn->prepare("SELECT c_id FROM customer WHERE c_email = ?");
+            $customerStmt->execute([$email]);
+            if ($customerStmt->rowCount() === 0) {
+                $error = 'No account found with this email address.';
+            }
+        }
+        
+        if (!$error) {
             // Email exists, send password reset request to Supabase
             $supabase_url = "https://ygbwanzobuielhttdzsw.supabase.co";
             $supabase_key = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlnYndhbnpvYnVpZWxodHRkenN3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDM1MTY3NTMsImV4cCI6MjA1OTA5Mjc1M30.bIaP_7rfHyne5PQ_Wmt8qdMYFDzurdnEAUR7U2bxbDQ";
@@ -481,8 +643,92 @@ function handleForgotPassword($conn) {
             if ($http_code === 200) {
                 $success = true;
             } else {
-                $response_data = json_decode($response, true);
-                $error = $response_data['message'] ?? 'An error occurred while processing your request.';
+                // If the user doesn't exist in Supabase yet (admin with no Supabase UID)
+                // Create the user in Supabase first
+                if ($isAdmin && $http_code === 400) {
+                    // Get admin details
+                    $adminDetailsStmt = $conn->prepare("SELECT admin_name, admin_position, admin_password FROM admin WHERE admin_email = ?");
+                    $adminDetailsStmt->execute([$email]);
+                    $adminDetails = $adminDetailsStmt->fetch(PDO::FETCH_ASSOC);
+                    
+                    if ($adminDetails) {
+                        // Generate a temporary password
+                        $tempPassword = bin2hex(random_bytes(8));
+                        
+                        // Create user in Supabase
+                        $ch = curl_init();
+                        curl_setopt($ch, CURLOPT_URL, $supabase_url . "/auth/v1/signup");
+                        curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+                        curl_setopt($ch, CURLOPT_POST, 1);
+                        
+                        $auth_data = [
+                            'email' => $email,
+                            'password' => $tempPassword,
+                            'data' => [
+                                'name' => $adminDetails['admin_name'],
+                                'position' => $adminDetails['admin_position']
+                            ],
+                            'email_confirm' => true // Skip email verification for admins
+                        ];
+                        
+                        curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($auth_data));
+                        
+                        $headers = [
+                            'Content-Type: application/json',
+                            'apikey: ' . $supabase_key
+                        ];
+                        
+                        curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+                        
+                        $response = curl_exec($ch);
+                        $http_code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+                        
+                        curl_close($ch);
+                        
+                        // If user creation was successful, now try to send the password reset email
+                        if ($http_code === 200 || $http_code === 201) {
+                            $response_data = json_decode($response, true);
+                            if (isset($response_data['user']) && isset($response_data['user']['id'])) {
+                                $supabase_uid = $response_data['user']['id'];
+                                
+                                // Update admin with Supabase UID
+                                $updateStmt = $conn->prepare("UPDATE admin SET supabase_uid = ? WHERE admin_email = ?");
+                                $updateStmt->execute([$supabase_uid, $email]);
+                                
+                                // Now try to send the password reset email again
+                                $ch = curl_init();
+                                curl_setopt($ch, CURLOPT_URL, $supabase_url . "/auth/v1/recover");
+                                curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+                                curl_setopt($ch, CURLOPT_POST, 1);
+                                
+                                curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($data));
+                                curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+                                
+                                $response = curl_exec($ch);
+                                $http_code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+                                
+                                curl_close($ch);
+                                
+                                if ($http_code === 200) {
+                                    $success = true;
+                                } else {
+                                    $response_data = json_decode($response, true);
+                                    $error = $response_data['message'] ?? 'An error occurred while processing your request.';
+                                }
+                            } else {
+                                $error = 'Failed to create user in authentication system.';
+                            }
+                        } else {
+                            $response_data = json_decode($response, true);
+                            $error = $response_data['message'] ?? 'An error occurred while processing your request.';
+                        }
+                    } else {
+                        $error = 'Failed to retrieve admin details.';
+                    }
+                } else {
+                    $response_data = json_decode($response, true);
+                    $error = $response_data['message'] ?? 'An error occurred while processing your request.';
+                }
             }
         }
     }
@@ -1070,6 +1316,7 @@ function handleForgotPassword($conn) {
                 .then(response => response.json())
                 .then(data => {
                     if (data.success) {
+                        showForgotPasswordMessage('Password reset link has been sent to your email.', 'success');  {
                         showForgotPasswordMessage('Password reset link has been sent to your email.', 'success');
                         document.getElementById('forgotPasswordEmail').value = '';
                         
