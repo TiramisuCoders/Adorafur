@@ -736,53 +736,63 @@ $(document).ready(() => {
   })
 
   // Handle complete booking button
-  $("#complete-booking").on("click", function () {
-    // Check if waiver checkboxes are checked
-    if (!$("#waiverForm-checkbox1").prop("checked") || !$("#waiverForm-checkbox2").prop("checked")) {
-      alert("You must agree to the terms and conditions to complete your booking.")
-      return
-    }
+// Handle complete booking button
+$("#complete-booking").on("click", function () {
+  // Check if waiver checkboxes are checked
+  if (!$("#waiverForm-checkbox1").prop("checked") || !$("#waiverForm-checkbox2").prop("checked")) {
+    alert("You must agree to the terms and conditions to complete your booking.")
+    return
+  }
 
-    // Show processing notification
-    alert("Your booking is being processed. Please wait...")
+  // Show processing notification
+  alert("Your booking is being processed. Please wait...")
 
-    // Disable the button to prevent multiple submissions
-    $(this).prop("disabled", true).text("Processing...")
+  // Disable the button to prevent multiple submissions
+  $(this).prop("disabled", true).text("Processing...")
 
-    // Get the payment form data
-    var formData = new FormData($("#paymentForm")[0])
-    formData.append("complete_booking", "true")
+  // Get the payment form data
+  var formData = new FormData($("#paymentForm")[0])
+  formData.append("complete_booking", "true")
 
-    // Add booking data to form
-    formData.append("booking_data", JSON.stringify(window.bookingData))
+  // Add booking data to form
+  formData.append("booking_data", JSON.stringify(window.bookingData))
 
-    $.ajax({
-      type: "POST",
-      url: "process-booking.php",
-      data: formData,
-      processData: false,
-      contentType: false,
-      dataType: "json",
-      success: (response) => {
-        if (response.success) {
-          alert("Booking completed successfully!")
-          $("#waiverForm").modal("hide")
-          // Redirect to confirmation page or refresh
-          window.location.href = "booking-daycare.php"
-        } else {
-          alert("Error: " + (response.message || "Unknown error"))
-          // Re-enable the button if there's an error
-          $("#complete-booking").prop("disabled", false).text("Complete Booking")
-        }
-      },
-      error: (xhr, status, error) => {
-        console.error("AJAX Error:", error)
-        alert("An error occurred while processing your booking. Please try again later.")
+  // Get the transaction number from the payment modal and add it to the form data
+  const transactionNo = $(".transaction-no").text().replace("Transaction No. ", "").trim()
+  formData.append("transaction_id", transactionNo)
+
+  // Add visible pets data
+  formData.append("visible_pets", $("#visiblePetsData").val())
+
+  $.ajax({
+    type: "POST",
+    url: "process-booking.php",
+    data: formData,
+    processData: false,
+    contentType: false,
+    dataType: "json",
+    success: (response) => {
+      if (response.success) {
+        alert("Booking completed successfully!")
+        $("#waiverForm").modal("hide")
+        // Redirect to confirmation page or refresh
+        window.location.href = "book-pet-hotel.php"
+      } else {
+        alert("Error: " + (response.message || "Unknown error"))
         // Re-enable the button if there's an error
         $("#complete-booking").prop("disabled", false).text("Complete Booking")
-      },
-    })
+      }
+    },
+    error: (xhr, status, error) => {
+      console.error("AJAX Error:", error)
+      alert("An error occurred while processing your booking. Please try again later.")
+      // Re-enable the button if there's an error
+      $("#complete-booking").prop("disabled", false).text("Complete Booking")
+    },
   })
+})
+
+
 
   // Handle payment button click - MODIFIED TO ONLY FETCH VISIBLE PETS
   $("#proceedToPaymentBtn").on("click", (e) => {
