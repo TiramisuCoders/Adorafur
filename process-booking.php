@@ -23,6 +23,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["complete_booking"])) 
     $paymentMethod = $_POST["payment_method"];
     $referenceNo = $_POST["reference_no"];
     $transactionId = $_POST["transaction_id"] ?? null; // Get transaction ID if provided
+    $paymentType = $_POST["payment_type"] ?? "full"; // Get payment type (full or down)
     
     // Debug information
     error_log("Transaction ID: " . print_r($transactionId, true));
@@ -43,9 +44,6 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["complete_booking"])) 
         ]);
         exit;
     }
-    
-    // Get the first pet from the array
-    $pet = $visiblePets[0];
     
     // Handle file upload for payment proof
     $paymentProofPath = "";
@@ -86,6 +84,16 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["complete_booking"])) 
             // Keep the payment category as "Booking Fee" to avoid constraint violation
         }
 
+        // Calculate number of days between check-in and check-out
+        $numberOfDays = 1; // Default to 1 day
+        if (isset($bookingData["checkInDate"]) && isset($bookingData["checkOutDate"])) {
+            $checkIn = new DateTime($bookingData["checkInDate"]);
+            $checkOut = new DateTime($bookingData["checkOutDate"]);
+            $interval = $checkIn->diff($checkOut);
+            $numberOfDays = $interval->days + 1; // Add 1 because the check-out day is counted
+            if ($numberOfDays < 1) $numberOfDays = 1;
+        }
+
         // Process each pet in the booking
         foreach ($visiblePets as $pet) {
             $petStmt = $conn->prepare("SELECT pet_id FROM pet WHERE pet_name = :pet_name AND customer_id = :customer_id LIMIT 1");
@@ -108,19 +116,19 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["complete_booking"])) 
             $serviceVariant = "";
             switch($pet["size"]) {
                 case 'Cat':
-                    $serviceVariant = "Cats";
+                    $serviceVariant = "Cat";
                     break;
                 case 'Small':
-                    $serviceVariant = "Small Dog";
+                    $serviceVariant = "Small";
                     break;
                 case 'Regular':
-                    $serviceVariant = "Medium Dog";
+                    $serviceVariant = "Regular";
                     break;
                 case 'Large':
-                    $serviceVariant = "Large Dog";
+                    $serviceVariant = "Large";
                     break;
                 default:
-                    $serviceVariant = "Medium Dog"; // Default if not matched
+                    $serviceVariant = "Regular"; // Default if not matched
             }
             
             $serviceStmt->bindParam(":service_variant", $serviceVariant);
@@ -146,19 +154,26 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["complete_booking"])) 
                 $checkOutDateTime = date("Y-m-d", strtotime($bookingData["checkOutDate"])) . " " . 
                                 date("H:i:s", strtotime($bookingData["checkOutTime"]));
             }
+            
+            // Calculate total amount for this pet (price * number of days)
+            $petTotalAmount = $pet["price"] * $numberOfDays;
                     
             $bookingStmt = $conn->prepare("INSERT INTO bookings 
                             (pet_id, service_id, admin_id, booking_status, booking_check_in, booking_check_out, 
                             booking_total_amount, booking_balance, transaction_id) 
                             VALUES 
                             (:pet_id, :service_id, 1, 'Pending', :check_in, :check_out, 
-                            :booking_amount, :booking_amount, :transaction_id)");
+                            :booking_amount, :booking_balance, :transaction_id)");
        
+            // Calculate booking balance based on payment type
+            $bookingBalance = ($paymentType === "down") ? ($petTotalAmount * 0.5) : 0;
+            
             $bookingStmt->bindParam(":pet_id", $petId, PDO::PARAM_INT);
             $bookingStmt->bindParam(":service_id", $serviceId, PDO::PARAM_INT);
             $bookingStmt->bindParam(":check_in", $checkInDateTime);
             $bookingStmt->bindParam(":check_out", $checkOutDateTime);
-            $bookingStmt->bindParam(":booking_amount", $pet["price"]);
+            $bookingStmt->bindParam(":booking_amount", $petTotalAmount);
+            $bookingStmt->bindParam(":booking_balance", $bookingBalance);
             $bookingStmt->bindParam(":transaction_id", $transactionId);
                        
             $bookingStmt->execute();
@@ -174,18 +189,29 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["complete_booking"])) 
         $stmt = $conn->prepare("INSERT INTO payment (customer_id, admin_id, pay_method, pay_reference_number, pay_category, 
                 pay_amount, pay_status, pay_date, proof_of_payment, booking_id) 
                 VALUES (:customer_id, 1, :pay_method, :reference_no, :pay_category, 
-                :pay_amount, 'Fully Paid', NOW(), :payment_proof, :booking_id)");
+                :pay_amount, :pay_status, NOW(), :payment_proof, :booking_id)");
 
+        // Calculate total amount for all pets
         $totalAmount = 0;
         foreach ($visiblePets as $pet) {
-            $totalAmount += $pet["price"];
+            $totalAmount += $pet["price"] * $numberOfDays;
+        }
+
+        // Calculate payment amount and status based on payment type
+        $payAmount = $totalAmount;
+        $payStatus = "Fully Paid";
+        
+        if ($paymentType === "down") {
+            $payAmount = $totalAmount * 0.5;
+            $payStatus = "Down Payment"; // Use "Down Payment" instead of "Partially Paid"
         }
 
         $stmt->bindParam(":customer_id", $customerId, PDO::PARAM_INT);
         $stmt->bindParam(":pay_method", $paymentMethod);
         $stmt->bindParam(":reference_no", $referenceNo);
         $stmt->bindParam(":pay_category", $payCategory);
-        $stmt->bindParam(":pay_amount", $totalAmount);
+        $stmt->bindParam(":pay_amount", $payAmount);
+        $stmt->bindParam(":pay_status", $payStatus);
         $stmt->bindParam(":payment_proof", $paymentProofPath);
         $stmt->bindParam(":booking_id", $firstBookingId); // Use the first booking ID for payment
 
