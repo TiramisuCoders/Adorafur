@@ -627,7 +627,7 @@ html, body {
 .iap{
     color: #AB643C;
     text-align: center;
-    font-size: 50px;
+    font-size: 90%;
     font-style: normal;
     font-weight: 500;
     line-height: normal;
@@ -661,6 +661,7 @@ html, body {
     .iap-text, .iap-img {
         max-width: 100%; /* Allows full width */
         width: 100%; /* Ensures they take up full width */
+        font-size: 100%;
     }
 }
 
@@ -683,6 +684,7 @@ html, body {
     
     .iap-text {
         width: 100%; /* Make the text section full width */
+        font-size: 100%;
     }
     
     .iap-img {

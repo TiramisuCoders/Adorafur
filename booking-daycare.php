@@ -427,14 +427,14 @@ $transactionNo = 'TRX'.time().rand(1000, 9999);
 
                                                             <div class="qr-section">
                                                                 <div class="qr-codes">
-                                                                    <img src="gcash.png" alt="GCash QR Code" class="qr-code" id="gcashQR" style="display: none;">
-                                                                    <img src="maya.png" alt="Maya QR Code" class="qr-code" id="mayaQR">
+                                                                    <img src="gcash1.png" alt="GCash QR Code" class="qr-code" id="gcashQR" style="display: none;">
+                                                                    <img src="maya1.png" alt="Maya QR Code" class="qr-code" id="mayaQR">
                                                                 </div>
                                                                 <p class="qr-instruction">We accept bank transfer to our GCash/Maya account or just scan the QR Code!</p>
-                                                                <div class="account-info">
+                                                                <!--<div class="account-info">
                                                                     <p>Account Number: <span>987654321</span></p>
                                                                     <p>Account Name: <span>Veatrice Delos Santos</span></p>
-                                                                </div>
+                                                                </div>-->
                                                                 <button type="button" class="btn btn-primary action-btn" id="proceed-to-waiver" data-toggle="modal" data-target="#waiverForm" disabled>
                                                                     Complete Booking
                                                                 </button>
@@ -577,7 +577,7 @@ $transactionNo = 'TRX'.time().rand(1000, 9999);
     </script>
     
     <!-- Include the external JavaScript file -->
-    <script src="daycare.js"></script>
+    <script src="daycare1.js"></script>
 </body>
 </html>
 
