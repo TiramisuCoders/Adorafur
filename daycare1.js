@@ -638,7 +638,7 @@ $(document).ready(() => {
         $("#petSummaryDetails").html(`
                     <div class="info-row"><span class="label">Breed:</span><span class="value">${pet.breed || ""}</span></div>
                     <div class="info-row"><span class="label">Gender:</span><span class="value">${pet.gender || ""}</span></div>
-                    <div class="info-row"><span class="label">Age:</span><span class="value">${pet.age ? pet.age + " y/o" : ""}</span></div>
+                    <div class="info-row"><span class="label">Age:</span><span class="value">${pet.age ? pet.age : ""}</span></div>
                 `)
       }
       // If there are multiple pets
@@ -654,7 +654,7 @@ $(document).ready(() => {
                             <h4>${pet.name}</h4>
                             <div class="info-row"><span class="label">Breed:</span><span class="value">${pet.breed || ""}</span></div>
                             <div class="info-row"><span class="label">Gender:</span><span class="value">${pet.gender || ""}</span></div>
-                            <div class="info-row"><span class="label">Age:</span><span class="value">${pet.age ? pet.age + " y/o" : ""}</span></div>
+                            <div class="info-row"><span class="label">Age:</span><span class="value">${pet.age ? pet.age : ""}</span></div>
                             ${index < window.bookingData.pets.length - 1 ? "<hr>" : ""}
                         </div>
                     `

@@ -108,12 +108,13 @@ include 'header.php'; ?>
             <div class="story2">
             <img src="AboutUs-Pics/our_story-inspo.png" alt="">
                 <p>Our inspiration when we started this company stems from our childhood where we grew with our beloved pets. We enjoyed playing and taking care of them. They not only bring us joy but also peace. Our pets became a part of our lives and family. Growing up we underwent mental challenges, and our pets became our source of happiness. When we see and play with them, we feel safe and at peace.</p>
-
             </div>
+
             <div class="story3">
             <img src="AboutUs-Pics/our_story-aim.png" alt="">
                 <p>At Adorafur Happy Stay, we aim to create a reason for people to come to us. We set out to provide a destination for pets and their parents. We started at home and have been attracting customers all over Metro Manila. Pet owners truly trust us with their fur babies, leaving them to our care for up to a year. We believe that our customers' cats and dogs are not just pets, they're family.</p>
             </div>
+            
         </div>
     </div>
 
