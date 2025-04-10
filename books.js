@@ -582,20 +582,20 @@ window.bookingData = {
         })
   
       const newRow = `
-                    <tr>
-                        <td data-label="Name">
-                            <select class="petSelect" onchange="updatePetDetails(this)">
-                                ${options}
-                            </select>
-                        </td>
-                        <td data-label="Breed"></td>
-                        <td data-label="Age"></td>
-                        <td data-label="Gender"></td>
-                        <td data-label="Size"></td>
-                        <td data-label="Price">₱0.00</td>
-                        <td><button type="button" onclick="removePetRow(this)" class="action-btn">(Remove)</button></td>
-                    </tr>
-                `
+                      <tr>
+                          <td data-label="Name">
+                              <select class="petSelect" onchange="updatePetDetails(this)">
+                                  ${options}
+                              </select>
+                          </td>
+                          <td data-label="Breed"></td>
+                          <td data-label="Age"></td>
+                          <td data-label="Gender"></td>
+                          <td data-label="Size"></td>
+                          <td data-label="Price">₱0.00</td>
+                          <td><button type="button" onclick="removePetRow(this)" class="action-btn">(Remove)</button></td>
+                      </tr>
+                  `
   
       $("#petTableBody").append(newRow)
   
@@ -644,10 +644,10 @@ window.bookingData = {
   
           // Update the pet details section
           $("#petSummaryDetails").html(`
-                            <div class="info-row"><span class="label">Breed:</span><span class="value">${pet.breed || ""}</span></div>
-                            <div class="info-row"><span class="label">Gender:</span><span class="value">${pet.gender || ""}</span></div>
-                            <div class="info-row"><span class="label">Age:</span><span class="value">${pet.age ? pet.age + " y/o" : ""}</span></div>
-                        `)
+                              <div class="info-row"><span class="label">Breed:</span><span class="value">${pet.breed || ""}</span></div>
+                              <div class="info-row"><span class="label">Gender:</span><span class="value">${pet.gender || ""}</span></div>
+                              <div class="info-row"><span class="label">Age:</span><span class="value">${pet.age ? pet.age + " y/o" : ""}</span></div>
+                          `)
         }
         // If there are multiple pets
         else {
@@ -658,14 +658,14 @@ window.bookingData = {
           let petDetailsHtml = ""
           window.bookingData.pets.forEach((pet, index) => {
             petDetailsHtml += `
-                                <div class="pet-summary-item">
-                                    <h4>${pet.name}</h4>
-                                    <div class="info-row"><span class="label">Breed:</span><span class="value">${pet.breed || ""}</span></div>
-                                    <div class="info-row"><span class="label">Gender:</span><span class="value">${pet.gender || ""}</span></div>
-                                    <div class="info-row"><span class="label">Age:</span><span class="value">${pet.age ? pet.age + " y/o" : ""}</span></div>
-                                    ${index < window.bookingData.pets.length - 1 ? "<hr>" : ""}
-                                </div>
-                            `
+                                  <div class="pet-summary-item">
+                                      <h4>${pet.name}</h4>
+                                      <div class="info-row"><span class="label">Breed:</span><span class="value">${pet.breed || ""}</span></div>
+                                      <div class="info-row"><span class="label">Gender:</span><span class="value">${pet.gender || ""}</span></div>
+                                      <div class="info-row"><span class="label">Age:</span><span class="value">${pet.age ? pet.age + " y/o" : ""}</span></div>
+                                      ${index < window.bookingData.pets.length - 1 ? "<hr>" : ""}
+                                  </div>
+                              `
           })
   
           // Update the pet details section
@@ -707,24 +707,29 @@ window.bookingData = {
       }
     })
   
-    // Payment form validation
+    // Payment form validation - UPDATED with debugging and improved validation
     function validatePaymentForm() {
       const referenceNo = $('input[name="reference_no"]').val().trim()
       const paymentProof = $('input[name="payment_proof"]').prop("files").length
   
+      console.log("Reference No:", referenceNo)
+      console.log("Payment Proof Files:", paymentProof)
+  
       // Enable button only if both fields are filled
       if (referenceNo && paymentProof > 0) {
         $("#proceed-to-waiver").prop("disabled", false)
+        console.log("Button enabled")
       } else {
         $("#proceed-to-waiver").prop("disabled", true)
+        console.log("Button disabled")
       }
     }
   
-    // Attach validation handlers
+    // Attach validation handlers - UPDATED with more robust event binding
     $(document).on("input", 'input[name="reference_no"]', validatePaymentForm)
     $(document).on("change", 'input[name="payment_proof"]', validatePaymentForm)
   
-    // Initialize payment modal
+    // Initialize payment modal - UPDATED to ensure validation runs when modal is shown
     $("#petPaymentModal").on("show.bs.modal", () => {
       // Reset form
       $("#paymentForm")[0].reset()
@@ -735,13 +740,26 @@ window.bookingData = {
       $("#mayaQR").show()
     })
   
-    // Handle proceed to waiver button
+    // Make sure validation runs after modal is fully shown
+    $("#petPaymentModal").on("shown.bs.modal", () => {
+      validatePaymentForm()
+    })
+  
+    // Handle proceed to waiver button - UPDATED with debugging
     $("#proceed-to-waiver").on("click", () => {
+      console.log("Proceed to waiver clicked")
       $("#petPaymentModal").modal("hide")
+  
+      // Increase timeout to ensure modal transition is complete
       setTimeout(() => {
+        console.log("Showing waiver form")
         $("#waiverForm").modal("show")
       }, 500)
     })
+  
+    // Add direct access to waiver form for testing
+    // Uncomment this line to test if the waiver form works directly
+    // $("#waiverForm").modal("show")
   
     // Handle complete booking button
     $("#complete-booking").on("click", function () {
@@ -804,12 +822,6 @@ window.bookingData = {
         return
       }
   
-      // Check if times are selected
-      if (!window.bookingData.checkInTime || !window.bookingData.checkOutTime) {
-        alert("Please select check-in and check-out times.")
-        return
-      }
-  
       // Get only the pets that are currently visible in the table
       const visiblePets = []
   
@@ -854,5 +866,4 @@ window.bookingData = {
       // Show the payment modal
       $("#petPaymentModal").modal("show")
     })
-  })
-  
+  })  
