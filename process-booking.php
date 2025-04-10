@@ -22,6 +22,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["complete_booking"])) 
     $bookingData = json_decode($_POST["booking_data"], true);
     $paymentMethod = $_POST["payment_method"];
     $referenceNo = $_POST["reference_no"];
+    $transactionId = $_POST["transaction_id"] ?? null; // Get transaction ID if provided
     
     // Get visible pets data
     $visiblePets = json_decode($_POST["visible_pets"], true);
@@ -131,18 +132,21 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["complete_booking"])) 
                 $checkOutDate = date("Y-m-d", strtotime($bookingData["checkOutDate"])) . " " . 
                                 date("H:i:s", strtotime($bookingData["checkOutTime"]));
                 
-                // Insert into bookings table
-                $bookingStmt = $conn->prepare("INSERT INTO bookings (pet_id, service_id, admin_id, 
-                             booking_status, booking_check_in, booking_check_out, booking_total_amount) 
-                             VALUES (:pet_id, :service_id, 1, 
-                             'Pending', :check_in, :check_out, :booking_amount)");
+                // Insert into bookings table - FIXED to explicitly specify all columns except booking_id
+                // This allows PostgreSQL to auto-generate the booking_id value
+                $bookingStmt = $conn->prepare("INSERT INTO bookings 
+                             (pet_id, service_id, admin_id, booking_status, booking_check_in, booking_check_out, 
+                             booking_total_amount, booking_balance, transaction_id) 
+                             VALUES 
+                             (:pet_id, :service_id, 1, 'Pending', :check_in, :check_out, 
+                             :booking_amount, :booking_amount, :transaction_id)");
 
-                            $bookingStmt->bindParam(":pet_id", $petId, PDO::PARAM_INT);
-                            $bookingStmt->bindParam(":service_id", $serviceId, PDO::PARAM_INT);
-                            // Remove this line: $bookingStmt->bindParam(":payment_id", $paymentId, PDO::PARAM_INT);
-                            $bookingStmt->bindParam(":check_in", $checkInDate);
-                            $bookingStmt->bindParam(":check_out", $checkOutDate);
-                            $bookingStmt->bindParam(":booking_amount", $pet["price"]); // Add this line to include the pet's price
+                $bookingStmt->bindParam(":pet_id", $petId, PDO::PARAM_INT);
+                $bookingStmt->bindParam(":service_id", $serviceId, PDO::PARAM_INT);
+                $bookingStmt->bindParam(":check_in", $checkInDate);
+                $bookingStmt->bindParam(":check_out", $checkOutDate);
+                $bookingStmt->bindParam(":booking_amount", $pet["price"]);
+                $bookingStmt->bindParam(":transaction_id", $transactionId);
                 
                 $bookingStmt->execute();
             }

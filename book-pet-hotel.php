@@ -237,263 +237,266 @@ unset($_SESSION['pet_form_data']);
                             <b><?php echo $isLoggedIn && $customerInfo ? htmlspecialchars($customerInfo['c_first_name'] . ' ' . $customerInfo['c_last_name']) : 'Client name'; ?></b><br>
                             <span class="client-email"><?php echo $isLoggedIn && $customerInfo ? htmlspecialchars($customerInfo['c_email']) : 'Client Email'; ?></span>
                         </div>
-                        <div class="pet-1">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
                             <div class="pets"><b>Pet/s</b></div>
+                            <button type="button" class="action-btn" id="backToBookingBtn">
+                                <i class="fas fa-arrow-left mr-1"></i> Back
+                            </button>
+                        </div>
 
-                            <table class="table">
-                                <thead>
-                                    <tr>
-                                        <th>Name</th>
-                                        <th>Breed</th>
-                                        <th>Age</th>
-                                        <th>Gender</th>
-                                        <th>Size</th>
-                                        <th>Price</th>
-                                        <th>Action</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="petTableBody">
-                                    <tr>
-                                        <!-- Dropdown inside the Name column -->
-                                        <td data-label="Name">
-                                            <select class="petSelect" onchange="updatePetDetails(this)">
-                                                <option value="">Choose Pet</option>
-                                                <!-- Pet options will be loaded via AJAX -->
-                                            </select>
-                                        </td>
-                                        <td data-label="Breed"></td>
-                                        <td data-label="Age"></td>
-                                        <td data-label="Gender"></td>
-                                        <td data-label="Size"></td>
-                                        <td data-label="Price">₱0.00</td>
-                                        <td><button type="button" onclick="addPetRow()" class="action-btn">(Add)</button></td>
-                                    </tr>
-                                </tbody>
-                            </table>
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Breed</th>
+                                    <th>Age</th>
+                                    <th>Gender</th>
+                                    <th>Size</th>
+                                    <th>Price</th>
+                                    
+                                </tr>
+                            </thead>
+                            <tbody id="petTableBody">
+                                <tr>
+                                    <!-- Dropdown inside the Name column -->
+                                    <td data-label="Name">
+                                        <select class="petSelect" onchange="updatePetDetails(this)">
+                                            <option value="">Choose Pet</option>
+                                            <!-- Pet options will be loaded via AJAX -->
+                                        </select>
+                                    </td>
+                                    <td data-label="Breed"></td>
+                                    <td data-label="Age"></td>
+                                    <td data-label="Gender"></td>
+                                    <td data-label="Size"></td>
+                                    <td data-label="Price">₱0.00</td>
+                                    
+                                </tr>
+                            </tbody>
+                        </table>
 
-                            <div class="lower-section">
-                                <button type="button" class="btn" id="regPet" data-toggle="modal" data-target="#petRegistrationModal">
-                                    <h6 class="regnewpet" style="font-weight: 600;">Need to register new pet?</h6>
-                                </button>
+                        <div class="lower-section">
+                            <button type="button" class="btn" id="regPet" data-toggle="modal" data-target="#petRegistrationModal">
+                                <h6 class="regnewpet" style="font-weight: 600;">Need to register new pet?</h6>
+                            </button>
 
-                                <div class="modal fade" id="petRegistrationModal" tabindex="-1" aria-labelledby="petRegistrationModalLabel" aria-hidden="true">
-                                    <div class="modal-dialog modal-dialog-centered modal-xl">
-                                        <div class="modal-content" id="reg-pet">
-                                            <div class="modal-header d-flex justify-content-center align-items-center" id="mheader">
-                                                <h1 class="modal-title" id="saveModal">PET/s</h1>
-                                                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                                                    <span aria-hidden="true">&times;</span>
-                                                </button>
-                                            </div>
+                            <div class="modal fade" id="petRegistrationModal" tabindex="-1" aria-labelledby="petRegistrationModalLabel" aria-hidden="true">
+                                <div class="modal-dialog modal-dialog-centered modal-xl">
+                                    <div class="modal-content" id="reg-pet">
+                                        <div class="modal-header d-flex justify-content-center align-items-center" id="mheader">
+                                            <h1 class="modal-title" id="saveModal">PET/s</h1>
+                                            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                                <span aria-hidden="true">&times;</span>
+                                            </button>
+                                        </div>
 
-                                            <div class="modal-body" id="mbody">
-                                                <div class="pet-modal">
-                                                    <!-- FORM: removed form action and method to avoid submission -->
-                                                    <form class="pet-form" method="post" action="add_pet.php" enctype="multipart/form-data">
-                        <div class="container-fluid p-0">
-                            <div class="row">
+                                        <div class="modal-body" id="mbody">
+                                            <div class="pet-modal">
+                                                <!-- FORM: removed form action and method to avoid submission -->
+                                                <form class="pet-form" method="post" action="add_pet.php" enctype="multipart/form-data">
+                    <div class="container-fluid p-0">
+                        <div class="row">
+                            
+                            <!-- Left Column -->
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">NAME</label>
+                                    <input type="text" name="pet_name" class="form-control" required value="<?php echo htmlspecialchars($pet_form_data['pet_name'] ?? ''); ?>">
+                                </div>
                                 
-                                <!-- Left Column -->
-                                <div class="col-md-6">
-                                    <div class="mb-3">
-                                        <label class="form-label">NAME</label>
-                                        <input type="text" name="pet_name" class="form-control" required value="<?php echo htmlspecialchars($pet_form_data['pet_name'] ?? ''); ?>">
-                                    </div>
-                                    
-                                    <div class="mb-3">
-                                        <label class="form-label">PET SIZE</label>
-                                        <div class="radio-group">
-                                            <div>
-                                                <input type="radio" name="pet_size" id="small_dog" value="small_dog" required <?php echo (isset($pet_form_data['pet_size']) && $pet_form_data['pet_size'] == 'small_dog') ? 'checked' : ''; ?>>
-                                                <label for="small_dog" id="pet-size">Small Dog</label>
-                                            </div>
-                                            <div>
-                                                <input type="radio" name="pet_size" id="regular_dog" value="regular_dog"  <?php echo (isset($pet_form_data['pet_size']) && $pet_form_data['pet_size'] == 'regular_dog') ? 'checked' : ''; ?>>
-                                                <label for="regular_dog" id="pet-size">Regular Dog</label>
-                                            </div>
-                                            <div>
-                                                <input type="radio" name="pet_size" id="large_dog" value="large_dog" <?php echo (isset($pet_form_data['pet_size']) && $pet_form_data['pet_size'] == 'large_dog') ? 'checked' : ''; ?>>
-                                                <label for="large_dog" id="pet-size">Large Dog</label>
-                                            </div>
-                                            <div>
-                                                <input type="radio" name="pet_size" id="regular_cat" value="regular_cat" <?php echo (isset($pet_form_data['pet_size']) && $pet_form_data['pet_size'] == 'regular_cat') ? 'checked' : ''; ?>>
-                                                <label for="regular_cat" id="pet-size">Regular Cat</label>
-                                            </div>
+                                <div class="mb-3">
+                                    <label class="form-label">PET SIZE</label>
+                                    <div class="radio-group">
+                                        <div>
+                                            <input type="radio" name="pet_size" id="small_dog" value="small_dog" required <?php echo (isset($pet_form_data['pet_size']) && $pet_form_data['pet_size'] == 'small_dog') ? 'checked' : ''; ?>>
+                                            <label for="small_dog" id="pet-size">Small Dog</label>
                                         </div>
-                                    </div>
-                                    
-                                    <div class="mb-3">
-                                        <label class="form-label">BREED</label>
-                                        <input type="text" name="breed" class="form-control" placeholder="Type Breed Here" required  value="<?php echo htmlspecialchars($pet_form_data['breed'] ?? ''); ?>">
-                                    </div>
-                                    
-                                    <div class="mb-3">
-                                        <label class="form-label">AGE (YEARS)</label>
-                                        <input type="number" name="age_years" class="form-control" placeholder="Years" min="0" required value="<?php echo htmlspecialchars($pet_form_data['age_years'] ?? ''); ?>">
-                                    </div>
-
-
-                                    <div class="mb-3">
-                                        <label class="form-label">GENDER</label>
-                                        <div class="radio-group">
-                                            <div>
-                                                <input type="radio" name="gender" id="male" value="male" required<?php echo (isset($pet_form_data['gender']) && $pet_form_data['gender'] == 'male') ? 'checked' : ''; ?>>
-                                                <label for="male" id="pet-gender">Male</label>
-                                            </div>
-                                            <div>
-                                                <input type="radio" name="gender" id="female" value="female" <?php echo (isset($pet_form_data['gender']) && $pet_form_data['gender'] == 'female') ? 'checked' : ''; ?>>
-                                                <label for="female" id="pet-gender">Female</label>
-                                            </div>
+                                        <div>
+                                            <input type="radio" name="pet_size" id="regular_dog" value="regular_dog"  <?php echo (isset($pet_form_data['pet_size']) && $pet_form_data['pet_size'] == 'regular_dog') ? 'checked' : ''; ?>>
+                                            <label for="regular_dog" id="pet-size">Regular Dog</label>
                                         </div>
-                                    </div>
-                                    
-                                    <div class="mb-3">
-                                        <label class="form-label">DESCRIPTION</label>
-                                        <textarea name="description" class="form-control" placeholder="e.x. White Spots" rows="3" id="petDescription" required><?php echo htmlspecialchars($pet_form_data['description'] ?? ''); ?></textarea>
+                                        <div>
+                                            <input type="radio" name="pet_size" id="large_dog" value="large_dog" <?php echo (isset($pet_form_data['pet_size']) && $pet_form_data['pet_size'] == 'large_dog') ? 'checked' : ''; ?>>
+                                            <label for="large_dog" id="pet-size">Large Dog</label>
+                                        </div>
+                                        <div>
+                                            <input type="radio" name="pet_size" id="regular_cat" value="regular_cat" <?php echo (isset($pet_form_data['pet_size']) && $pet_form_data['pet_size'] == 'regular_cat') ? 'checked' : ''; ?>>
+                                            <label for="regular_cat" id="pet-size">Regular Cat</label>
+                                        </div>
                                     </div>
                                 </div>
                                 
-                                <!-- Right Column -->
-                                <div class="col-md-6">
-                                    <div class="mb-3">
-                                        <label class="form-label">PET PROFILE PHOTO</label>
-                                        <input type="file" name="pet_photo" class="form-control" accept="image/*,application/pdf" >
-                                        <div class="form-text">File size must be less than 5MB.</div>
-                                        <?php if ($pet_photo_error): ?>
-                                            <p class="error pet-photo-error"><?php echo $pet_photo_error; ?></p>
-                                        <?php endif; ?>
-                                        <div id="petPhotoError" class="error pet-photo-error" style="display: none;"></div>
-                                    </div>
-                                    
-                                    <div class="mb-3">
-                                        <label class="form-label">VACCINATION STATUS</label>
-                                        <input type="file" name="vaccination_file" class="form-control mb-2" accept="image/*,application/pdf" required  id="vaccinationFileInput">
-                                        <div class="form-text">File size must be less than 5MB.</div>
-                                        <?php if ($vaccination_file_error): ?>
-                                            <p class="error vaccination-file-error"><?php echo $vaccination_file_error; ?></p>
-                                        <?php endif; ?>
+                                <div class="mb-3">
+                                    <label class="form-label">BREED</label>
+                                    <input type="text" name="breed" class="form-control" placeholder="Type Breed Here" required  value="<?php echo htmlspecialchars($pet_form_data['breed'] ?? ''); ?>">
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label class="form-label">AGE (YEARS)</label>
+                                    <input type="number" name="age_years" class="form-control" placeholder="Years" min="0" required value="<?php echo htmlspecialchars($pet_form_data['age_years'] ?? ''); ?>">
+                                </div>
 
-                                        <div id="vaccinationFileError" class="error vaccination-file-error" style="display: none;"></div>
-                                        <div class="radio-group">
-                                            <div>
-                                                <input type="radio" name="vaccination_status" id="vaccinated" value="vaccinated" required> <?php echo (isset($pet_form_data['vaccination_status']) && $pet_form_data['vaccination_status'] == 'vaccinated') ? 'checked' : ''; ?>
-                                                <label for="vaccinated">Vaccinated</label>
-                                            </div>
-                                            <div>
-                                                <input type="radio" name="vaccination_status" id="not_vaccinated" value="not_vaccinated"> <?php echo (isset($pet_form_data['vaccination_status']) && $pet_form_data['vaccination_status'] == 'not_vaccinated') ? 'checked' : ''; ?>
-                                                <label for="not_vaccinated">Not Vaccinated</label>
-                                            </div>
+
+                                <div class="mb-3">
+                                    <label class="form-label">GENDER</label>
+                                    <div class="radio-group">
+                                        <div>
+                                            <input type="radio" name="gender" id="male" value="male" required<?php echo (isset($pet_form_data['gender']) && $pet_form_data['gender'] == 'male') ? 'checked' : ''; ?>>
+                                            <label for="male" id="pet-gender">Male</label>
+                                        </div>
+                                        <div>
+                                            <input type="radio" name="gender" id="female" value="female" <?php echo (isset($pet_form_data['gender']) && $pet_form_data['gender'] == 'female') ? 'checked' : ''; ?>>
+                                            <label for="female" id="pet-gender">Female</label>
                                         </div>
                                     </div>
-                                    
-                                    <div class="mb-3">
-                                        <label class="form-label">DATE ADMINISTERED</label>
-                                        <input type="date" name="date_administered" class="form-control" required id="dateAdministeredInput" value="<?php echo htmlspecialchars($pet_form_data['date_administered'] ?? ''); ?>">
-                                        <?php if ($date_administered_error): ?>
-                                            <p class="error date-administered-error"><?php echo $date_administered_error; ?></p>
-                                        <?php endif; ?>
-                                        <div id="dateAdministeredError" class="error date-administered-error" style="display: none;"></div>
-                                    </div>
-                                    
-                                    <div class="mb-3">
-                                        <label class="form-label">EXPIRY DATE</label>
-                                        <input type="date" name="expiry_date" class="form-control" required value="<?php echo htmlspecialchars($pet_form_data['expiry_date'] ?? ''); ?>">
-                                    </div>
-                                    
-                                    <div class="mb-3">
-                                        <label class="form-label">SPECIAL INSTRUCTIONS</label>
-                                        <textarea name="special_instructions" class="form-control" placeholder="e.x. Medications" rows="3" id="petInstruction" required><?php echo htmlspecialchars($pet_form_data['special_instructions'] ?? ''); ?></textarea>
-                                    </div>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label class="form-label">DESCRIPTION</label>
+                                    <textarea name="description" class="form-control" placeholder="e.x. White Spots" rows="3" id="petDescription" required><?php echo htmlspecialchars($pet_form_data['description'] ?? ''); ?></textarea>
                                 </div>
                             </div>
                             
-                            <div class="row mt-3">
-                                <div class="col-12 text-center">
-                                    <button type="submit" class="btn" id="confirm-but">Save and Go Back</button>
+                            <!-- Right Column -->
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">PET PROFILE PHOTO</label>
+                                    <input type="file" name="pet_photo" class="form-control" accept="image/*,application/pdf" >
+                                    <div class="form-text">File size must be less than 5MB.</div>
+                                    <?php if ($pet_photo_error): ?>
+                                        <p class="error pet-photo-error"><?php echo $pet_photo_error; ?></p>
+                                    <?php endif; ?>
+                                    <div id="petPhotoError" class="error pet-photo-error" style="display: none;"></div>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label class="form-label">VACCINATION STATUS</label>
+                                    <input type="file" name="vaccination_file" class="form-control mb-2" accept="image/*,application/pdf" required  id="vaccinationFileInput">
+                                    <div class="form-text">File size must be less than 5MB.</div>
+                                    <?php if ($vaccination_file_error): ?>
+                                        <p class="error vaccination-file-error"><?php echo $vaccination_file_error; ?></p>
+                                    <?php endif; ?>
+
+                                    <div id="vaccinationFileError" class="error vaccination-file-error" style="display: none;"></div>
+                                    <div class="radio-group">
+                                        <div>
+                                            <input type="radio" name="vaccination_status" id="vaccinated" value="vaccinated" required> <?php echo (isset($pet_form_data['vaccination_status']) && $pet_form_data['vaccination_status'] == 'vaccinated') ? 'checked' : ''; ?>
+                                            <label for="vaccinated">Vaccinated</label>
+                                        </div>
+                                        <div>
+                                            <input type="radio" name="vaccination_status" id="not_vaccinated" value="not_vaccinated"> <?php echo (isset($pet_form_data['vaccination_status']) && $pet_form_data['vaccination_status'] == 'not_vaccinated') ? 'checked' : ''; ?>
+                                            <label for="not_vaccinated">Not Vaccinated</label>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label class="form-label">DATE ADMINISTERED</label>
+                                    <input type="date" name="date_administered" class="form-control" required id="dateAdministeredInput" value="<?php echo htmlspecialchars($pet_form_data['date_administered'] ?? ''); ?>">
+                                    <?php if ($date_administered_error): ?>
+                                        <p class="error date-administered-error"><?php echo $date_administered_error; ?></p>
+                                    <?php endif; ?>
+                                    <div id="dateAdministeredError" class="error date-administered-error" style="display: none;"></div>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label class="form-label">EXPIRY DATE</label>
+                                    <input type="date" name="expiry_date" class="form-control" required value="<?php echo htmlspecialchars($pet_form_data['expiry_date'] ?? ''); ?>">
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label class="form-label">SPECIAL INSTRUCTIONS</label>
+                                    <textarea name="special_instructions" class="form-control" placeholder="e.x. Medications" rows="3" id="petInstruction" required><?php echo htmlspecialchars($pet_form_data['special_instructions'] ?? ''); ?></textarea>
                                 </div>
                             </div>
                         </div>
-                    </form>
-                                                </div>
+                        
+                        <div class="row mt-3">
+                            <div class="col-12 text-center">
+                                <button type="submit" class="btn" id="confirm-but">Save and Go Back</button>
+                            </div>
+                        </div>
+                    </div>
+                </form>
                                             </div>
-
                                         </div>
+
                                     </div>
                                 </div>
                             </div>
+                        </div>
 
+                        
+
+                                                        
                             
+                            <!-- Payment Button -->
+                            <div class="proctopayment">
+                                <button type="button" class="btn payment-btn" id="proceedToPaymentBtn">
+                                    Proceed to Payment
+                                </button>
 
-                                                            
-                                
-                                <!-- Payment Button -->
-                                <div class="proctopayment">
-                                    <button type="button" class="btn payment-btn" id="proceedToPaymentBtn">
-                                        Proceed to Payment
-                                    </button>
+                                <!-- Payment Modal -->
+                                <div class="modal fade" id="petPaymentModal" tabindex="-1" aria-labelledby="petPaymentModalLabel" aria-hidden="true">
+                                    <div class="modal-dialog modal-lg">
+                                        <div class="modal-content">
+                                            <div class="modal-body p-0">
+                                                <div class="payment-modal-content">
+                                                    <h1>Let's Seal the Deal!</h1>
+                                                    <p class="subtitle">To finalize your pet's stay, please scan the QR code below to securely process your payment.</p>
 
-                                    <!-- Payment Modal -->
-                                    <div class="modal fade" id="petPaymentModal" tabindex="-1" aria-labelledby="petPaymentModalLabel" aria-hidden="true">
-                                        <div class="modal-dialog modal-lg">
-                                            <div class="modal-content">
-                                                <div class="modal-body p-0">
-                                                    <div class="payment-modal-content">
-                                                        <h1>Let's Seal the Deal!</h1>
-                                                        <p class="subtitle">To finalize your pet's stay, please scan the QR code below to securely process your payment.</p>
-
-                                                        <div class="modal-grid">
-                                                            <div class="details-section">
-                                                                <p class="transaction-no">Transaction No. <?php echo $transactionNo; ?></p>
-                                                                <h2 class="pet-name" id="summaryPetName">Your Pet</h2>
-                                                                <div class="booking-dates">
-                                                                    <p><strong>Check in:</strong> <span id="summaryCheckIn">Not selected</span></p>
-                                                                    <p><strong>Check out:</strong> <span id="summaryCheckOut">Not selected</span></p>
-                                                                </div>
-
-                                                                <div class="info-grid">
-                                                                    <div class="info-row"><span class="label">Service:</span><span class="value">Pet Hotel</span></div>
-                                                                    <div id="petSummaryDetails">
-                                                                        <!-- Pet details will be inserted here dynamically -->
-                                                                    </div>
-                                                                    <div class="info-row"><span class="label">Owner:</span><span class="value">
-                                                                        <?php echo $isLoggedIn && $customerInfo ? htmlspecialchars($customerInfo['c_first_name'] . ' ' . $customerInfo['c_last_name']) : 'Not logged in'; ?>
-                                                                    </span></div>
-                                                                    <div class="info-row"><span class="label">Amount to pay:</span><span class="value" id="summaryTotalAmount">₱ 0.00</span></div>
-                                                                    <div class="info-row"><span class="label">Remaining Balance:</span><span class="value" id="summaryRemainingBalance">₱ 0.00</span></div>
-                                                                </div>
-
-                                                                <form method="POST" enctype="multipart/form-data" id="paymentForm">
-                                                                    <input type="hidden" name="visible_pets" id="visiblePetsData" value="">
-                                                                    <div class="payment-section">
-                                                                        <p class="section-label">Mode of Payment</p>
-                                                                        <div class="radio-group">
-                                                                            <label><input type="radio" name="payment_method" value="Maya" checked> <span>Maya</span></label>
-                                                                            <label><input type="radio" name="payment_method" value="GCash"> <span>GCash</span></label>
-                                                                        </div>
-
-                                                                        <p class="section-label">Reference No. of Your Payment</p>
-                                                                        <input type="text" name="reference_no" placeholder="Enter Reference Number" class="reference-input" required>
-
-                                                                        <p class="section-label">Proof of Payment</p>
-                                                                        <input type="file" name="payment_proof" accept="image/*" required>
-                                                                    </div>
-                                                                </form>
+                                                    <div class="modal-grid">
+                                                        <div class="details-section">
+                                                            <p class="transaction-no">Transaction No. <?php echo $transactionNo; ?></p>
+                                                            <h2 class="pet-name" id="summaryPetName">Your Pet</h2>
+                                                            <div class="booking-dates">
+                                                                <p><strong>Check in:</strong> <span id="summaryCheckIn">Not selected</span></p>
+                                                                <p><strong>Check out:</strong> <span id="summaryCheckOut">Not selected</span></p>
                                                             </div>
 
-                                                            <div class="qr-section">
-                                                                <div class="qr-codes">
-                                                                    <img src="gcash.png" alt="GCash QR Code" class="qr-code" id="gcashQR" style="display: none;">
-                                                                    <img src="maya.png" alt="Maya QR Code" class="qr-code" id="mayaQR">
+                                                            <div class="info-grid">
+                                                                <div class="info-row"><span class="label">Service:</span><span class="value">Pet Hotel</span></div>
+                                                                <div id="petSummaryDetails">
+                                                                    <!-- Pet details will be inserted here dynamically -->
                                                                 </div>
-                                                                <p class="qr-instruction">We accept bank transfer to our GCash/Maya account or just scan the QR Code!</p>
-                                                                <div class="account-info">
-                                                                    <p>Account Number: <span>987654321</span></p>
-                                                                    <p>Account Name: <span>Veatrice Delos Santos</span></p>
-                                                                </div>
-                                                                <button type="button" class="btn btn-primary action-btn" id="proceed-to-waiver" data-toggle="modal" data-target="#waiverForm" disabled>
-                                                                    Complete Booking
-                                                                </button>
+                                                                <div class="info-row"><span class="label">Owner:</span><span class="value">
+                                                                    <?php echo $isLoggedIn && $customerInfo ? htmlspecialchars($customerInfo['c_first_name'] . ' ' . $customerInfo['c_last_name']) : 'Not logged in'; ?>
+                                                                </span></div>
+                                                                <div class="info-row"><span class="label">Amount to pay:</span><span class="value" id="summaryTotalAmount">₱ 0.00</span></div>
+                                                                <div class="info-row"><span class="label">Remaining Balance:</span><span class="value" id="summaryRemainingBalance">₱ 0.00</span></div>
                                                             </div>
+
+                                                            <form method="POST" enctype="multipart/form-data" id="paymentForm">
+                                                                <input type="hidden" name="visible_pets" id="visiblePetsData" value="">
+                                                                <div class="payment-section">
+                                                                    <p class="section-label">Mode of Payment</p>
+                                                                    <div class="radio-group">
+                                                                        <label><input type="radio" name="payment_method" value="Maya" checked> <span>Maya</span></label>
+                                                                        <label><input type="radio" name="payment_method" value="GCash"> <span>GCash</span></label>
+                                                                    </div>
+
+                                                                    <p class="section-label">Reference No. of Your Payment</p>
+                                                                    <input type="text" name="reference_no" placeholder="Enter Reference Number" class="reference-input" required>
+
+                                                                    <p class="section-label">Proof of Payment</p>
+                                                                    <input type="file" name="payment_proof" accept="image/*" required>
+                                                                </div>
+                                                            </form>
+                                                        </div>
+
+                                                        <div class="qr-section">
+                                                            <div class="qr-codes">
+                                                                <img src="gcash.png" alt="GCash QR Code" class="qr-code" id="gcashQR" style="display: none;">
+                                                                <img src="maya.png" alt="Maya QR Code" class="qr-code" id="mayaQR">
+                                                            </div>
+                                                            <p class="qr-instruction">We accept bank transfer to our GCash/Maya account or just scan the QR Code!</p>
+                                                            <div class="account-info">
+                                                                <p>Account Number: <span>987654321</span></p>
+                                                                <p>Account Name: <span>Veatrice Delos Santos</span></p>
+                                                            </div>
+                                                            <button type="button" class="btn btn-primary action-btn" id="proceed-to-waiver" data-toggle="modal" data-target="#waiverForm" disabled>
+                                                                Complete Booking
+                                                            </button>
                                                         </div>
                                                     </div>
                                                 </div>
@@ -595,7 +598,7 @@ unset($_SESSION['pet_form_data']);
                                                     <p>
                                                         By submitting this agreement form, I, the Owner, acknowledge represent that I have made full disclosure and have read, understand and accept the terms and conditions stated in this agreement.
                                                         I acknowledge all of the statements above and understand and agree to release Adorafur Happy Stay and its employees from any and all liabilities, expenses, and costs (including veterinary and legal fees)
-                                                        resulting from any service provided, or unintentional injury to my pet while under their care or afterwards. I acknowledge this agreement shall be effective and binding on both parties.
+resulting from any service provided, or unintentional injury to my pet while under their care or afterwards. I acknowledge this agreement shall be effective and binding on both parties.
                                                         I also agree to follow the health and safety protocols of Adorafur Happy Stay.
                                                     </p>
 
@@ -635,4 +638,3 @@ unset($_SESSION['pet_form_data']);
     <script src="books.js"></script>
 </body>
 </html>
-
