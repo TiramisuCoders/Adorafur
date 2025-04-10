@@ -616,6 +616,9 @@ $(document).ready(() => {
       const checkOut = new Date(selectedDates.checkOut)
       const timeDiff = Math.abs(checkOut.getTime() - checkIn.getTime())
       numberOfDays = Math.ceil(timeDiff / (1000 * 3600 * 24)) || 1
+
+      // Add 1 because the check-out day is counted
+      numberOfDays += 1
     }
 
     // Calculate price based on selected pets
@@ -626,11 +629,32 @@ $(document).ready(() => {
       })
     }
 
-    // Update the total price display
-    $("#summaryTotalAmount").text(`₱ ${totalPrice.toFixed(2)}`)
-    $("#summaryRemainingBalance").text(`₱ ${totalPrice.toFixed(2)}`)
+    // Update the full amount display (total price)
+    $("#summaryFullAmount").text(`₱ ${totalPrice.toFixed(2)}`)
+
+    // Update payment amounts based on selected payment type
+    updatePaymentAmounts()
 
     return totalPrice
+  }
+
+  // Function to update payment amounts based on payment type
+  function updatePaymentAmounts() {
+    const paymentType = $("#paymentTypeSelect").val()
+    const fullAmount = Number.parseFloat($("#summaryFullAmount").text().replace("₱", "").trim()) || 0
+
+    let amountToPay = fullAmount
+    let remainingBalance = 0
+
+    if (paymentType === "down") {
+      // Down payment is 50% of the total
+      amountToPay = fullAmount * 0.5
+      remainingBalance = fullAmount - amountToPay
+    }
+
+    // Update the displayed amounts
+    $("#summaryTotalAmount").text(`₱ ${amountToPay.toFixed(2)}`)
+    $("#summaryRemainingBalance").text(`₱ ${remainingBalance.toFixed(2)}`)
   }
 
   // Update booking summary
@@ -707,6 +731,11 @@ $(document).ready(() => {
     }
   })
 
+  // Handle payment type change
+  $(document).on("change", "#paymentTypeSelect", () => {
+    updatePaymentAmounts()
+  })
+
   // Payment form validation - UPDATED with debugging and improved validation
   function validatePaymentForm() {
     const referenceNo = $('input[name="reference_no"]').val().trim()
@@ -738,6 +767,12 @@ $(document).ready(() => {
     // Show default QR code (Maya)
     $("#gcashQR").hide()
     $("#mayaQR").show()
+
+    // Set default payment type to full payment
+    $("#paymentTypeSelect").val("full")
+
+    // Update payment amounts
+    updatePaymentAmounts()
   })
 
   // Make sure validation runs after modal is fully shown
@@ -787,6 +822,9 @@ $(document).ready(() => {
     // Get the transaction number from the payment modal and add it to the form data
     const transactionNo = $(".transaction-no").text().replace("Transaction No. ", "").trim()
     formData.append("transaction_id", transactionNo)
+
+    // Add payment type to the form data
+    formData.append("payment_type", $("#paymentTypeSelect").val())
 
     // Add visible pets data
     formData.append("visible_pets", $("#visiblePetsData").val())

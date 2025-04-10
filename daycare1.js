@@ -608,7 +608,7 @@ $(document).ready(() => {
   }
 
   // Calculate total price
-  window.calculateTotalPrice = () => {
+  const calculateTotalPrice = () => {
     let totalPrice = 0
 
     // Calculate price based on selected pets (for daycare, it's just a single day)
@@ -618,11 +618,32 @@ $(document).ready(() => {
       })
     }
 
-    // Update the total price display
-    $("#summaryTotalAmount").text(`₱ ${totalPrice.toFixed(2)}`)
-    $("#summaryRemainingBalance").text(`₱ ${totalPrice.toFixed(2)}`)
+    // Update the full amount display (total price)
+    $("#summaryFullAmount").text(`₱ ${totalPrice.toFixed(2)}`)
+
+    // Update payment amounts based on selected payment type
+    updatePaymentAmounts()
 
     return totalPrice
+  }
+
+  // Function to update payment amounts based on payment type
+  function updatePaymentAmounts() {
+    const paymentType = $("#paymentTypeSelect").val()
+    const fullAmount = Number.parseFloat($("#summaryFullAmount").text().replace("₱", "").trim()) || 0
+
+    let amountToPay = fullAmount
+    let remainingBalance = 0
+
+    if (paymentType === "down") {
+      // Down payment is 50% of the total
+      amountToPay = fullAmount * 0.5
+      remainingBalance = fullAmount - amountToPay
+    }
+
+    // Update the displayed amounts
+    $("#summaryTotalAmount").text(`₱ ${amountToPay.toFixed(2)}`)
+    $("#summaryRemainingBalance").text(`₱ ${remainingBalance.toFixed(2)}`)
   }
 
   // Update booking summary
@@ -699,6 +720,11 @@ $(document).ready(() => {
     }
   })
 
+  // Handle payment type change
+  $(document).on("change", "#paymentTypeSelect", () => {
+    updatePaymentAmounts()
+  })
+
   // Payment form validation
   function validatePaymentForm() {
     const referenceNo = $('input[name="reference_no"]').val().trim()
@@ -725,6 +751,12 @@ $(document).ready(() => {
     // Show default QR code (Maya)
     $("#gcashQR").hide()
     $("#mayaQR").show()
+
+    // Set default payment type to full payment
+    $("#paymentTypeSelect").val("full")
+
+    // Update payment amounts
+    updatePaymentAmounts()
   })
 
   // Handle proceed to waiver button
@@ -736,63 +768,63 @@ $(document).ready(() => {
   })
 
   // Handle complete booking button
-// Handle complete booking button
-$("#complete-booking").on("click", function () {
-  // Check if waiver checkboxes are checked
-  if (!$("#waiverForm-checkbox1").prop("checked") || !$("#waiverForm-checkbox2").prop("checked")) {
-    alert("You must agree to the terms and conditions to complete your booking.")
-    return
-  }
+  $("#complete-booking").on("click", function () {
+    // Check if waiver checkboxes are checked
+    if (!$("#waiverForm-checkbox1").prop("checked") || !$("#waiverForm-checkbox2").prop("checked")) {
+      alert("You must agree to the terms and conditions to complete your booking.")
+      return
+    }
 
-  // Show processing notification
-  alert("Your booking is being processed. Please wait...")
+    // Show processing notification
+    alert("Your booking is being processed. Please wait...")
 
-  // Disable the button to prevent multiple submissions
-  $(this).prop("disabled", true).text("Processing...")
+    // Disable the button to prevent multiple submissions
+    $(this).prop("disabled", true).text("Processing...")
 
-  // Get the payment form data
-  var formData = new FormData($("#paymentForm")[0])
-  formData.append("complete_booking", "true")
+    // Get the payment form data
+    var formData = new FormData($("#paymentForm")[0])
+    formData.append("complete_booking", "true")
 
-  // Add booking data to form
-  formData.append("booking_data", JSON.stringify(window.bookingData))
+    // Add booking data to form
+    formData.append("booking_data", JSON.stringify(window.bookingData))
 
-  // Get the transaction number from the payment modal and add it to the form data
-  const transactionNo = $(".transaction-no").text().replace("Transaction No. ", "").trim()
-  formData.append("transaction_id", transactionNo)
+    // Get the transaction number from the payment modal and add it to the form data
+    const transactionNo = $(".transaction-no").text().replace("Transaction No. ", "").trim()
+    formData.append("transaction_id", transactionNo)
 
-  // Add visible pets data
-  formData.append("visible_pets", $("#visiblePetsData").val())
+    // Add payment type to the form data
+    formData.append("payment_type", $("#paymentTypeSelect").val())
 
-  $.ajax({
-    type: "POST",
-    url: "process-booking.php",
-    data: formData,
-    processData: false,
-    contentType: false,
-    dataType: "json",
-    success: (response) => {
-      if (response.success) {
-        alert("Booking completed successfully!")
-        $("#waiverForm").modal("hide")
-        // Redirect to confirmation page or refresh
-        window.location.href = "book-pet-hotel.php"
-      } else {
-        alert("Error: " + (response.message || "Unknown error"))
+    // Add visible pets data
+    formData.append("visible_pets", $("#visiblePetsData").val())
+
+    $.ajax({
+      type: "POST",
+      url: "process-booking.php",
+      data: formData,
+      processData: false,
+      contentType: false,
+      dataType: "json",
+      success: (response) => {
+        if (response.success) {
+          alert("Booking completed successfully!")
+          $("#waiverForm").modal("hide")
+          // Redirect to confirmation page or refresh
+          window.location.href = "book-pet-hotel.php"
+        } else {
+          alert("Error: " + (response.message || "Unknown error"))
+          // Re-enable the button if there's an error
+          $("#complete-booking").prop("disabled", false).text("Complete Booking")
+        }
+      },
+      error: (xhr, status, error) => {
+        console.error("AJAX Error:", error)
+        alert("An error occurred while processing your booking. Please try again later.")
         // Re-enable the button if there's an error
         $("#complete-booking").prop("disabled", false).text("Complete Booking")
-      }
-    },
-    error: (xhr, status, error) => {
-      console.error("AJAX Error:", error)
-      alert("An error occurred while processing your booking. Please try again later.")
-      // Re-enable the button if there's an error
-      $("#complete-booking").prop("disabled", false).text("Complete Booking")
-    },
+      },
+    })
   })
-})
-
-
 
   // Handle payment button click - MODIFIED TO ONLY FETCH VISIBLE PETS
   $("#proceedToPaymentBtn").on("click", (e) => {
@@ -853,4 +885,3 @@ $("#complete-booking").on("click", function () {
     $("#petPaymentModal").modal("show")
   })
 })
-

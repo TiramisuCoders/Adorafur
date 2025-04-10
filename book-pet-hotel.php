@@ -464,6 +464,18 @@ unset($_SESSION['pet_form_data']);
                                                                 <div class="info-row"><span class="label">Owner:</span><span class="value">
                                                                     <?php echo $isLoggedIn && $customerInfo ? htmlspecialchars($customerInfo['c_first_name'] . ' ' . $customerInfo['c_last_name']) : 'Not logged in'; ?>
                                                                 </span></div>
+                                                                <!-- Add payment type dropdown -->
+                                                                <div class="info-row">
+                                                                    <span class="label">Payment:</span>
+                                                                    <span class="value">
+                                                                        <select id="paymentTypeSelect" class="form-control form-control-sm">
+                                                                            <option value="full">Full Payment</option>
+                                                                            <option value="down">Down Payment (50%)</option>
+                                                                        </select>
+                                                                    </span>
+                                                                </div>
+                                                                <!-- Add total amount (full price) -->
+                                                                <div class="info-row"><span class="label">Total Amount:</span><span class="value" id="summaryFullAmount">₱ 0.00</span></div>
                                                                 <div class="info-row"><span class="label">Amount to pay:</span><span class="value" id="summaryTotalAmount">₱ 0.00</span></div>
                                                                 <div class="info-row"><span class="label">Remaining Balance:</span><span class="value" id="summaryRemainingBalance">₱ 0.00</span></div>
                                                             </div>
@@ -638,5 +650,55 @@ resulting from any service provided, or unintentional injury to my pet while und
     
     <!-- Include the external JavaScript file -->
     <script src="books.js"></script>
+
+    <!-- Add JavaScript for payment type handling -->
+    <script>
+        $(document).ready(function() {
+            // Function to update payment amounts based on payment type
+            function updatePaymentAmounts() {
+                const paymentType = $("#paymentTypeSelect").val();
+                const fullAmount = parseFloat($("#summaryFullAmount").text().replace("₱", "").trim()) || 0;
+                
+                let amountToPay = fullAmount;
+                let remainingBalance = 0;
+                
+                if (paymentType === "down") {
+                    // Down payment is 50% of the total
+                    amountToPay = fullAmount * 0.5;
+                    remainingBalance = fullAmount - amountToPay;
+                }
+                
+                // Update the displayed amounts
+                $("#summaryTotalAmount").text(`₱ ${amountToPay.toFixed(2)}`);
+                $("#summaryRemainingBalance").text(`₱ ${remainingBalance.toFixed(2)}`);
+            }
+            
+            // Handle payment type change
+            $("#paymentTypeSelect").on("change", function() {
+                updatePaymentAmounts();
+            });
+            
+            // Modify the existing calculateTotalPrice function to update all price fields
+            const originalCalculateTotalPrice = window.calculateTotalPrice;
+            if (typeof originalCalculateTotalPrice === 'function') {
+                window.calculateTotalPrice = function() {
+                    const totalPrice = originalCalculateTotalPrice();
+                    
+                    // Update the full amount display
+                    $("#summaryFullAmount").text(`₱ ${totalPrice.toFixed(2)}`);
+                    
+                    // Then update the payment amounts based on selected payment type
+                    updatePaymentAmounts();
+                    
+                    return totalPrice;
+                };
+            }
+            
+            // Initialize payment amounts when modal is shown
+            $("#petPaymentModal").on("shown.bs.modal", function() {
+                updatePaymentAmounts();
+            });
+        });
+    </script>
 </body>
 </html>
