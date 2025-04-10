@@ -64,7 +64,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     // Validate vaccination file size
     if (isset($_FILES['vaccination_file']) && $_FILES['vaccination_file']['size'] > 0) {
         if ($_FILES['vaccination_file']['size'] > 5242880) {
-            $vaccination_file_error = "malaki.";
+            $vaccination_file_error = "File is too large. Maximum size is 5MB.";
             $hasError = true;
         }
     }
@@ -73,8 +73,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     if (!empty($date_administered)) {
         $current_date = date('Y-m-d');
         
-        if ($date_administered < $current_date) {
-            $date_administered_error = "ha";
+        if ($date_administered == $current_date) {
+            $date_administered_error = "Date administered cannot be today.";
             $hasError = true;
         } 
         
@@ -237,6 +237,7 @@ if (isset($_SESSION['error_message'])) {
     error_log("No message set after processing");
 }
 
-header("Location: profile.php");
-exit();
+$redirect_page = isset($_SESSION['redirect_page']) ? $_SESSION['redirect_page'] : 'profile.php'; // Default to 'profile.php'
+        header("Location: " . $redirect_page);
+        exit();
 ?>

@@ -23,6 +23,20 @@ if ($isLoggedIn) {
 
 // Generate a unique transaction number
 $transactionNo = 'TRX'.time().rand(1000, 9999);
+
+// Initialize error variables for pet registration
+$pet_photo_error = $_SESSION['pet_photo_error'] ?? null;
+$vaccination_file_error = $_SESSION['vaccination_file_error'] ?? null;
+$date_administered_error = $_SESSION['date_administered_error'] ?? null;
+
+// Get stored form data if available
+$pet_form_data = $_SESSION['pet_form_data'] ?? [];
+
+// Clear session variables
+unset($_SESSION['pet_photo_error']);
+unset($_SESSION['vaccination_file_error']);
+unset($_SESSION['date_administered_error']);
+unset($_SESSION['pet_form_data']);
 ?>
 
 <!DOCTYPE html>
@@ -66,6 +80,23 @@ $transactionNo = 'TRX'.time().rand(1000, 9999);
         pointer-events: none;
         text-decoration: none !important;
     }
+
+    .error {
+        color: #af4242;
+        background-color: #fde8ec;
+        padding: 10px;
+        display: block;
+        transform: translateY(-20px);
+        margin-bottom: 10px;
+        font-size: 14px;
+        margin-top: 22px;
+    }
+    
+    /* Add these styles to show/hide errors */
+    <?php if ($pet_photo_error): ?> .pet-photo-error { display: block; } <?php endif; ?>
+    <?php if ($vaccination_file_error): ?> .vaccination-file-error { display: block; } <?php endif; ?>
+    <?php if ($date_administered_error): ?> .date-administered-error { display: block; } <?php endif; ?>
+
 </style>
 </head>
 
@@ -245,131 +276,155 @@ $transactionNo = 'TRX'.time().rand(1000, 9999);
                                     <h6 class="regnewpet" style="font-weight: 600;">Need to register new pet?</h6>
                                 </button>
 
-                                <div class="modal fade" id="petRegistrationModal" data-backdrop="static" data-keyboard="false" tabindex="-1">
+                                <div class="modal fade" id="petRegistrationModal" tabindex="-1" aria-labelledby="petRegistrationModalLabel" aria-hidden="true">
                                     <div class="modal-dialog modal-dialog-centered modal-xl">
-                                        <div class="modal-content">
-                                            <div class="modal-header d-flex justify-content-center align-items-center" id="modalHeader">
-                                                <h1 class="modal-title" id="modalTitle">Register Your Pet</h1>
+                                        <div class="modal-content" id="reg-pet">
+                                            <div class="modal-header d-flex justify-content-center align-items-center" id="mheader">
+                                                <h1 class="modal-title" id="saveModal">PET/s</h1>
                                                 <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                                                     <span aria-hidden="true">&times;</span>
                                                 </button>
                                             </div>
-                                            <div class="modal-body" id="modalBody">
-                                                <!-- Pet registration form content -->
-                                                <div class="pet-registration-form">
-                                                    <form class="pet-form" method="post" enctype="multipart/form-data">
-                                                        <div class="container-fluid p-0">
-                                                            <div class="row">
-                                                                <!-- Left Column -->
-                                                                <div class="col-md-6">
-                                                                    <div class="mb-3">
-                                                                        <label for="petName" class="form-label">Pet Name</label>
-                                                                        <input type="text" id="petName" name="pet_name" class="form-control" required>
-                                                                    </div>
 
-                                                                    <div class="mb-3">
-                                                                        <label class="form-label">Pet Size</label>
-                                                                        <div class="radio-group">
-                                                                            <div>
-                                                                                <input type="radio" name="pet_size" id="sizeSmallDog" value="Small">
-                                                                                <label for="sizeSmallDog">Small Dog</label>
-                                                                            </div>
-                                                                            <div>
-                                                                                <input type="radio" name="pet_size" id="sizeRegularDog" value="Regular">
-                                                                                <label for="sizeRegularDog">Regular Dog</label>
-                                                                            </div>
-                                                                            <div>
-                                                                                <input type="radio" name="pet_size" id="sizeLargeDog" value="Large">
-                                                                                <label for="sizeLargeDog">Large Dog</label>
-                                                                            </div>
-                                                                            <div>
-                                                                                <input type="radio" name="pet_size" id="sizeRegularCat" value="Cat">
-                                                                                <label for="sizeRegularCat">Regular Cat</label>
-                                                                            </div>
-                                                                        </div>
-                                                                    </div>
-
-                                                                    <div class="mb-3">
-                                                                        <label for="petBreed" class="form-label">Breed</label>
-                                                                        <input type="text" id="petBreed" name="breed" class="form-control" placeholder="Type Breed Here">
-                                                                    </div>
-
-                                                                    <div class="mb-3">
-                                                                        <label for="petAge" class="form-label">Age</label>
-                                                                        <input type="text" id="petAge" name="age" class="form-control" placeholder="Type Age Here">
-                                                                    </div>
-
-                                                                    <div class="mb-3">
-                                                                        <label class="form-label">Gender</label>
-                                                                        <div class="radio-group">
-                                                                            <div>
-                                                                                <input type="radio" name="gender" id="genderMale" value="Male">
-                                                                                <label for="genderMale">Male</label>
-                                                                            </div>
-                                                                            <div>
-                                                                                <input type="radio" name="gender" id="genderFemale" value="Female">
-                                                                                <label for="genderFemale">Female</label>
-                                                                            </div>
-                                                                        </div>
-                                                                    </div>
-
-                                                                    <div class="mb-3">
-                                                                        <label for="petDescription" class="form-label">Description</label>
-                                                                        <textarea id="petDescription" name="description" class="form-control" placeholder="e.g., White Spots" rows="3"></textarea>
-                                                                    </div>
-                                                                </div>
-
-                                                                <!-- Right Column -->
-                                                                <div class="col-md-6">
-                                                                    <div class="mb-3">
-                                                                        <label for="petProfilePhoto" class="form-label">Pet Profile Photo</label>
-                                                                        <input type="file" id="petProfilePhoto" name="pet_photo" class="form-control" accept="image/*,application/pdf">
-                                                                    </div>
-
-                                                                    <div class="mb-3">
-                                                                        <label class="form-label">Vaccination Status</label>
-                                                                        <input type="file" name="vaccination_file" class="form-control mb-2" accept="image/*,application/pdf">
-                                                                        <div class="radio-group">
-                                                                            <div>
-                                                                                <input type="radio" name="vaccination_status" id="vaccinatedYes" value="vaccinated">
-                                                                                <label for="vaccinatedYes">Vaccinated</label>
-                                                                            </div>
-                                                                            <div>
-                                                                                <input type="radio" name="vaccination_status" id="vaccinatedNo" value="not_vaccinated">
-                                                                                <label for="vaccinatedNo">Not Vaccinated</label>
-                                                                            </div>
-                                                                        </div>
-                                                                    </div>
-
-                                                                    <div class="mb-3">
-                                                                        <label for="dateAdministered" class="form-label">Date Administered</label>
-                                                                        <input type="date" id="dateAdministered" name="date_administered" class="form-control">
-                                                                    </div>
-
-                                                                    <div class="mb-3">
-                                                                        <label for="expiryDate" class="form-label">Expiry Date</label>
-                                                                        <input type="date" id="expiryDate" name="expiry_date" class="form-control">
-                                                                    </div>
-
-                                                                    <div class="mb-3">
-                                                                        <label for="specialInstructions" class="form-label">Special Instructions</label>
-                                                                        <textarea id="specialInstructions" name="special_instructions" class="form-control" placeholder="e.g., Medications" rows="3"></textarea>
-                                                                    </div>
-                                                                </div>
-                                                            </div>
-
-                                                            <div class="row mt-3">
-                                                                <div class="col-12 text-center">
-                                                                    <button type="submit" class="btn" id="saveButton">Save and Go Back</button>
-                                                                </div>
-                                                            </div>
-                                                        </div>
-                                                    </form>
-                                                </div>
+                                            <div class="modal-body" id="mbody">
+                                                <div class="pet-modal">
+                                                    <!-- FORM: removed form action and method to avoid submission -->
+                                                    <form class="pet-form" method="post" action="add_pet.php" enctype="multipart/form-data">
+                        <div class="container-fluid p-0">
+                            <div class="row">
+                                
+                                <!-- Left Column -->
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label class="form-label">NAME</label>
+                                        <input type="text" name="pet_name" class="form-control" required value="<?php echo htmlspecialchars($pet_form_data['pet_name'] ?? ''); ?>">
+                                    </div>
+                                    
+                                    <div class="mb-3">
+                                        <label class="form-label">PET SIZE</label>
+                                        <div class="radio-group">
+                                            <div>
+                                                <input type="radio" name="pet_size" id="small_dog" value="small_dog" required <?php echo (isset($pet_form_data['pet_size']) && $pet_form_data['pet_size'] == 'small_dog') ? 'checked' : ''; ?>>
+                                                <label for="small_dog" id="pet-size">Small Dog</label>
+                                            </div>
+                                            <div>
+                                                <input type="radio" name="pet_size" id="regular_dog" value="regular_dog"  <?php echo (isset($pet_form_data['pet_size']) && $pet_form_data['pet_size'] == 'regular_dog') ? 'checked' : ''; ?>>
+                                                <label for="regular_dog" id="pet-size">Regular Dog</label>
+                                            </div>
+                                            <div>
+                                                <input type="radio" name="pet_size" id="large_dog" value="large_dog" <?php echo (isset($pet_form_data['pet_size']) && $pet_form_data['pet_size'] == 'large_dog') ? 'checked' : ''; ?>>
+                                                <label for="large_dog" id="pet-size">Large Dog</label>
+                                            </div>
+                                            <div>
+                                                <input type="radio" name="pet_size" id="regular_cat" value="regular_cat" <?php echo (isset($pet_form_data['pet_size']) && $pet_form_data['pet_size'] == 'regular_cat') ? 'checked' : ''; ?>>
+                                                <label for="regular_cat" id="pet-size">Regular Cat</label>
                                             </div>
                                         </div>
                                     </div>
+                                    
+                                    <div class="mb-3">
+                                        <label class="form-label">BREED</label>
+                                        <input type="text" name="breed" class="form-control" placeholder="Type Breed Here" required  value="<?php echo htmlspecialchars($pet_form_data['breed'] ?? ''); ?>">
+                                    </div>
+                                    
+                                    <div class="mb-3">
+                                        <label class="form-label">AGE (YEARS)</label>
+                                        <input type="number" name="age_years" class="form-control" placeholder="Years" min="0" required value="<?php echo htmlspecialchars($pet_form_data['age_years'] ?? ''); ?>">
+                                    </div>
+
+
+                                    <div class="mb-3">
+                                        <label class="form-label">GENDER</label>
+                                        <div class="radio-group">
+                                            <div>
+                                                <input type="radio" name="gender" id="male" value="male" required<?php echo (isset($pet_form_data['gender']) && $pet_form_data['gender'] == 'male') ? 'checked' : ''; ?>>
+                                                <label for="male" id="pet-gender">Male</label>
+                                            </div>
+                                            <div>
+                                                <input type="radio" name="gender" id="female" value="female" <?php echo (isset($pet_form_data['gender']) && $pet_form_data['gender'] == 'female') ? 'checked' : ''; ?>>
+                                                <label for="female" id="pet-gender">Female</label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="mb-3">
+                                        <label class="form-label">DESCRIPTION</label>
+                                        <textarea name="description" class="form-control" placeholder="e.x. White Spots" rows="3" id="petDescription" required><?php echo htmlspecialchars($pet_form_data['description'] ?? ''); ?></textarea>
+                                    </div>
                                 </div>
+                                
+                                <!-- Right Column -->
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label class="form-label">PET PROFILE PHOTO</label>
+                                        <input type="file" name="pet_photo" class="form-control" accept="image/*,application/pdf" >
+                                        <div class="form-text">File size must be less than 5MB.</div>
+                                        <?php if ($pet_photo_error): ?>
+                                            <p class="error pet-photo-error"><?php echo $pet_photo_error; ?></p>
+                                        <?php endif; ?>
+                                        <div id="petPhotoError" class="error pet-photo-error" style="display: none;"></div>
+                                    </div>
+                                    
+                                    <div class="mb-3">
+                                        <label class="form-label">VACCINATION STATUS</label>
+                                        <input type="file" name="vaccination_file" class="form-control mb-2" accept="image/*,application/pdf" required  id="vaccinationFileInput">
+                                        <div class="form-text">File size must be less than 5MB.</div>
+                                        <?php if ($vaccination_file_error): ?>
+                                            <p class="error vaccination-file-error"><?php echo $vaccination_file_error; ?></p>
+                                        <?php endif; ?>
+
+                                        <div id="vaccinationFileError" class="error vaccination-file-error" style="display: none;"></div>
+                                        <div class="radio-group">
+                                            <div>
+                                                <input type="radio" name="vaccination_status" id="vaccinated" value="vaccinated" required> <?php echo (isset($pet_form_data['vaccination_status']) && $pet_form_data['vaccination_status'] == 'vaccinated') ? 'checked' : ''; ?>
+                                                <label for="vaccinated">Vaccinated</label>
+                                            </div>
+                                            <div>
+                                                <input type="radio" name="vaccination_status" id="not_vaccinated" value="not_vaccinated"> <?php echo (isset($pet_form_data['vaccination_status']) && $pet_form_data['vaccination_status'] == 'not_vaccinated') ? 'checked' : ''; ?>
+                                                <label for="not_vaccinated">Not Vaccinated</label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="mb-3">
+                                        <label class="form-label">DATE ADMINISTERED</label>
+                                        <input type="date" name="date_administered" class="form-control" required id="dateAdministeredInput" value="<?php echo htmlspecialchars($pet_form_data['date_administered'] ?? ''); ?>">
+                                        <?php if ($date_administered_error): ?>
+                                            <p class="error date-administered-error"><?php echo $date_administered_error; ?></p>
+                                        <?php endif; ?>
+                                        <div id="dateAdministeredError" class="error date-administered-error" style="display: none;"></div>
+                                    </div>
+                                    
+                                    <div class="mb-3">
+                                        <label class="form-label">EXPIRY DATE</label>
+                                        <input type="date" name="expiry_date" class="form-control" required value="<?php echo htmlspecialchars($pet_form_data['expiry_date'] ?? ''); ?>">
+                                    </div>
+                                    
+                                    <div class="mb-3">
+                                        <label class="form-label">SPECIAL INSTRUCTIONS</label>
+                                        <textarea name="special_instructions" class="form-control" placeholder="e.x. Medications" rows="3" id="petInstruction" required><?php echo htmlspecialchars($pet_form_data['special_instructions'] ?? ''); ?></textarea>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="row mt-3">
+                                <div class="col-12 text-center">
+                                    <button type="submit" class="btn" id="confirm-but">Save and Go Back</button>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                                                </div>
+                                            </div>
+
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            
+
+                                                            
                                 
                                 <!-- Payment Button -->
                                 <div class="proctopayment">
