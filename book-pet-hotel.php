@@ -233,9 +233,11 @@ unset($_SESSION['pet_form_data']);
                 
                 <div class="book-1">
                     <div class="book-label">
+                        <!-- Add this test button right after the client info section for debugging -->
                         <div class="client">
                             <b><?php echo $isLoggedIn && $customerInfo ? htmlspecialchars($customerInfo['c_first_name'] . ' ' . $customerInfo['c_last_name']) : 'Client name'; ?></b><br>
                             <span class="client-email"><?php echo $isLoggedIn && $customerInfo ? htmlspecialchars($customerInfo['c_email']) : 'Client Email'; ?></span>
+                            
                         </div>
                         <div class="d-flex justify-content-between align-items-center mb-2">
                             <div class="pets"><b>Pet/s</b></div>
@@ -462,6 +464,18 @@ unset($_SESSION['pet_form_data']);
                                                                 <div class="info-row"><span class="label">Owner:</span><span class="value">
                                                                     <?php echo $isLoggedIn && $customerInfo ? htmlspecialchars($customerInfo['c_first_name'] . ' ' . $customerInfo['c_last_name']) : 'Not logged in'; ?>
                                                                 </span></div>
+                                                                <!-- Add payment type dropdown -->
+                                                                <div class="info-row">
+                                                                    <span class="label">Payment:</span>
+                                                                    <span class="value">
+                                                                        <select id="paymentTypeSelect" class="form-control form-control-sm">
+                                                                            <option value="full">Full Payment</option>
+                                                                            <option value="down">Down Payment (50%)</option>
+                                                                        </select>
+                                                                    </span>
+                                                                </div>
+                                                                <!-- Add total amount (full price) -->
+                                                                <div class="info-row"><span class="label">Total Amount:</span><span class="value" id="summaryFullAmount">₱ 0.00</span></div>
                                                                 <div class="info-row"><span class="label">Amount to pay:</span><span class="value" id="summaryTotalAmount">₱ 0.00</span></div>
                                                                 <div class="info-row"><span class="label">Remaining Balance:</span><span class="value" id="summaryRemainingBalance">₱ 0.00</span></div>
                                                             </div>
@@ -494,7 +508,7 @@ unset($_SESSION['pet_form_data']);
                                                                 <p>Account Number: <span>987654321</span></p>
                                                                 <p>Account Name: <span>Veatrice Delos Santos</span></p>
                                                             </div>
-                                                            <button type="button" class="btn btn-primary action-btn" id="proceed-to-waiver" data-toggle="modal" data-target="#waiverForm" disabled>
+                                                            <button type="button" class="btn btn-primary action-btn" id="proceed-to-waiver" disabled>
                                                                 Complete Booking
                                                             </button>
                                                         </div>
@@ -503,125 +517,125 @@ unset($_SESSION['pet_form_data']);
                                             </div>
                                         </div>
                                     </div>
-                                    
-                                    <!-- Waiver Modal -->
-                                    <div class="modal fade" id="waiverForm" data-backdrop="static" data-keyboard="false" tabindex="-1" role="dialog" aria-labelledby="staticBackdropLabel" aria-hidden="true">
-                                        <div class="modal-dialog modal-xl modal-dialog-scrollable">
-                                            <div class="modal-content">
-                                                <div class="modal-header" id="waiverForm-header">
-                                                    <h1 class="modal-title" id="waiverForm-title">Liability Release and Waiver Form</h1>
-                                                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                                                        <span aria-hidden="true">&times;</span>
-                                                    </button>
-                                                </div>
-                                                <div class="modal-body" id="waiverForm-body">
-                                                    <!-- Waiver content -->
-                                                    <p>
-                                                        We care about the safety and wellbeing of all pets. We want to assure you that we will make every effort to make your pet's stay with us as pleasant as possible.
-                                                        While we provide the best care for your fur babies, there are possible risks that come with availing of pet boarding services.
-                                                    </p>
-
-                                                    <ul>
-                                                        <li>
-                                                            Owner represents that his/her pet is in all respects healthy and received all required vaccines (Distemper/ Canine Adenovirus-2, Canine Parvovirus-2 and Rabies), currently flea protection (Frontline, Advantage or Revolution for dogs) and that said pet does not suffer from any disability, illness or condition which could affect the said paid, other pets, employees and customers safety.
-                                                            If the Owner's pet has external parasites, Owner agrees by signing this form that ADORAFUR HAPPY STAY may apply frontline spray to Owner's pet at Owner's own cost, for such parasites so as not to contaminate this facility or the other pets saying at ADORAFUR HAPPY STAY.
-                                                        </li>
-
-                                                        <li>
-                                                            I recognize that there are inherent risks of injury or illness in any environment associated with cageless pets in daycare and in boarding environments.
-                                                            I also recognize that such risks may include, without limitation, injuries or illnesses resulting from fights, rough play and contagious diseases.
-                                                            Knowing such inherent risks and dangers, I understand and affirm that ADORAFUR HAPPY STAY cannot be held responsible for any injury, illness or damage caused by my pet and that I am solely responsible for the same.
-                                                            I agree to hold ADORAFUR HAPPY STAY free and harmless from any claims for damage, all defense costs, fees and business losses arising from any claim or any third party may have against ADORAFUR HAPPY STAY.
-                                                        </li>
-
-                                                        <!-- Additional waiver content -->
-                                                        <li>
-                                                            Pets must be sociable to be allowed to stay with us.
-                                                            Some pets may have aggressive tendencies if triggered, despite being able to socialize.
-                                                            If your pet has any history of aggression such as food, territorial, possessive aggression, or if they don't want to be touched in a certain body part, please inform us so we may cater to their behavior needs.
-                                                            As much as possible we would love to avoid using restricting instruments to pets. However, if the need arise we may isolate, crate, leash or muzzle an aggressive pet.
-                                                            In any case, we reserve the right to refuse any pet that are hostile, aggressive and appear to be ill for everyone's safety.
-                                                        </li>
-
-                                                        <li>
-                                                            Please be aware that we strive to avoid any accidents during their stay.
-                                                            Pets can be unpredictable and injuries, illness or escaping may occur.
-                                                            Minor injuries from nicks from clippers during grooming or rough play may result if your pet does not respond to the handler to behave properly during their stay.
-                                                            All pet owners are required to accept these and other risks as a condition of their pet's participation in our services at Adorafur Happy Stay.
-                                                        </li>
-
-                                                        <li>
-                                                            Adorafur Happy Stay will not be held responsible for any sickness, injury or death caused by the pet to itself during grooming,
-                                                            from pre-existing health conditions, natural disasters, or any illness a pet acquires due to non-vaccination or expired vaccines.
-                                                        </li>
-
-                                                        <li>
-                                                            I agree to hold Adorafur Happy Stay harmless from any claims for damage, all defense costs, fees and business losses arising resulting from any claims to be made against Adorafur Happy Stay
-                                                            for which its agents or employees are not ultimately held to be legally responsible.
-                                                        </li>
-
-                                                        <li>I certify that my pet has never unduly harmed or threatened anyone or any other pets.</li>
-                                                        <li>I expressly agree to be held responsible for any damage to property (i.e. kennels, fencing, walls, flooring etc.) caused by my pet.</li>
-                                                        <li>I expressly agree to be held responsible for medical costs for any human injury caused by my pet.</li>
-
-                                                        <li>The Owner understands that it is possible for us to discover a pet's illness during their stay with us such as arthritis, cysts,
-                                                            cancer or any health problems old age brings for senior dogs.</li>
-
-                                                        <li>
-                                                            These conditions take time to develop and could be discovered during their stay.
-                                                            In that case, we will notify you immediately if something feels off with your pet and we would take them to the vet to get a diagnosis and proper treatment,
-                                                            costs shall be shouldered by the owner. We understand how stressful and worrisome this is if this may happen to your pet.
-                                                            Rest assured we will give them the care they need and provide the best comfort for them as much as possible. We will send you daily updates, vet's advice and etc.
-                                                        </li>
-
-                                                        <li>
-                                                            Your pet's safety and well being is our absolute #1 priority.
-                                                        </li>
-
-                                                        <li>
-                                                            Should the owner leave intentionally their pet in ADORAFUR HAPPY STAY without giving any communication for more than 1 week,
-                                                            ADORAFUR HAPPY STAY reserves the right to hold the pet as a security for non-payment of the services and may sell and alienate the same, without the consent of the owner, to a third party to satisfy any claims it may have against the customer. Otherwise, Adorafur Happy Stay shall have the dogs/ cats adopted or endorse them to the necessary dog impounding station as deemed necessary
-                                                        </li>
-                                                    </ul>
-
-                                                    <p>
-                                                        Adorafur Happy Stay holds the highest standards to ensure that your pet is handled with respect and cared for properly.
-                                                        It is extremely important to us that you know when your pet is under our supervision, Adorafur Happy Stay will provide them with the best care we can provide,
-                                                        meeting the high expectations that we personally have for our own pets when under the supervision of another person.
-                                                        We recognize and respect that all pets are living beings who have feelings and experience emotion. We value that you have entrusted your pet to us to provide our services to them.
-                                                    </p>
-
-                                                    <hr>
-
-                                                    <strong>Conforme: </strong>
-
-                                                    <p>
-                                                        By submitting this agreement form, I, the Owner, acknowledge represent that I have made full disclosure and have read, understand and accept the terms and conditions stated in this agreement.
-                                                        I acknowledge all of the statements above and understand and agree to release Adorafur Happy Stay and its employees from any and all liabilities, expenses, and costs (including veterinary and legal fees)
-resulting from any service provided, or unintentional injury to my pet while under their care or afterwards. I acknowledge this agreement shall be effective and binding on both parties.
-                                                        I also agree to follow the health and safety protocols of Adorafur Happy Stay.
-                                                    </p>
-
-                                                    <p>
-                                                        <input type="checkbox" id="waiverForm-checkbox1" name="agree" value="1">
-                                                        I hereby grant Adorafur Happy Stay and its care takers permission to board and care for my pet
-                                                    </p>
-                                                    <p>
-                                                        <input type="checkbox" id="waiverForm-checkbox2" name="agree" value="1">
-                                                        I have read and agree with the Liability Release and Waiver Form
-                                                    </p>
-                                                </div>
-
-                                                <div class="modal-footer" id="waiverForm-footer">
-                                                    <button type="button" class="btn btn-primary" id="complete-booking">Complete Booking</button>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
                                 </div>
                             </div>
                         </div>
                     </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Waiver Modal -->
+    <div class="modal fade" id="waiverForm" data-backdrop="static" data-keyboard="false" tabindex="-1" role="dialog" aria-labelledby="staticBackdropLabel" aria-hidden="true">
+        <div class="modal-dialog modal-xl modal-dialog-scrollable">
+            <div class="modal-content">
+                <div class="modal-header" id="waiverForm-header">
+                    <h1 class="modal-title" id="waiverForm-title">Liability Release and Waiver Form</h1>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body" id="waiverForm-body">
+                    <!-- Waiver content -->
+                    <p>
+                        We care about the safety and wellbeing of all pets. We want to assure you that we will make every effort to make your pet's stay with us as pleasant as possible.
+                        While we provide the best care for your fur babies, there are possible risks that come with availing of pet boarding services.
+                    </p>
+
+                    <ul>
+                        <li>
+                            Owner represents that his/her pet is in all respects healthy and received all required vaccines (Distemper/ Canine Adenovirus-2, Canine Parvovirus-2 and Rabies), currently flea protection (Frontline, Advantage or Revolution for dogs) and that said pet does not suffer from any disability, illness or condition which could affect the said paid, other pets, employees and customers safety.
+                            If the Owner's pet has external parasites, Owner agrees by signing this form that ADORAFUR HAPPY STAY may apply frontline spray to Owner's pet at Owner's own cost, for such parasites so as not to contaminate this facility or the other pets saying at ADORAFUR HAPPY STAY.
+                        </li>
+
+                        <li>
+                            I recognize that there are inherent risks of injury or illness in any environment associated with cageless pets in daycare and in boarding environments.
+                            I also recognize that such risks may include, without limitation, injuries or illnesses resulting from fights, rough play and contagious diseases.
+                            Knowing such inherent risks and dangers, I understand and affirm that ADORAFUR HAPPY STAY cannot be held responsible for any injury, illness or damage caused by my pet and that I am solely responsible for the same.
+                            I agree to hold ADORAFUR HAPPY STAY free and harmless from any claims for damage, all defense costs, fees and business losses arising from any claim or any third party may have against ADORAFUR HAPPY STAY.
+                        </li>
+
+                        <!-- Additional waiver content -->
+                        <li>
+                            Pets must be sociable to be allowed to stay with us.
+                            Some pets may have aggressive tendencies if triggered, despite being able to socialize.
+                            If your pet has any history of aggression such as food, territorial, possessive aggression, or if they don't want to be touched in a certain body part, please inform us so we may cater to their behavior needs.
+                            As much as possible we would love to avoid using restricting instruments to pets. However, if the need arise we may isolate, crate, leash or muzzle an aggressive pet.
+                            In any case, we reserve the right to refuse any pet that are hostile, aggressive and appear to be ill for everyone's safety.
+                        </li>
+
+                        <li>
+                            Please be aware that we strive to avoid any accidents during their stay.
+                            Pets can be unpredictable and injuries, illness or escaping may occur.
+                            Minor injuries from nicks from clippers during grooming or rough play may result if your pet does not respond to the handler to behave properly during their stay.
+                            All pet owners are required to accept these and other risks as a condition of their pet's participation in our services at Adorafur Happy Stay.
+                        </li>
+
+                        <li>
+                            Adorafur Happy Stay will not be held responsible for any sickness, injury or death caused by the pet to itself during grooming,
+                            from pre-existing health conditions, natural disasters, or any illness a pet acquires due to non-vaccination or expired vaccines.
+                        </li>
+
+                        <li>
+                            I agree to hold Adorafur Happy Stay harmless from any claims for damage, all defense costs, fees and business losses arising resulting from any claims to be made against Adorafur Happy Stay
+                            for which its agents or employees are not ultimately held to be legally responsible.
+                        </li>
+
+                        <li>I certify that my pet has never unduly harmed or threatened anyone or any other pets.</li>
+                        <li>I expressly agree to be held responsible for any damage to property (i.e. kennels, fencing, walls, flooring etc.) caused by my pet.</li>
+                        <li>I expressly agree to be held responsible for medical costs for any human injury caused by my pet.</li>
+
+                        <li>The Owner understands that it is possible for us to discover a pet's illness during their stay with us such as arthritis, cysts,
+                            cancer or any health problems old age brings for senior dogs.</li>
+
+                        <li>
+                            These conditions take time to develop and could be discovered during their stay.
+                            In that case, we will notify you immediately if something feels off with your pet and we would take them to the vet to get a diagnosis and proper treatment,
+                            costs shall be shouldered by the owner. We understand how stressful and worrisome this is if this may happen to your pet.
+                            Rest assured we will give them the care they need and provide the best comfort for them as much as possible. We will send you daily updates, vet's advice and etc.
+                        </li>
+
+                        <li>
+                            Your pet's safety and well being is our absolute #1 priority.
+                        </li>
+
+                        <li>
+                            Should the owner leave intentionally their pet in ADORAFUR HAPPY STAY without giving any communication for more than 1 week,
+                            ADORAFUR HAPPY STAY reserves the right to hold the pet as a security for non-payment of the services and may sell and alienate the same, without the consent of the owner, to a third party to satisfy any claims it may have against the customer. Otherwise, Adorafur Happy Stay shall have the dogs/ cats adopted or endorse them to the necessary dog impounding station as deemed necessary
+                        </li>
+                    </ul>
+
+                    <p>
+                        Adorafur Happy Stay holds the highest standards to ensure that your pet is handled with respect and cared for properly.
+                        It is extremely important to us that you know when your pet is under our supervision, Adorafur Happy Stay will provide them with the best care we can provide,
+                        meeting the high expectations that we personally have for our own pets when under the supervision of another person.
+                        We recognize and respect that all pets are living beings who have feelings and experience emotion. We value that you have entrusted your pet to us to provide our services to them.
+                    </p>
+
+                    <hr>
+
+                    <strong>Conforme: </strong>
+
+                    <p>
+                        By submitting this agreement form, I, the Owner, acknowledge represent that I have made full disclosure and have read, understand and accept the terms and conditions stated in this agreement.
+                        I acknowledge all of the statements above and understand and agree to release Adorafur Happy Stay and its employees from any and all liabilities, expenses, and costs (including veterinary and legal fees)
+resulting from any service provided, or unintentional injury to my pet while under their care or afterwards. I acknowledge this agreement shall be effective and binding on both parties.
+                        I also agree to follow the health and safety protocols of Adorafur Happy Stay.
+                    </p>
+
+                    <p>
+                        <input type="checkbox" id="waiverForm-checkbox1" name="agree" value="1">
+                        I hereby grant Adorafur Happy Stay and its care takers permission to board and care for my pet
+                    </p>
+                    <p>
+                        <input type="checkbox" id="waiverForm-checkbox2" name="agree" value="1">
+                        I have read and agree with the Liability Release and Waiver Form
+                    </p>
+                </div>
+
+                <div class="modal-footer" id="waiverForm-footer">
+                    <button type="button" class="btn btn-primary" id="complete-booking">Complete Booking</button>
                 </div>
             </div>
         </div>
@@ -636,5 +650,55 @@ resulting from any service provided, or unintentional injury to my pet while und
     
     <!-- Include the external JavaScript file -->
     <script src="books.js"></script>
+
+    <!-- Add JavaScript for payment type handling -->
+    <script>
+        $(document).ready(function() {
+            // Function to update payment amounts based on payment type
+            function updatePaymentAmounts() {
+                const paymentType = $("#paymentTypeSelect").val();
+                const fullAmount = parseFloat($("#summaryFullAmount").text().replace("₱", "").trim()) || 0;
+                
+                let amountToPay = fullAmount;
+                let remainingBalance = 0;
+                
+                if (paymentType === "down") {
+                    // Down payment is 50% of the total
+                    amountToPay = fullAmount * 0.5;
+                    remainingBalance = fullAmount - amountToPay;
+                }
+                
+                // Update the displayed amounts
+                $("#summaryTotalAmount").text(`₱ ${amountToPay.toFixed(2)}`);
+                $("#summaryRemainingBalance").text(`₱ ${remainingBalance.toFixed(2)}`);
+            }
+            
+            // Handle payment type change
+            $("#paymentTypeSelect").on("change", function() {
+                updatePaymentAmounts();
+            });
+            
+            // Modify the existing calculateTotalPrice function to update all price fields
+            const originalCalculateTotalPrice = window.calculateTotalPrice;
+            if (typeof originalCalculateTotalPrice === 'function') {
+                window.calculateTotalPrice = function() {
+                    const totalPrice = originalCalculateTotalPrice();
+                    
+                    // Update the full amount display
+                    $("#summaryFullAmount").text(`₱ ${totalPrice.toFixed(2)}`);
+                    
+                    // Then update the payment amounts based on selected payment type
+                    updatePaymentAmounts();
+                    
+                    return totalPrice;
+                };
+            }
+            
+            // Initialize payment amounts when modal is shown
+            $("#petPaymentModal").on("shown.bs.modal", function() {
+                updatePaymentAmounts();
+            });
+        });
+    </script>
 </body>
 </html>

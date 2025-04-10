@@ -608,7 +608,7 @@ $(document).ready(() => {
   }
 
   // Calculate total price
-  window.calculateTotalPrice = () => {
+  const calculateTotalPrice = () => {
     let totalPrice = 0
 
     // Calculate price based on selected pets (for daycare, it's just a single day)
@@ -618,11 +618,32 @@ $(document).ready(() => {
       })
     }
 
-    // Update the total price display
-    $("#summaryTotalAmount").text(`₱ ${totalPrice.toFixed(2)}`)
-    $("#summaryRemainingBalance").text(`₱ ${totalPrice.toFixed(2)}`)
+    // Update the full amount display (total price)
+    $("#summaryFullAmount").text(`₱ ${totalPrice.toFixed(2)}`)
+
+    // Update payment amounts based on selected payment type
+    updatePaymentAmounts()
 
     return totalPrice
+  }
+
+  // Function to update payment amounts based on payment type
+  function updatePaymentAmounts() {
+    const paymentType = $("#paymentTypeSelect").val()
+    const fullAmount = Number.parseFloat($("#summaryFullAmount").text().replace("₱", "").trim()) || 0
+
+    let amountToPay = fullAmount
+    let remainingBalance = 0
+
+    if (paymentType === "down") {
+      // Down payment is 50% of the total
+      amountToPay = fullAmount * 0.5
+      remainingBalance = fullAmount - amountToPay
+    }
+
+    // Update the displayed amounts
+    $("#summaryTotalAmount").text(`₱ ${amountToPay.toFixed(2)}`)
+    $("#summaryRemainingBalance").text(`₱ ${remainingBalance.toFixed(2)}`)
   }
 
   // Update booking summary
@@ -699,6 +720,11 @@ $(document).ready(() => {
     }
   })
 
+  // Handle payment type change
+  $(document).on("change", "#paymentTypeSelect", () => {
+    updatePaymentAmounts()
+  })
+
   // Payment form validation
   function validatePaymentForm() {
     const referenceNo = $('input[name="reference_no"]').val().trim()
@@ -725,6 +751,12 @@ $(document).ready(() => {
     // Show default QR code (Maya)
     $("#gcashQR").hide()
     $("#mayaQR").show()
+
+    // Set default payment type to full payment
+    $("#paymentTypeSelect").val("full")
+
+    // Update payment amounts
+    updatePaymentAmounts()
   })
 
   // Handle proceed to waiver button
@@ -756,6 +788,16 @@ $(document).ready(() => {
     // Add booking data to form
     formData.append("booking_data", JSON.stringify(window.bookingData))
 
+    // Get the transaction number from the payment modal and add it to the form data
+    const transactionNo = $(".transaction-no").text().replace("Transaction No. ", "").trim()
+    formData.append("transaction_id", transactionNo)
+
+    // Add payment type to the form data
+    formData.append("payment_type", $("#paymentTypeSelect").val())
+
+    // Add visible pets data
+    formData.append("visible_pets", $("#visiblePetsData").val())
+
     $.ajax({
       type: "POST",
       url: "process-booking.php",
@@ -768,7 +810,7 @@ $(document).ready(() => {
           alert("Booking completed successfully!")
           $("#waiverForm").modal("hide")
           // Redirect to confirmation page or refresh
-          window.location.href = "booking-daycare.php"
+          window.location.href = "book-pet-hotel.php"
         } else {
           alert("Error: " + (response.message || "Unknown error"))
           // Re-enable the button if there's an error
@@ -843,4 +885,3 @@ $(document).ready(() => {
     $("#petPaymentModal").modal("show")
   })
 })
-
