@@ -28,12 +28,17 @@ $sql = "SELECT
         JOIN pet p ON b.pet_id = p.pet_id
         JOIN customer c ON p.customer_id = c.c_id
         JOIN service s ON b.service_id = s.service_id
-        JOIN payment pay ON b.booking_id = pay.booking_id
-        WHERE b.booking_status <> 'Cancelled'
+        JOIN (
+            SELECT DISTINCT ON (booking_id)
+                *
+            FROM payment
+            ORDER BY booking_id, pay_date DESC
+        ) pay ON b.booking_id = pay.booking_id
+        WHERE b.booking_status IN ('Pending', 'Confirmed')
         ORDER BY
             CASE
-                WHEN b.booking_check_in >= CURRENT_DATE THEN 1  
-                ELSE 2  
+                WHEN b.booking_check_in >= CURRENT_DATE THEN 1
+                ELSE 2
             END,
             b.booking_check_in ASC;";
 
@@ -43,7 +48,7 @@ try {
     $reservations = $stmt->fetchAll(PDO::FETCH_ASSOC);  // Fetch results as an associative array
 
     // Query to get staff names
-    $stmt = $conn->query("SELECT admin_name FROM admin");
+    $stmt = $conn->query("SELECT  admin_id, admin_name FROM admin");
 
     // Fetch all results into an associative array
     $staffNames = $stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -198,7 +203,7 @@ try {
                         // Check if there are staff names to display
                         if ($staffNames) {
                             foreach ($staffNames as $staff) {
-                                echo "<option value='" . htmlspecialchars($staff['admin_name']) . "'>" . htmlspecialchars($staff['admin_name']) . "</option>";
+                                echo "<option value='" . htmlspecialchars($staff['admin_id']) . "'>" . htmlspecialchars($staff['admin_name']) . "</option>";
                             }
                         } else {
                             echo "<option>No staff available</option>";
@@ -208,7 +213,7 @@ try {
                     </div>
 
                     <div class="button-group">
-                        <button class="button" id="saveButton" onclick="saveBooking()">Save</button>
+                        <button class="button" id="saveButton">Save</button>
                         <button type="button" class="btn" id="cancelButton" data-bs-dismiss="modal">Cancel</button>
                     </div>
                 </div>
@@ -287,10 +292,10 @@ if (!empty($fetch_reservations['pay_proof_of_payment']) && file_exists($full_pat
                                 <div class="form-group">
                                     <label class="form-label text-brown mb-2">Booking Status:</label>
                                     <select class="form-control" name="bookingStatusUpdate" id="bookingStatusUpdate">
-                                        <option value="pending">Pending</option>
-                                        <option value="confirmed">Confirmed</option>
-                                        <option value="completed">Completed</option>
-                                        <option value="cancelled">Cancelled</option>
+                                        <option value="Pending">Pending</option>
+                                        <option value="Confirmed">Confirmed</option>
+                                        <option value="Completed">Completed</option>
+                                        <option value="Cancelled">Cancelled</option>
                                     </select>
                                 </div>
                             </div>
@@ -408,37 +413,46 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     document.getElementById('saveButton').addEventListener('click', function (e) {
-        e.preventDefault();
+    e.preventDefault();
 
-        var formData = new FormData(document.getElementById('updateBookingForm'));
-        formData.append('booking_id', document.getElementById('modalBookingId').textContent);
+    // Create FormData object
+    var formData = new FormData();
+    
+    // Add booking ID
+    formData.append('booking_id', document.getElementById('modalBookingId').textContent);
+    
+    // Add check-in and check-out dates
+    formData.append('checkIn', document.getElementById('checkIn').value);
+    formData.append('checkOut', document.getElementById('checkOut').value);
+    
+    // Add booking status - note the name change from bookingStatusUpdate to booking_status
+    formData.append('booking_status', document.getElementById('bookingStatusUpdate').value);
+    
+    // Add payment status
+    formData.append('paymentStatus', document.getElementById('paymentStatus').value);
+    
+    // Add staff selection
+    formData.append('staff', document.getElementById('staffSelect').value);
 
-        // Check if the payment form is expanded/visible
-        var paymentFormCollapsed = document.getElementById('paymentForm').classList.contains('show');
-        if (paymentFormCollapsed) {
-            formData.append('addPayment', 'yes');
+    // Send the AJAX request
+    fetch('update_booking.php', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(result => {
+        if (result.success) {
+            alert('Booking updated successfully!');
+            location.reload();
         } else {
-            formData.append('addPayment', 'no');
+            alert('Error updating booking: ' + (result.message || 'Unknown error'));
         }
-
-        fetch('update_booking.php', {
-            method: 'POST',
-            body: formData
-        })
-        .then(response => response.json())
-        .then(result => {
-            if (result.success) {
-                alert('Booking updated successfully!');
-                location.reload();
-            } else {
-                alert('Error updating booking.');
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            alert('Error updating the booking!');
-        });
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Error updating the booking!');
     });
+});
 
     function openModal(bookingId, currentStatus) {
     document.getElementById('bookingId').value = bookingId;
@@ -447,31 +461,31 @@ document.addEventListener('DOMContentLoaded', function() {
     myModal.show();
     }
 
-    function saveBooking() {
-    const formData = new FormData(document.getElementById('bookingForm'));
-    fetch('update_booking.php', {
-        method: 'POST',
-        body: formData
-    })
-    .then(res => res.text())
-    .then(data => {
-        alert('Booking updated!');
-        location.reload();
-    });
-    }
+    // function saveBooking() {
+    // const formData = new FormData(document.getElementById('bookingForm'));
+    // fetch('update_booking.php', {
+    //     method: 'POST',
+    //     body: formData
+    // })
+    // .then(res => res.text())
+    // .then(data => {
+    //     alert('Booking updated!');
+    //     location.reload();
+    // });
+    // }
 
-    function savePayment() {
-    const formData = new FormData(document.getElementById('bookingForm'));
-    fetch('add_payment.php', {
-        method: 'POST',
-        body: formData
-    })
-    .then(res => res.text())
-    .then(data => {
-        alert('Payment added!');
-        location.reload();
-    });
-    }
+    // function savePayment() {
+    // const formData = new FormData(document.getElementById('bookingForm'));
+    // fetch('add_payment.php', {
+    //     method: 'POST',
+    //     body: formData
+    // })
+    // .then(res => res.text())
+    // .then(data => {
+    //     alert('Payment added!');
+    //     location.reload();
+    // });
+    // }
 });
 
 
