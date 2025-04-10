@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 
-    <link rel="stylesheet" href="aboutss.css">
+    <link rel="stylesheet" href="aboutus1.css">
     <link rel="icon" type="image/png" href="Header-Pics/logo.png">
     <title>About Adorafur</title>
 </head>
@@ -34,7 +34,7 @@ include 'header.php'; ?>
                     </div>
                     <div class="carousel-item">
                         <h5>GOAL</h5>
-                        <p>Our goal is to become every pet owner's most trusted partner for all their pet's needs. We envision to not only be a pet store, but an establishment where our clients come in knowing they are getting the best service available in the market. Combined with an outstanding, consistent care, value-for-money, and excellent pet experience.</p>
+                        <p>Our goal is to become every owner's trusted partner for all their pet's needs. We envision to not only be a pet store, but an establishment where our clients come in knowing they are getting the best service. Combined with consistent care, value-for-money, and excellent pet experience.</p>
                     </div>
                 </div>  
                 <div class="carousel-indicators" id="but">
@@ -108,12 +108,13 @@ include 'header.php'; ?>
             <div class="story2">
             <img src="AboutUs-Pics/our_story-inspo.png" alt="">
                 <p>Our inspiration when we started this company stems from our childhood where we grew with our beloved pets. We enjoyed playing and taking care of them. They not only bring us joy but also peace. Our pets became a part of our lives and family. Growing up we underwent mental challenges, and our pets became our source of happiness. When we see and play with them, we feel safe and at peace.</p>
-
             </div>
+
             <div class="story3">
             <img src="AboutUs-Pics/our_story-aim.png" alt="">
                 <p>At Adorafur Happy Stay, we aim to create a reason for people to come to us. We set out to provide a destination for pets and their parents. We started at home and have been attracting customers all over Metro Manila. Pet owners truly trust us with their fur babies, leaving them to our care for up to a year. We believe that our customers' cats and dogs are not just pets, they're family.</p>
             </div>
+            
         </div>
     </div>
 
