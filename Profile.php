@@ -206,8 +206,7 @@ include 'header.php'; ?>
                                                     </div>
 
                                                     <div class="tDeets2-2">
-                                                <button class="btn" data-bs-target="#request-to-cancel" data-bs-toggle="modal" id="reqtoCancel-but" data-booking-id="<?php echo $reservation['booking_id']; ?>">Request to Cancel</button>
-                                                        
+                                                        <button class="btn" data-bs-target="#req-to-cancel-modal" data-bs-toggle="modal" id="reqtoCancel-but" data-booking-id="<?php echo $reservation['booking_id']; ?>">Request to Cancel</button>
                                                     </div>
                                                 </div>
                                             </div>
@@ -328,6 +327,7 @@ include 'header.php'; ?>
         <div class="modal-content" id="view-and-edit">
             <div class="modal-header" id="mheader">
                 <h5 class="modal-title" id="petModalLabel">VIEW & EDIT PET INFORMATION</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
                 <form id="petForm" method="POST" action="update_pet.php" enctype="multipart/form-data">
@@ -360,8 +360,15 @@ include 'header.php'; ?>
                                     <input type="text" class="form-control" name="pet_size" id="edit_pet_size" >
                                 </div>
                                 <div class="col-md-6">
-                                    <label class="form-label">AGE (YEARS)</label>
-                                    <input type="number" class="form-control" name="pet_age_years" id="edit_pet_age_years" placeholder="Years" min="0">
+                                    <label class="form-label">AGE</label>
+                                    <div class="row g-2">
+                                        <div class="col-6">
+                                            <input type="number" class="form-control" name="pet_age_years" id="edit_pet_age_years" placeholder="Years" min="0">
+                                        </div>
+                                        <div class="col-6">
+                                            <input type="number" class="form-control" name="pet_age_months" id="edit_pet_age_months" placeholder="Months" min="0" max="11">
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                             
@@ -415,31 +422,6 @@ include 'header.php'; ?>
     </div>
 </div>
 
-<!-- DELETE MODAL
-<div class="modal fade" id="delModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="staticBackdropLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg modal-dialog-centered">
-        <div class="modal-content" id="del-modal">
-            <div class="modal-header d-flex justify-content-center align-items-center" id="mheader">
-                <h1 class="modal-title text-center" id="mod-header">Are you sure?</h1>
-            </div>
-            
-            <div class="modal-body d-flex justify-content-center align-items-center" id="mbody">
-                <h6 class="modal-title text-center" id="mod-body">
-                    <p>Deleting this file will remove all records of your pet from our system permanently.</p>
-                </h6>
-            </div>
-            
-            <form action="delete_pet.php" method="POST">
-                <input type="hidden" name="pet_id" id="delete_pet_id">
-                <div class="modal-footer d-flex justify-content-center align-items-center" id="mfooter">
-                    <button type="submit" class="btn" id="confirm-but">Confirm</button>
-                    <button type="button" class="btn" data-bs-dismiss="modal" id="cancel-but">Cancel</button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div> -->
-
 <!-- REGISTER NEW PET MODAL -->
 <div class="modal fade" id="regPetModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="staticBackdropLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered modal-xl">
@@ -491,8 +473,15 @@ include 'header.php'; ?>
                                     </div>
                                     
                                     <div class="mb-3">
-                                        <label class="form-label">AGE (YEARS)</label>
-                                        <input type="number" name="age_years" class="form-control" placeholder="Years" min="0" required value="<?php echo htmlspecialchars($pet_form_data['age_years'] ?? ''); ?>">
+                                        <label class="form-label">AGE</label>
+                                        <div class="row g-2">
+                                            <div class="col-6">
+                                                <input type="number" name="age_years" class="form-control" placeholder="Years" min="0" required value="<?php echo htmlspecialchars($pet_form_data['age_years'] ?? ''); ?>">
+                                            </div>
+                                            <div class="col-6">
+                                                <input type="number" name="age_months" class="form-control" placeholder="Months" min="0" max="11" required value="<?php echo htmlspecialchars($pet_form_data['age_months'] ?? ''); ?>">
+                                            </div>
+                                        </div>
                                     </div>
 
 
@@ -520,7 +509,7 @@ include 'header.php'; ?>
                                 <div class="col-md-6">
                                     <div class="mb-3">
                                         <label class="form-label">PET PROFILE PHOTO</label>
-                                        <input type="file" name="pet_photo" class="form-control" accept="image/*,application/pdf" >
+                                        <input type="file" name="pet_photo" class="form-control" accept="image/*,application/pdf" id="petPhotoInput">
                                         <div class="form-text">File size must be less than 5MB.</div>
                                         <?php if ($pet_photo_error): ?>
                                             <p class="error pet-photo-error"><?php echo $pet_photo_error; ?></p>
@@ -530,20 +519,19 @@ include 'header.php'; ?>
                                     
                                     <div class="mb-3">
                                         <label class="form-label">VACCINATION STATUS</label>
-                                        <input type="file" name="vaccination_file" class="form-control mb-2" accept="image/*,application/pdf" required  id="vaccinationFileInput">
+                                        <input type="file" name="vaccination_file" class="form-control mb-2" accept="image/*,application/pdf" required id="vaccinationFileInput">
                                         <div class="form-text">File size must be less than 5MB.</div>
                                         <?php if ($vaccination_file_error): ?>
                                             <p class="error vaccination-file-error"><?php echo $vaccination_file_error; ?></p>
                                         <?php endif; ?>
-
                                         <div id="vaccinationFileError" class="error vaccination-file-error" style="display: none;"></div>
                                         <div class="radio-group">
                                             <div>
-                                                <input type="radio" name="vaccination_status" id="vaccinated" value="vaccinated" required> <?php echo (isset($pet_form_data['vaccination_status']) && $pet_form_data['vaccination_status'] == 'vaccinated') ? 'checked' : ''; ?>
+                                                <input type="radio" name="vaccination_status" id="vaccinated" value="vaccinated" required <?php echo (isset($pet_form_data['vaccination_status']) && $pet_form_data['vaccination_status'] == 'vaccinated') ? 'checked' : ''; ?>>
                                                 <label for="vaccinated">Vaccinated</label>
                                             </div>
                                             <div>
-                                                <input type="radio" name="vaccination_status" id="not_vaccinated" value="not_vaccinated"> <?php echo (isset($pet_form_data['vaccination_status']) && $pet_form_data['vaccination_status'] == 'not_vaccinated') ? 'checked' : ''; ?>
+                                                <input type="radio" name="vaccination_status" id="not_vaccinated" value="not_vaccinated" <?php echo (isset($pet_form_data['vaccination_status']) && $pet_form_data['vaccination_status'] == 'not_vaccinated') ? 'checked' : ''; ?>>
                                                 <label for="not_vaccinated">Not Vaccinated</label>
                                             </div>
                                         </div>
@@ -584,100 +572,19 @@ include 'header.php'; ?>
 </div>
 
 <!-- REQUEST TO CANCEL MODAL -->
-<div class="modal" id="request-to-cancel" aria-hidden="true" aria-labelledby="exampleModalToggleLabel" tabindex="-1">
+<div class="modal fade" id="req-to-cancel-modal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="staticBackdropLabel" aria-hidden="true">
     <div class="modal-dialog modal-lg modal-dialog-centered">
         <div class="modal-content" id="req-to-cancel">
-            <div class="modal-header" id="mheader">
-                <h1 class="modal-title fs-5" id="req-to-cancel-title">Are you sure you want to cancel?</h1>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
             
-            <div class="modal-body" id="mbody-req-to-cancel">
-                <div class="mbody-text">
-                    <p id="req-to-cancel-mbody-text">
-                        We're sorry to see you go! Please confirm if you'd like to cancel your booking.
-                        If you need assistance, feel free to reach out to us.
-                    </p>
-                    
-                    <div class="d-flex flex-wrap gap-3">
-                        <div>
-                            <input type="radio" name="reason" value="Change of Plans" id="ChangeOfPlans" required>
-                            <label for="ChangeOfPlans">Change of Plans</label>
-                        </div>
-
-                        <div>
-                            <input type="radio" name="reason" value="Personal Emergency" id="PersonalEmergency">
-                            <label for="PersonalEmergency">Personal Emergency</label>
-                        </div>
-
-                        <div>
-                            <input type="radio" name="reason" value="Scheduling Conflict" id="SchedulingConflict">
-                            <label for="SchedulingConflict">Scheduling Conflict</label>
-                        </div>
-
-                        <div>
-                            <input type="radio" name="reason" value="Dissatisfaction with Services" id="DissatisfactionWithServices">
-                            <label for="DissatisfactionWithServices">Dissatisfaction with Services</label>
-                        </div>
-
-                        <div class="d-flex align-items-center">
-                            <input type="radio" name="reason" value="Other" id="Others">
-                            <label for="Others" class="me-2">Other Specify:</label>
-                            <textarea class="form-control" id="message-text" name="other_reason"></textarea>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="modal-footer d-flex justify-content-center align-items-center" id="mfooter">
-                <button class="btn" id="confirm-but" data-bs-target="#process-cancellation" data-bs-toggle="modal" type="button">
-                    Proceed to Cancel
-                </button>
-            </div>
-        </div>
-    </div>
-</div>
-
-<div class="modal" id="process-cancellation" aria-hidden="true" aria-labelledby="exampleModalToggleLabel2" tabindex="-1">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content" id="process-cancel">
-            <div class="modal-header" id="mheader">
-                <h1 class="modal-title fs-5" id="process-cancellation-title">Your Cancellation is Being Processed</h1>
-            </div>
-
-            <div class="modal-body" id="mbody-process-cancellation">
-                We're processing your refund now. Kindly wait a moment, and we'll notify you once it's complete.
-                Thank you for your patience!
-            </div>
-            
-            <div class="modal-footer d-flex justify-content-center align-items-center" id="mfooter">
-                <form action="cancel_booking.php" method="POST">
-                    <input type="hidden" name="booking_id" id="confirm_cancel_booking_id">
-                    <input type="hidden" name="reason" id="confirm_cancel_reason">
-                    <input type="hidden" name="other_reason" id="confirm_cancel_other_reason">
-                    <button type="submit" class="btn" id="confirm-but">Confirm</button>
-                    <button type="button" class="btn" data-bs-dismiss="modal" id="cancel-but">Cancel</button>
-                </form>
-            </div>
-        </div>
-    </div>
-</div>
-
-
-<!-- 
-<div class="modal" tabindex="-1" id="request-to-cancel" role="dialog">
-  <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
-    <div class="modal-content" id="req-to-cancel">
-
-    <form action="cancel_booking.php" method="POST">
-                <input type="hidden" name="booking_id" id="cancel  method="POST">
+            <form action="cancel_booking.php" method="POST">
                 <input type="hidden" name="booking_id" id="cancel_booking_id">
                 
-    <div class="modal-header" id="mheader">
+                <div class="modal-header" id="mheader">
                     <h1 class="modal-title fs-5" id="req-to-cancel-title">Are you sure you want to cancel?</h1>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
-      <div class="modal-body" id="mbody-req-to-cancel">
+                
+                <div class="modal-body" id="mbody-req-to-cancel">
                     <div class="mbody-text">
                         <p id="req-to-cancel-mbody-text">
                             We're sorry to see you go! Please confirm if you'd like to cancel your booking.
@@ -713,35 +620,41 @@ include 'header.php'; ?>
                         </div>
                     </div>
                 </div>
-      <div class="modal-footer d-flex justify-content-center align-items-center" id="mfooter">
-                    <button class="btn" id="confirm-but" data-bs-target="#cancellation" data-bs-toggle="modal" type="button" >
+                
+                <div class="modal-footer d-flex justify-content-center align-items-center" id="mfooter">
+                    <button class="btn" id="confirm-but" data-bs-target="#process-cancellation" data-bs-toggle="modal" type="button">
                         Proceed to Cancel
                     </button>
                 </div>
-                </form>
+            </form>
+        </div>
     </div>
-  </div>
 </div>
 
-<div class="modal" id="cancellation" aria-hidden="true" aria-labelledby="exampleModalToggleLabel2" tabindex="-1">
-  <div class="modal-dialog modal-dialog-centered">
-    <div class="modal-content">
-    <div class="modal-header" id="mheader">
+<div class="modal fade" id="process-cancellation" aria-hidden="true" aria-labelledby="exampleModalToggleLabel2" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content" id="process-cancel">
+            <div class="modal-header" id="mheader">
                 <h1 class="modal-title fs-5" id="process-cancellation-title">Your Cancellation is Being Processed</h1>
             </div>
+
             <div class="modal-body" id="mbody-process-cancellation">
                 We're processing your refund now. Kindly wait a moment, and we'll notify you once it's complete.
                 Thank you for your patience!
             </div>
+            
             <div class="modal-footer d-flex justify-content-center align-items-center" id="mfooter">
-                <button type="button" class="btn" data-bs-dismiss="modal" id="confirm-but">Confirm</button>
-                <button type="button" class="btn" data-bs-dismiss="modal" id="cancel-but">Cancel</button>
+                <form action="cancel_booking.php" method="POST">
+                    <input type="hidden" name="booking_id" id="confirm_cancel_booking_id">
+                    <input type="hidden" name="reason" id="confirm_cancel_reason">
+                    <input type="hidden" name="other_reason" id="confirm_cancel_other_reason">
+                    <button type="submit" class="btn" id="confirm-but">Confirm</button>
+                    <button type="button" class="btn" data-bs-dismiss="modal" id="cancel-but">Cancel</button>
+                </form>
             </div>
+        </div>
     </div>
-  </div>
-</div> -->
-
-
+</div>
 
 <!-- EDIT USER INFORMATION -->
 <div class="modal fade" id="editProfileModal" tabindex="-1" aria-labelledby="editProfileModalLabel" aria-hidden="true">
@@ -751,6 +664,7 @@ include 'header.php'; ?>
                 <div class="paw-prints">
                     <img src="Profile-Pics.png" alt="">
                 </div>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
                 
             <div class="modal-body" id="mbody">
@@ -793,7 +707,7 @@ include 'header.php'; ?>
                         <input type="url" class="form-control" name="socials" value="<?php echo isset($fetch_cust_info['c_mode_of_communication']) ? htmlspecialchars($fetch_cust_info['c_mode_of_communication']) : ''; ?>">
                     </div>
 
-                    <!-- <div class="row mb-4">
+                    <div class="row mb-4">
                         <div class="col-md-6">
                             <label class="form-label">CURRENT PASSWORD</label>
                             <input type="password" class="form-control" name="current_password">
@@ -802,7 +716,7 @@ include 'header.php'; ?>
                             <label class="form-label">NEW PASSWORD</label>
                             <input type="password" class="form-control" name="new_password">
                         </div>
-                    </div> -->
+                    </div>
 
                     <div class="modal-footer d-flex justify-content-center align-items-center" id="mfooter">
                         <button type="button" class="btn" data-bs-dismiss="modal" id="cancel-but">Cancel</button>
@@ -817,7 +731,6 @@ include 'header.php'; ?>
 <!-- JavaScript for handling modal data -->
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-
     // Handle View & Edit Pet Modal
     const veModal = document.getElementById('veModal');
     if (veModal) {
@@ -842,17 +755,21 @@ document.addEventListener('DOMContentLoaded', function() {
                     document.getElementById('edit_pet_size').value = data.pet_size || '';
                     document.getElementById('gender-dropdown').value = data.pet_gender || '';
                     document.getElementById('petDescription').value = data.pet_description || '';
+                    document.getElementById('petInstruction').value = data.pet_special_instructions || '';
                     document.getElementById('vaccination_status').value = data.pet_vaccination_status || '';
                     document.getElementById('date_administered').value = data.pet_vaccination_date_administered || '';
-                    document.getElementById('petInstruction').value = data.pet_special_instruction || '';
-                    if (data.pet_vaccination_date_expiry) {
-                        document.getElementById('expiry_date').value = data.pet_vaccination_date_expiry;
-                    }
+                    document.getElementById('expiry_date').value = data.pet_vaccination_date_expiry || '';
 
+                    // Parse the age string into years and months
                     const ageString = data.pet_age || '';
                     const yearMatch = ageString.match(/(\d+)\s+years?/);
+                    const monthMatch = ageString.match(/(\d+)\s+mos?/);
+                    
                     const years = yearMatch ? yearMatch[1] : '0';
+                    const months = monthMatch ? monthMatch[1] : '0';
+                    
                     document.getElementById('edit_pet_age_years').value = years;
+                    document.getElementById('edit_pet_age_months').value = months;
                     
                     if (data.pet_picture) {
                         document.getElementById('pet-image-preview').src = data.pet_picture;
@@ -864,16 +781,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 });
         });
     }
-    
-    // Handle Delete Pet Modal
-//    const delModal = document.getElementById('delModal');
-  //  if (delModal) {
-    //    delModal.addEventListener('show.bs.modal', function(event) {
-      //      const button = event.relatedTarget;
-        //    const petId = button.getAttribute('data-pet-id');
-          //  document.getElementById('delete_pet_id').value = petId;
-       // });
-   // }
     
     // Handle Cancel Booking Modal
     const cancelModal = document.getElementById('req-to-cancel-modal');
@@ -914,7 +821,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const petPhotoInput = document.getElementById('petPhotoInput');
     const vaccinationFileInput = document.getElementById('vaccinationFileInput');
     const dateAdministeredInput = document.getElementById('dateAdministeredInput');
-    const petRegistrationForm = document.getElementById('petRegistrationForm');
+    const petRegistrationForm = document.querySelector('.pet-form');
     
     if (petPhotoInput) {
         petPhotoInput.addEventListener('change', function() {
@@ -963,7 +870,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     function validateFileSize(input, errorElementId) {
-        const maxSize = 26214400; // 25MB in bytes
+        const maxSize = 5242880; // 5MB in bytes
         const errorElement = document.getElementById(errorElementId);
         
         // Clear previous error
@@ -974,7 +881,7 @@ document.addEventListener('DOMContentLoaded', function() {
             const fileSize = input.files[0].size;
             
             if (fileSize > maxSize) {
-                errorElement.textContent = 'File is too large. Maximum size is 25MB.';
+                errorElement.textContent = 'File is too large. Maximum size is 5MB.';
                 errorElement.style.display = 'block';
                 input.value = ''; // Clear the file input
                 return false;
@@ -984,6 +891,7 @@ document.addEventListener('DOMContentLoaded', function() {
         return true;
     }
     
+    // Add client-side validation for future dates as well
     function validateDate(input) {
         const selectedDate = input.value;
         const today = new Date().toISOString().split('T')[0];
@@ -997,46 +905,40 @@ document.addEventListener('DOMContentLoaded', function() {
             errorElement.textContent = 'Date administered cannot be the current date.';
             errorElement.style.display = 'block';
             return false;
+        } else if (selectedDate > today) {
+            errorElement.textContent = 'Date administered cannot be a future date.';
+            errorElement.style.display = 'block';
+            return false;
         }
         
         return true;
     }
-    const reqToCancelButtons = document.querySelectorAll('[data-bs-target="#request-to-cancel"]')
-  reqToCancelButtons.forEach((button) => {
-    button.addEventListener("click", function () {
-      const bookingId = this.getAttribute("data-booking-id")
-      // Store the booking ID in a global variable or localStorage
-      window.cancelBookingId = bookingId
-    })
-  })
-
-  // Handle the transfer to the confirmation modal
-  const proceedButton = document.querySelector('[data-bs-target="#process-cancellation"]')
-  if (proceedButton) {
-    proceedButton.addEventListener("click", () => {
-      // Get the booking ID from the global variable
-      const bookingId = window.cancelBookingId
-
-      // Set the booking ID in the confirmation form
-      document.getElementById("confirm_cancel_booking_id").value = bookingId
-
-      // Get the selected reason
-      const reasonInputs = document.querySelectorAll('input[name="reason"]')
-      let selectedReason = ""
-      reasonInputs.forEach((input) => {
-        if (input.checked) {
-          selectedReason = input.value
-        }
-      })
-      document.getElementById("confirm_cancel_reason").value = selectedReason
-
-      // Get the other reason if applicable
-      if (selectedReason === "Other") {
-        const otherReason = document.getElementById("message-text").value
-        document.getElementById("confirm_cancel_other_reason").value = otherReason
-      }
-    })
-  }
+    
+    // Handle the transfer of data between cancellation modals
+    const proceedButton = document.querySelector('[data-bs-target="#process-cancellation"]');
+    if (proceedButton) {
+        proceedButton.addEventListener('click', function() {
+            // Get the booking ID
+            const bookingId = document.getElementById('cancel_booking_id').value;
+            document.getElementById('confirm_cancel_booking_id').value = bookingId;
+            
+            // Get the selected reason
+            const reasonInputs = document.querySelectorAll('input[name="reason"]');
+            let selectedReason = '';
+            reasonInputs.forEach(input => {
+                if (input.checked) {
+                    selectedReason = input.value;
+                }
+            });
+            document.getElementById('confirm_cancel_reason').value = selectedReason;
+            
+            // Get other reason if applicable
+            if (selectedReason === 'Other') {
+                const otherReason = document.getElementById('message-text').value;
+                document.getElementById('confirm_cancel_other_reason').value = otherReason;
+            }
+        });
+    }
 });
 </script>
 

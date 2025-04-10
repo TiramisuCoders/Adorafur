@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 
-    <link rel="stylesheet" href="aboutss.css">
+    <link rel="stylesheet" href="aboutus1.css">
     <link rel="icon" type="image/png" href="Header-Pics/logo.png">
     <title>About Adorafur</title>
 </head>
@@ -34,7 +34,7 @@ include 'header.php'; ?>
                     </div>
                     <div class="carousel-item">
                         <h5>GOAL</h5>
-                        <p>Our goal is to become every pet owner's most trusted partner for all their pet's needs. We envision to not only be a pet store, but an establishment where our clients come in knowing they are getting the best service available in the market. Combined with an outstanding, consistent care, value-for-money, and excellent pet experience.</p>
+                        <p>Our goal is to become every owner's trusted partner for all their pet's needs. We envision to not only be a pet store, but an establishment where our clients come in knowing they are getting the best service. Combined with consistent care, value-for-money, and excellent pet experience.</p>
                     </div>
                 </div>  
                 <div class="carousel-indicators" id="but">
