@@ -349,6 +349,13 @@ window.bookingData = {
       })
     })
   
+    // Handle Back button click
+    $(document).on("click", "#backToBookingBtn", () => {
+      $(".book-1").fadeOut(() => {
+        $(".main-schedule-options").fadeIn()
+      })
+    })
+  
     // Fetch customer pets
     function fetchCustomerPets() {
       $.ajax({
@@ -575,20 +582,20 @@ window.bookingData = {
         })
   
       const newRow = `
-                  <tr>
-                      <td data-label="Name">
-                          <select class="petSelect" onchange="updatePetDetails(this)">
-                              ${options}
-                          </select>
-                      </td>
-                      <td data-label="Breed"></td>
-                      <td data-label="Age"></td>
-                      <td data-label="Gender"></td>
-                      <td data-label="Size"></td>
-                      <td data-label="Price">₱0.00</td>
-                      <td><button type="button" onclick="removePetRow(this)" class="action-btn">(Remove)</button></td>
-                  </tr>
-              `
+                    <tr>
+                        <td data-label="Name">
+                            <select class="petSelect" onchange="updatePetDetails(this)">
+                                ${options}
+                            </select>
+                        </td>
+                        <td data-label="Breed"></td>
+                        <td data-label="Age"></td>
+                        <td data-label="Gender"></td>
+                        <td data-label="Size"></td>
+                        <td data-label="Price">₱0.00</td>
+                        <td><button type="button" onclick="removePetRow(this)" class="action-btn">(Remove)</button></td>
+                    </tr>
+                `
   
       $("#petTableBody").append(newRow)
   
@@ -637,10 +644,10 @@ window.bookingData = {
   
           // Update the pet details section
           $("#petSummaryDetails").html(`
-                          <div class="info-row"><span class="label">Breed:</span><span class="value">${pet.breed || ""}</span></div>
-                          <div class="info-row"><span class="label">Gender:</span><span class="value">${pet.gender || ""}</span></div>
-                          <div class="info-row"><span class="label">Age:</span><span class="value">${pet.age ? pet.age + " y/o" : ""}</span></div>
-                      `)
+                            <div class="info-row"><span class="label">Breed:</span><span class="value">${pet.breed || ""}</span></div>
+                            <div class="info-row"><span class="label">Gender:</span><span class="value">${pet.gender || ""}</span></div>
+                            <div class="info-row"><span class="label">Age:</span><span class="value">${pet.age ? pet.age + " y/o" : ""}</span></div>
+                        `)
         }
         // If there are multiple pets
         else {
@@ -651,14 +658,14 @@ window.bookingData = {
           let petDetailsHtml = ""
           window.bookingData.pets.forEach((pet, index) => {
             petDetailsHtml += `
-                              <div class="pet-summary-item">
-                                  <h4>${pet.name}</h4>
-                                  <div class="info-row"><span class="label">Breed:</span><span class="value">${pet.breed || ""}</span></div>
-                                  <div class="info-row"><span class="label">Gender:</span><span class="value">${pet.gender || ""}</span></div>
-                                  <div class="info-row"><span class="label">Age:</span><span class="value">${pet.age ? pet.age + " y/o" : ""}</span></div>
-                                  ${index < window.bookingData.pets.length - 1 ? "<hr>" : ""}
-                              </div>
-                          `
+                                <div class="pet-summary-item">
+                                    <h4>${pet.name}</h4>
+                                    <div class="info-row"><span class="label">Breed:</span><span class="value">${pet.breed || ""}</span></div>
+                                    <div class="info-row"><span class="label">Gender:</span><span class="value">${pet.gender || ""}</span></div>
+                                    <div class="info-row"><span class="label">Age:</span><span class="value">${pet.age ? pet.age + " y/o" : ""}</span></div>
+                                    ${index < window.bookingData.pets.length - 1 ? "<hr>" : ""}
+                                </div>
+                            `
           })
   
           // Update the pet details section
@@ -756,6 +763,10 @@ window.bookingData = {
   
       // Add booking data to form
       formData.append("booking_data", JSON.stringify(window.bookingData))
+  
+      // Get the transaction number from the payment modal and add it to the form data
+      const transactionNo = $(".transaction-no").text().replace("Transaction No. ", "").trim()
+      formData.append("transaction_id", transactionNo)
   
       $.ajax({
         type: "POST",
