@@ -46,6 +46,8 @@ require_once 'create_admin_modal.php';
     <link rel="stylesheet" href="admin-css/admin_modal.css">
     <link rel="icon" type="image/png" href="admin-pics/adorafur-logo.png">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Load Supabase JS library -->
+    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
     <script src="admin.js"></script>
 
     <title>Admin Profile</title>
@@ -131,21 +133,17 @@ require_once 'create_admin_modal.php';
                 <span class="close-modal" onclick="closeModal()">&times;</span>
             </div>
             
-            <form id="createAdminForm" method="POST" action="">
+            <form id="createAdminForm">
                 <div class="form-group">
                     <label for="admin_name">Name</label>
                     <input type="text" id="admin_name" name="admin_name" placeholder="Enter full name" value="<?php echo htmlspecialchars($admin_name ?? ''); ?>">
-                    <?php if (isset($name_error)): ?>
-                        <div class="error-message"><?php echo $name_error; ?></div>
-                    <?php endif; ?>
+                    <div class="error-message" id="name_error"><?php echo $name_error ?? ''; ?></div>
                 </div>
                 
                 <div class="form-group">
                     <label for="email">Email Address</label>
                     <input type="email" id="email" name="email" placeholder="Enter email address" value="<?php echo htmlspecialchars($email ?? ''); ?>">
-                    <?php if (isset($email_error)): ?>
-                        <div class="error-message"><?php echo $email_error; ?></div>
-                    <?php endif; ?>
+                    <div class="error-message" id="email_error"><?php echo $email_error ?? ''; ?></div>
                 </div>
                 
                 <div class="form-group">
@@ -156,9 +154,7 @@ require_once 'create_admin_modal.php';
                             <i id="passwordEyeIcon" class="fa fa-eye"></i>
                         </button>
                     </div>
-                    <?php if (isset($password_error)): ?>
-                        <div class="error-message"><?php echo $password_error; ?></div>
-                    <?php endif; ?>
+                    <div class="error-message" id="password_error"><?php echo $password_error ?? ''; ?></div>
                     <div class="password-requirements">Password must be 8-12 characters, containing a 1 special character, 1 uppercase and 1 number.</div>
                 </div>
                 
@@ -170,19 +166,18 @@ require_once 'create_admin_modal.php';
                             <i id="repeatPasswordEyeIcon" class="fa fa-eye"></i>
                         </button>
                     </div>
+                    <div class="error-message" id="repeat_password_error"></div>
                 </div>
                 
                 <div class="form-group">
                     <label for="admin_position">Position</label>
                     <input type="text" id="admin_position" name="admin_position" placeholder="Enter position (e.g., Manager, Supervisor)" value="<?php echo htmlspecialchars($position ?? ''); ?>">
-                    <?php if (isset($position_error)): ?>
-                        <div class="error-message"><?php echo $position_error; ?></div>
-                    <?php endif; ?>
+                    <div class="error-message" id="position_error"><?php echo $position_error ?? ''; ?></div>
                 </div>
                 
                 <div class="btn-container">
                     <button type="button" class="btn btn-secondary" onclick="closeModal()">Cancel</button>
-                    <button type="submit" name="create_admin" class="btn btn-primary">Create Admin</button>
+                    <button type="button" id="createAdminBtn" class="btn btn-primary">Create Admin</button>
                 </div>
             </form>
         </div>

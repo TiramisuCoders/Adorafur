@@ -83,31 +83,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['create_admin'])) {
         $hasError = true;
     }
     
-    // If no errors, create admin account
+    // If no errors, prepare data for JavaScript to handle Supabase signup
     if (!$hasError) {
-        try {
-            // Hash the password for security
-            $hashed_password = password_hash($password, PASSWORD_DEFAULT);
-            
-            // Insert admin data into database
-            $stmt = $conn->prepare("INSERT INTO admin (admin_name, admin_email, admin_password, admin_position) VALUES (:admin_name, :admin_email, :admin_password, :admin_position)");
-            $stmt->bindParam(':admin_name', $admin_name, PDO::PARAM_STR);
-            $stmt->bindParam(':admin_email', $email, PDO::PARAM_STR);
-            $stmt->bindParam(':admin_password', $hashed_password, PDO::PARAM_STR);
-            $stmt->bindParam(':admin_position', $position, PDO::PARAM_STR);
-            
-            if ($stmt->execute()) {
-                // Set success message
-                $_SESSION['success_message'] = "Admin account created successfully";
-                header("Location: admin_profile.php");
-                exit();
-            } else {
-                throw new Exception("Failed to create admin in database");
-            }
-        } catch(Exception $e) {
-            error_log("Error creating admin: " . $e->getMessage());
-            $error_message = "An error occurred while creating admin account: " . $e->getMessage();
-        }
+        // We'll pass this data to JavaScript to handle Supabase signup
+        $admin_data = [
+            'admin_name' => $admin_name,
+            'admin_email' => $email,
+            'admin_password' => $password,
+            'admin_position' => $position
+        ];
+        
+        // Convert to JSON for JavaScript
+        $admin_data_json = json_encode($admin_data);
     }
 }
 ?>
