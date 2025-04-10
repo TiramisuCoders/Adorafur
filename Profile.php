@@ -127,11 +127,7 @@ include 'header.php'; ?>
                     <button type="button" class="btn" data-bs-toggle="modal" data-bs-target="#editProfileModal">
                         <i class="fa-regular fa-pen-to-square edit-icon"></i>
                     </button>
-                </div>
-                <!-- Notification Bell -->
-                <div class="notifBell">
-                    <i class="fa-regular fa-bell notif-icon"></i>
-                </div>      
+                </div>     
             </div>
 
             <div class="user-deets">
