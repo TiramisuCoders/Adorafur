@@ -29,15 +29,10 @@ try {
   $adminId = $_SESSION['admin_id']; // Get the admin ID from the session
   $customerId = $_POST['customer_id'];
   
-  // If payment mode is "others", use the specified value
-  if ($paymentMode === 'others' && isset($_POST['other_payment_mode']) && !empty($_POST['other_payment_mode'])) {
-    $paymentMode = $_POST['other_payment_mode'];
-  }
   
   // Begin transaction
   $conn->beginTransaction();
   
-  // 1. Get current balance
   $stmt = $conn->prepare("SELECT booking_balance FROM bookings WHERE booking_id = :booking_id");
   $stmt->bindParam(':booking_id', $bookingId);
   $stmt->execute();
