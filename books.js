@@ -112,7 +112,93 @@ $(document).ready(() => {
     highlightDateRange()
   }
 
-  // Handle date click
+  // Modify the updateAvailableSlots function to match the daycare system's approach
+  function updateAvailableSlots() {
+    if (!selectedDates.checkIn || !selectedDates.checkOut) {
+      $(".available-slot").text("Available Slots: Select dates")
+      return
+    }
+
+    // Get the selected pet type and variant
+    let species = ""
+    let variant = ""
+
+    if (window.bookingData.pets.length > 0) {
+      const pet = window.bookingData.pets[0]
+
+      // Extract species and variant from pet size
+      if (pet.size.includes("Dog")) {
+        species = "dog"
+        if (pet.size.includes("Small")) {
+          variant = "small"
+        } else if (pet.size.includes("Large")) {
+          variant = "large"
+        } else {
+          variant = "regular"
+        }
+      } else if (pet.size.includes("Cat")) {
+        species = "cat"
+        variant = "regular"
+      }
+    }
+
+    // If no pet is selected yet, just show a message
+    if (!species || !variant) {
+      $(".available-slot").text("Available Slots: Select a pet type first")
+      return
+    }
+
+    const checkInDate = selectedDates.checkIn.toISOString().split("T")[0]
+    const checkOutDate = selectedDates.checkOut.toISOString().split("T")[0]
+
+    $.ajax({
+      type: "POST",
+      url: "get-available-slots-hotel.php",
+      data: {
+        action: "get_hotel_slots",
+        check_in_date: checkInDate,
+        check_out_date: checkOutDate,
+        species: species,
+        variant: variant,
+      },
+      dataType: "json",
+      beforeSend: () => {
+        // Show loading indicator
+        $(".available-slot").html(`<span>Checking availability...</span>`)
+      },
+      success: (response) => {
+        console.log("AJAX success, full response:", response)
+
+        if (response.success) {
+          const availableSlots = response.available_slots || 0
+          const maxSlots = response.max_slots || 10
+
+          // Update the UI with the available slots count
+          $(".available-slot").html(`
+          Available Slots: <span class="slot-count">${availableSlots}</span>/${maxSlots}
+        `)
+
+          // Add visual indicator based on availability
+          if (availableSlots <= 0) {
+            $(".available-slot").addClass("no-slots").removeClass("few-slots")
+          } else if (availableSlots <= 3) {
+            $(".available-slot").addClass("few-slots").removeClass("no-slots")
+          } else {
+            $(".available-slot").removeClass("few-slots no-slots")
+          }
+        } else {
+          $(".available-slot").html(`Available Slots: <span class="slot-count">Error</span>`)
+        }
+      },
+      error: (xhr, status, error) => {
+        console.error("AJAX Error:", error)
+        console.error("Status:", status)
+        console.error("Response:", xhr.responseText)
+        $(".available-slot").html(`Available Slots: <span class="slot-count">Error</span>`)
+      },
+    })
+  }
+
   function handleDateClick(date, element) {
     if (!selectedDates.checkIn || (selectedDates.checkIn && selectedDates.checkOut)) {
       // Start new selection
@@ -153,6 +239,9 @@ $(document).ready(() => {
             $(this).removeClass("selected-date").addClass("highlighted")
           }
         })
+
+        // Update available slots after date range is selected
+        updateAvailableSlots()
       }
     }
 
@@ -447,16 +536,16 @@ $(document).ready(() => {
         let price = 0
         switch (petDetails.pet_size) {
           case "Cat":
-            price = 500
+            price = 600
             break
           case "Small":
-            price = 700
-            break
-          case "Regular":
             price = 800
             break
-          case "Large":
+          case "Regular":
             price = 900
+            break
+          case "Large":
+            price = 1000
             break
         }
 
