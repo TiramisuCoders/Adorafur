@@ -415,11 +415,51 @@ unset($_SESSION['pet_form_data']);
                         
                         <div class="row mt-3">
                             <div class="col-12 text-center">
-                                <button type="submit" class="btn" id="confirm-but">Save and Go Back</button>
+                            <button type="button" class="btn" id="confirm-but">Save and Go Back</button>
+                                <script>
+                                   document.getElementById("confirm-but").addEventListener("click", function() {
+                                            // Get the form element
+                                            const petForm = document.querySelector('.pet-form');
+                                            
+                                            // Create a FormData object
+                                            const formData = new FormData(petForm);
+                                            
+                                            // Add a hidden field to identify this is from the modal
+                                            formData.append('from_modal', 'true');
+                                            
+                                            // Use AJAX to submit the form
+                                            $.ajax({
+                                                type: "POST",
+                                                url: "add_pet.php",
+                                                data: formData,
+                                                processData: false,
+                                                contentType: false,
+                                                success: function(response) {
+                                                    // Show success message
+                                                    alert("New pet registered successfully!");
+                                                    
+                                                    // Force close the modal using Bootstrap's modal method
+                                                    $('#petRegistrationModal').modal('hide');
+                                                    
+                                                    // Refresh the pet dropdown after a short delay
+                                                    setTimeout(function() {
+                                                        if (typeof fetchCustomerPets === 'function') {
+                                                            fetchCustomerPets();
+                                                        }
+                                                    }, 500);
+                                                },
+                                                error: function(xhr, status, error) {
+                                                    console.error("Error submitting form:", error);
+                                                    alert("There was an error registering your pet. Please try again.");
+                                                }
+                                            });
+                                        });
+                                </script>
                             </div>
                         </div>
                     </div>
                 </form>
+                
                                             </div>
                                         </div>
 
@@ -700,5 +740,17 @@ resulting from any service provided, or unintentional injury to my pet while und
             });
         });
     </script>
+  
+<script>
+    // Fix for modal not closing
+    $(document).ready(function() {
+        // Ensure the modal backdrop is removed when the modal is closed
+        $('#petRegistrationModal').on('hidden.bs.modal', function () {
+            $('.modal-backdrop').remove();
+            $('body').removeClass('modal-open');
+            $('body').css('padding-right', '');
+        });
+    });
+</script>
 </body>
 </html>
