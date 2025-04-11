@@ -304,11 +304,11 @@ try {
                              <!-- Add Payment Section -->
                              <div class="card mt-4">
                                     <!-- Replace the card with this button -->
-                                        <!-- <div class="mb-3"> -->
+<!-- <div class="mb-3"> -->
                                 <button type="button" class="btn btn-primary w-100" onclick="openPaymentModal(document.getElementById('modalBookingId').textContent, document.getElementById('bookBalance').value)">
                                     Add Payment
                                 </button>
-                                                <!-- </div> -->
+<!-- </div> -->
                                     <!-- <div id="paymentForm" class="collapse">
                                         <div class="card-body">
                                             <div class="row g-3">
@@ -388,11 +388,10 @@ document.addEventListener('DOMContentLoaded', function() {
             .then(data => {
                 if (data.booking_status) {
                     var bookingStatusSelect = document.getElementById('bookingStatusUpdate');
-                    var bookingStatus = data.booking_status;
+                    var bookingStatus = data.booking_status.toLowerCase();
                     
-                    // Match case properly with what's in the dropdown
                     for (var i = 0; i < bookingStatusSelect.options.length; i++) {
-                        if (bookingStatusSelect.options[i].value.toLowerCase() === bookingStatus.toLowerCase()) {
+                        if (bookingStatusSelect.options[i].value === bookingStatus) {
                             bookingStatusSelect.selectedIndex = i;
                             break;
                         }
@@ -402,94 +401,40 @@ document.addEventListener('DOMContentLoaded', function() {
             .catch(error => console.error('Error:', error));
     });
 
-    // Updated JavaScript for the save button with improved error handling
     document.getElementById('saveButton').addEventListener('click', function (e) {
-        e.preventDefault();
-        
-        // Show loading state
-        const saveButton = this;
-        const originalText = saveButton.textContent;
-        saveButton.disabled = true;
-        saveButton.textContent = 'Saving...';
-        
-        var formData = new FormData();
-        
-        // Get the booking ID
-        var bookingId = document.getElementById('modalBookingId').textContent;
-        formData.append('booking_id', bookingId);
-        
-        // Get check-in and check-out dates
-        var checkIn = document.getElementById('checkIn').value;
-        var checkOut = document.getElementById('checkOut').value;
-        formData.append('checkIn', checkIn);
-        formData.append('checkOut', checkOut);
-        
-        // Get booking status
-        var bookingStatus = document.getElementById('bookingStatusUpdate').value;
-        formData.append('booking_status', bookingStatus);
-        
-        // Get payment status
-        var paymentStatus = document.getElementById('paymentStatus').value;
-        formData.append('paymentStatus', paymentStatus);
-        
-        // Get staff ID
-        var staffId = document.getElementById('staffSelect').value;
-        formData.append('staff', staffId);
-        
-        // Send the update request
-        fetch('update_booking.php', {
-            method: 'POST',
-            body: formData
-        })
-        .then(response => {
-            // Check if response is ok
-            if (!response.ok) {
-                throw new Error('Server returned status ' + response.status);
-            }
-            
-            // Try to parse response as JSON
-            return response.text().then(text => {
-                try {
-                    return JSON.parse(text);
-                } catch (e) {
-                    console.error('Invalid JSON response:', text);
-                    throw new Error('Server returned invalid JSON response');
-                }
-            });
-        })
-        .then(result => {
-            // Reset button state
-            saveButton.disabled = false;
-            saveButton.textContent = originalText;
-            
-            if (result && result.success) {
-                // Show success message
-                alert('Booking updated successfully!');
-                
-                // Close the modal
-                const modal = bootstrap.Modal.getInstance(document.getElementById('bookingModal'));
-                if (modal) {
-                    modal.hide();
-                }
-                
-                // Reload the page to show updated data
-                location.reload();
-            } else {
-                // Show error message with details
-                alert('Error updating booking: ' + (result && result.message ? result.message : 'Unknown error'));
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            
-            // Reset button state
-            saveButton.disabled = false;
-            saveButton.textContent = originalText;
-            
-            // Show detailed error message
-            alert('Error updating the booking: ' + error.message);
-        });
+    e.preventDefault();
+
+    var formData = new FormData();
+    
+    formData.append('booking_id', document.getElementById('modalBookingId').textContent);
+    
+    formData.append('checkIn', document.getElementById('checkIn').value);
+    formData.append('checkOut', document.getElementById('checkOut').value);
+    
+    formData.append('booking_status', document.getElementById('bookingStatusUpdate').value);
+    
+    formData.append('paymentStatus', document.getElementById('paymentStatus').value);
+    
+    formData.append('staff', document.getElementById('staffSelect').value);
+
+    fetch('update_booking.php', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(result => {
+        if (result.success) {
+            alert('Booking updated successfully!');
+            location.reload();
+        } else {
+            alert('Error updating booking: ' + (result.message || 'Unknown error'));
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Error updating the booking!');
     });
+});
 
     function openModal(bookingId, currentStatus) {
         document.getElementById('bookingId').value = bookingId;
