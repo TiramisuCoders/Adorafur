@@ -1,4 +1,7 @@
 <?php
+// Start output buffering to prevent any unexpected output
+ob_start();
+
 session_start();
 // Check if admin is logged in
 if (!isset($_SESSION['admin_id'])) {
@@ -16,8 +19,7 @@ try {
   // Check if all required fields are present
   if (!isset($_POST['booking_id']) || !isset($_POST['amount_paid']) || !isset($_POST['payment_mode']) || !isset($_POST['payment_status'])) {
     $response['message'] = 'Missing required fields';
-    echo json_encode($response);
-    exit();
+    throw new Exception('Missing required fields');
   }
   
   // Get form data
@@ -27,12 +29,36 @@ try {
   $referenceNo = isset($_POST['reference_no']) ? $_POST['reference_no'] : '';
   $paymentStatus = $_POST['payment_status'];
   $adminId = $_SESSION['admin_id']; // Get the admin ID from the session
-  $customerId = $_POST['customer_id'];
+  $customerId = isset($_POST['customer_id']) ? $_POST['customer_id'] : null;
   
+  if (!$customerId) {
+    // If customer_id is not provided, try to get it from the booking
+    $stmt = $conn->prepare("
+      SELECT p.customer_id 
+      FROM bookings b 
+      JOIN pet p ON b.pet_id = p.pet_id 
+      WHERE b.booking_id = :booking_id
+    ");
+    $stmt->bindParam(':booking_id', $bookingId);
+    $stmt->execute();
+    $result = $stmt->fetch(PDO::FETCH_ASSOC);
+    
+    if ($result && isset($result['customer_id'])) {
+      $customerId = $result['customer_id'];
+    } else {
+      throw new Exception('Customer ID not found');
+    }
+  }
+  
+  // If payment mode is "others", use the specified value
+  if ($paymentMode === 'others' && isset($_POST['other_payment_mode']) && !empty($_POST['other_payment_mode'])) {
+    $paymentMode = $_POST['other_payment_mode'];
+  }
   
   // Begin transaction
   $conn->beginTransaction();
   
+  // 1. Get current balance
   $stmt = $conn->prepare("SELECT booking_balance FROM bookings WHERE booking_id = :booking_id");
   $stmt->bindParam(':booking_id', $bookingId);
   $stmt->execute();
@@ -89,18 +115,25 @@ try {
   // Return success response
   $response['success'] = true;
   $response['message'] = 'Payment added successfully';
-  $response['new_balance'] = $newBalance;
+  $response['booking_balance'] = $newBalance;
   
 } catch (Exception $e) {
   // Rollback transaction on error
-  if ($conn->inTransaction()) {
+  if ($conn && $conn->inTransaction()) {
     $conn->rollBack();
   }
   
   $response['message'] = $e->getMessage();
+  error_log("Payment error: " . $e->getMessage());
 } finally {
+  // Clear any output buffers
+  while (ob_get_level()) {
+    ob_end_clean();
+  }
+  
   // Return JSON response
   header('Content-Type: application/json');
   echo json_encode($response);
+  exit();
 }
 ?>
