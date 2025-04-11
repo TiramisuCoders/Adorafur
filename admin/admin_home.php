@@ -444,7 +444,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
-function openPaymentModal(bookingId, currentBalance) {
+    function openPaymentModal(bookingId, currentBalance) {
   document.getElementById("paymentBookingId").value = bookingId
   document.getElementById("currentBalance").value = currentBalance
 
@@ -470,6 +470,10 @@ document.addEventListener("DOMContentLoaded", () => {
         return
       }
 
+      // Disable button to prevent double submission
+      savePaymentBtn.disabled = true
+      savePaymentBtn.textContent = "Processing..."
+
       const formData = new FormData(form)
 
       const amountPaid = Number.parseFloat(formData.get("amount_paid"))
@@ -477,11 +481,15 @@ document.addEventListener("DOMContentLoaded", () => {
 
       if (amountPaid <= 0) {
         alert("Amount paid must be greater than zero.")
+        savePaymentBtn.disabled = false
+        savePaymentBtn.textContent = "Save Payment"
         return
       }
 
       if (amountPaid > currentBalance) {
         alert("Amount paid cannot be greater than the current balance.")
+        savePaymentBtn.disabled = false
+        savePaymentBtn.textContent = "Save Payment"
         return
       }
 
@@ -489,37 +497,74 @@ document.addEventListener("DOMContentLoaded", () => {
         method: "POST",
         body: formData,
       })
-        .then((response) => response.json())
-        .then((data) => {
-            if (data.success) {
-            // Update the UI with new values
-            if (data.booking_balance !== undefined) {
-                document.getElementById('bookBalance').value = data.booking_balance;
-                
-                // Update payment status if balance is zero
-                if (parseFloat(data.booking_balance) === 0) {
-                    document.getElementById('paymentStatus').value = 'Fully Paid';
-                } else if (parseFloat(data.booking_balance) > 0) {
-                    document.getElementById('paymentStatus').value = 'Down Payment';
-                }
-                
-                // Show notification
-                alert('Booking amount recalculated. New balance: ' + data.booking_balance);
-            } else {
-                console.error('Booking balance is undefined in the response');
-                alert('Error: Booking balance calculation failed');
+        .then((response) => response.text())
+        .then((text) => {
+          // Try to parse as JSON, but handle HTML responses
+          let data
+          try {
+            data = JSON.parse(text)
+          } catch (e) {
+            console.error("Server returned non-JSON response:", text)
+            throw new Error("Server returned an invalid response. Check server logs.")
+          }
+
+          if (data.success) {
+            // Close the modal
+            const modalElement = document.getElementById("addPaymentModal")
+            const modal = bootstrap.Modal.getInstance(modalElement)
+            if (modal) {
+              modal.hide()
             }
-        } else {
-            alert('Error: ' + (data.message || 'Unknown error occurred'));
-        }
+
+            // Update the UI with new balance
+            if (data.booking_balance !== undefined) {
+              document.getElementById("bookBalance").value = data.booking_balance
+
+              // Update payment status if balance is zero
+              if (Number.parseFloat(data.booking_balance) === 0) {
+                document.getElementById("paymentStatus").value = "Fully Paid"
+              } else if (Number.parseFloat(data.booking_balance) > 0) {
+                document.getElementById("paymentStatus").value = "Down Payment"
+              }
+
+              // Show success message
+              alert("Payment added successfully! New balance: " + data.booking_balance)
+            } else {
+              alert("Payment added successfully!")
+            }
+
+            // Optional: Reload the page to refresh all data
+            // location.reload();
+          } else {
+            alert("Error: " + (data.message || "Unknown error occurred"))
+          }
         })
         .catch((error) => {
           console.error("Error:", error)
-          alert("An error occurred while processing the payment.")
+          alert("An error occurred while processing the payment: " + error.message)
+        })
+        .finally(() => {
+          // Re-enable button
+          savePaymentBtn.disabled = false
+          savePaymentBtn.textContent = "Save Payment"
         })
     })
   }
+
+  // Add event listener for payment mode change
+  const paymentModeSelect = document.getElementById("paymentModeAdd")
+  if (paymentModeSelect) {
+    paymentModeSelect.addEventListener("change", function () {
+      const otherPaymentMode = document.getElementById("otherPaymentMode")
+      if (this.value === "others") {
+        otherPaymentMode.classList.remove("d-none")
+      } else {
+        otherPaymentMode.classList.add("d-none")
+      }
+    })
+  }
 })
+
 
 
 // Add event listeners to check-in and check-out date inputs to recalculate total amount and balance
