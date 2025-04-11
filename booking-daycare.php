@@ -557,10 +557,10 @@ unset($_SESSION['pet_form_data']);
                                                                 <img src="maya.png" alt="Maya QR Code" class="qr-code" id="mayaQR">
                                                             </div>
                                                             <p class="qr-instruction">We accept bank transfer to our GCash/Maya account or just scan the QR Code!</p>
-                                                            <div class="account-info">
+                                                            <!-- <div class="account-info">
                                                                 <p>Account Number: <span>987654321</span></p>
                                                                 <p>Account Name: <span>Veatrice Delos Santos</span></p>
-                                                            </div>
+                                                            </div> -->
                                                             <button type="button" class="btn btn-primary action-btn" id="proceed-to-waiver" disabled>
                                                                 Complete Booking
                                                             </button>
