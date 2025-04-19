@@ -12,7 +12,7 @@ if (session_status() == PHP_SESSION_NONE) {
 include("connect.php");
 
 if (!isset($_SESSION['c_id'])) {
-    header("Location: index..php");
+    header("Location: index.php");
     exit();
 }
 
@@ -29,25 +29,23 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $pet_name = $_POST['pet_name'];
     $pet_size = $_POST['pet_size'];
     $breed = $_POST['breed'];
-    $years = isset($_POST['pet_age_years']) ? intval($_POST['pet_age_years']) : 0;
-    $months = isset($_POST['pet_age_months']) ? intval($_POST['pet_age_months']) : 0;
+    $years = isset($_POST['pet_age_years']) ? intval($_POST['pet_age_years']) : 
+          (isset($_POST['age_years']) ? intval($_POST['age_years']) : 0);
 
-    if ($years > 0 && $months > 0) {
-        $age = "$years years $months mos";
-    } elseif ($years > 0) {
+    if ($years == 1) {
+        $age = "1 year";
+    } elseif ($years > 1) {
         $age = "$years years";
-    } elseif ($months > 0) {
-        $age = "$months mos";
     } else {
-        $age = "0 mos"; 
+        $age = "0 years"; 
     }
 
     $gender = $_POST['gender'];
     $description = $_POST['description'];
-    $special_instructions = $_POST['special_instructions'];
+    $special_instructions = !empty($_POST['special_instructions']) ? $_POST['special_instructions'] : '';
     $vaccination_status = $_POST['vaccination_status'];
     $date_administered = $_POST['date_administered'];
-    $expiry_date = $_POST['expiry_date'];
+    $expiry_date = !empty($_POST['expiry_date']) ? $_POST['expiry_date'] : null;
 
     // Initialize error variables
     $pet_photo_error = null;
@@ -97,7 +95,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             'pet_name' => $pet_name,
             'pet_size' => $pet_size,
             'breed' => $breed,
-            'age' => $age,
+            'age_years' => $years,
             'gender' => $gender,
             'description' => $description,
             'vaccination_status' => $vaccination_status,
@@ -237,6 +235,6 @@ if (isset($_SESSION['error_message'])) {
     error_log("No message set after processing");
 }
 
-header("Location: profile.php");
+header("Location: Profile.php");
 exit();
 ?>
