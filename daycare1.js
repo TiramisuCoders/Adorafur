@@ -102,7 +102,58 @@ $(document).ready(() => {
     }
   }
 
-  // Handle date click
+  // Add this function after the renderCalendar function
+  function updateAvailableSlots(date) {
+    // Default maximum slots per day
+    const MAX_SLOTS = 10
+
+    if (!date) {
+      // If no date is selected, show default message
+      $(".available-slot").text("Available Slots: Select a date")
+      return
+    }
+
+    // Format date for the server
+    const formattedDate = date.toISOString().split("T")[0]
+
+    // Fetch current bookings for this date
+    $.ajax({
+      type: "POST",
+      url: "get-daycare-bookings.php",
+      data: { date: formattedDate },
+      dataType: "json",
+      success: (response) => {
+        if (response.success) {
+          // Calculate available slots
+          const bookedSlots = response.bookings || 0
+          const availableSlots = Math.max(0, MAX_SLOTS - bookedSlots)
+
+          // Update the display
+          $(".available-slot").html(`
+            Available Slots: <span class="slot-count">${availableSlots}</span>/${MAX_SLOTS}
+          `)
+
+          // Add visual indicator based on availability
+          if (availableSlots === 0) {
+            $(".available-slot").addClass("no-slots").removeClass("few-slots")
+          } else if (availableSlots <= 3) {
+            $(".available-slot").addClass("few-slots").removeClass("no-slots")
+          } else {
+            $(".available-slot").removeClass("few-slots no-slots")
+          }
+        }else {
+            console.error("Error fetching bookings:", response.message)
+            $(".available-slot").text("Available Slots: Select a date")
+          }
+        },
+        error: (xhr, status, error) => {
+          console.error("AJAX Error:", error)
+          $(".available-slot").text("Available Slots: Select a date")
+        },
+    })
+  }
+
+  // Modify the handleDateClick function to update available slots
   function handleDateClick(date, element) {
     // Clear previous selection
     $(".day").removeClass("selected-date")
@@ -120,6 +171,9 @@ $(document).ready(() => {
 
     // Enable time selection after date selection
     $(".checkin-out").removeClass("disabled-section")
+
+    // Update available slots for the selected date
+    updateAvailableSlots(date)
 
     // Update summary
     updateBookingSummary()
@@ -608,7 +662,7 @@ $(document).ready(() => {
   }
 
   // Calculate total price
-  window.calculateTotalPrice = () => {
+  const calculateTotalPrice = () => {
     let totalPrice = 0
 
     // Calculate price based on selected pets (for daycare, it's just a single day)
@@ -618,11 +672,32 @@ $(document).ready(() => {
       })
     }
 
-    // Update the total price display
-    $("#summaryTotalAmount").text(`₱ ${totalPrice.toFixed(2)}`)
-    $("#summaryRemainingBalance").text(`₱ ${totalPrice.toFixed(2)}`)
+    // Update the full amount display (total price)
+    $("#summaryFullAmount").text(`₱ ${totalPrice.toFixed(2)}`)
+
+    // Update payment amounts based on selected payment type
+    updatePaymentAmounts()
 
     return totalPrice
+  }
+
+  // Function to update payment amounts based on payment type
+  function updatePaymentAmounts() {
+    const paymentType = $("#paymentTypeSelect").val()
+    const fullAmount = Number.parseFloat($("#summaryFullAmount").text().replace("₱", "").trim()) || 0
+
+    let amountToPay = fullAmount
+    let remainingBalance = 0
+
+    if (paymentType === "down") {
+      // Down payment is 50% of the total
+      amountToPay = fullAmount * 0.5
+      remainingBalance = fullAmount - amountToPay
+    }
+
+    // Update the displayed amounts
+    $("#summaryTotalAmount").text(`₱ ${amountToPay.toFixed(2)}`)
+    $("#summaryRemainingBalance").text(`₱ ${remainingBalance.toFixed(2)}`)
   }
 
   // Update booking summary
@@ -699,6 +774,11 @@ $(document).ready(() => {
     }
   })
 
+  // Handle payment type change
+  $(document).on("change", "#paymentTypeSelect", () => {
+    updatePaymentAmounts()
+  })
+
   // Payment form validation
   function validatePaymentForm() {
     const referenceNo = $('input[name="reference_no"]').val().trim()
@@ -725,6 +805,12 @@ $(document).ready(() => {
     // Show default QR code (Maya)
     $("#gcashQR").hide()
     $("#mayaQR").show()
+
+    // Set default payment type to full payment
+    $("#paymentTypeSelect").val("full")
+
+    // Update payment amounts
+    updatePaymentAmounts()
   })
 
   // Handle proceed to waiver button
@@ -756,6 +842,16 @@ $(document).ready(() => {
     // Add booking data to form
     formData.append("booking_data", JSON.stringify(window.bookingData))
 
+    // Get the transaction number from the payment modal and add it to the form data
+    const transactionNo = $(".transaction-no").text().replace("Transaction No. ", "").trim()
+    formData.append("transaction_id", transactionNo)
+
+    // Add payment type to the form data
+    formData.append("payment_type", $("#paymentTypeSelect").val())
+
+    // Add visible pets data
+    formData.append("visible_pets", $("#visiblePetsData").val())
+
     $.ajax({
       type: "POST",
       url: "process-booking.php",
@@ -768,7 +864,7 @@ $(document).ready(() => {
           alert("Booking completed successfully!")
           $("#waiverForm").modal("hide")
           // Redirect to confirmation page or refresh
-          window.location.href = "booking-daycare.php"
+          window.location.href = "book-pet-hotel.php"
         } else {
           alert("Error: " + (response.message || "Unknown error"))
           // Re-enable the button if there's an error
@@ -843,4 +939,3 @@ $(document).ready(() => {
     $("#petPaymentModal").modal("show")
   })
 })
-

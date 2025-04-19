@@ -223,7 +223,7 @@ include 'header.php'; ?>
                     <li>Pay-as-you-go pricing with no discounts.</li>
                     </ul>
 
-                <div class = "member-price">₱ xxx.xx</div>
+                <div class = "member-price">Free!</div>
                 
                 </div><!-- member desc--></center>
                 </div><!-- cards1 -->
@@ -237,7 +237,7 @@ include 'header.php'; ?>
                     <li>Priority booking during holidays and weekends.</li>
                     </ul>
 
-                <div class = "member-price" style = "margin-top: 40px">₱ xxx.xx</div>
+                <div class = "member-price" style = "margin-top: 40px">₱ 1000.00</div>
                 
                 </div><!-- member desc--></center>
                 </div><!-- cards2 -->
@@ -251,7 +251,7 @@ include 'header.php'; ?>
                     <li>Complimentary daycare service for one day each month.</li>
                     </ul>
 
-                <div class = "member-price" style = "margin-top: 40px">₱ xxx.xx</div>
+                <div class = "member-price" style = "margin-top: 40px">₱ 2000.00</div>
                 
                 </div><!-- member desc--></center>
                 </div><!-- cards3 -->
@@ -265,7 +265,7 @@ include 'header.php'; ?>
                     <li>Pay-as-you-go pricing with no discounts.</li>
                     </ul>
 
-                <div class = "member-price">₱ xxx.xx</div>
+                <div class = "member-price">₱ 3500.00</div>
                 
                 </div><!-- member desc--></center>
                 </div><!-- cards4 -->
