@@ -429,7 +429,46 @@ unset($_SESSION['pet_form_data']);
                         
                         <div class="row mt-3">
                             <div class="col-12 text-center">
-                                <button type="submit" class="btn" id="confirm-but">Save and Go Back</button>
+                            <button type="button" class="btn" id="confirm-but">Save and Go Back</button>
+                                <script>
+                                   document.getElementById("confirm-but").addEventListener("click", function() {
+                                            // Get the form element
+                                            const petForm = document.querySelector('.pet-form');
+                                            
+                                            // Create a FormData object
+                                            const formData = new FormData(petForm);
+                                            
+                                            // Add a hidden field to identify this is from the modal
+                                            formData.append('from_modal', 'true');
+                                            
+                                            // Use AJAX to submit the form
+                                            $.ajax({
+                                                type: "POST",
+                                                url: "add_pet.php",
+                                                data: formData,
+                                                processData: false,
+                                                contentType: false,
+                                                success: function(response) {
+                                                    // Show success message
+                                                    alert("New pet registered successfully!");
+                                                    
+                                                    // Force close the modal using Bootstrap's modal method
+                                                    $('#petRegistrationModal').modal('hide');
+                                                    
+                                                    // Refresh the pet dropdown after a short delay
+                                                    setTimeout(function() {
+                                                        if (typeof fetchCustomerPets === 'function') {
+                                                            fetchCustomerPets();
+                                                        }
+                                                    }, 500);
+                                                },
+                                                error: function(xhr, status, error) {
+                                                    console.error("Error submitting form:", error);
+                                                    alert("There was an error registering your pet. Please try again.");
+                                                }
+                                            });
+                                        });
+                                </script>
                             </div>
                         </div>
                     </div>
@@ -518,10 +557,10 @@ unset($_SESSION['pet_form_data']);
                                                                 <img src="maya.png" alt="Maya QR Code" class="qr-code" id="mayaQR">
                                                             </div>
                                                             <p class="qr-instruction">We accept bank transfer to our GCash/Maya account or just scan the QR Code!</p>
-                                                            <div class="account-info">
+                                                            <!-- <div class="account-info">
                                                                 <p>Account Number: <span>987654321</span></p>
                                                                 <p>Account Name: <span>Veatrice Delos Santos</span></p>
-                                                            </div>
+                                                            </div> -->
                                                             <button type="button" class="btn btn-primary action-btn" id="proceed-to-waiver" disabled>
                                                                 Complete Booking
                                                             </button>
@@ -697,6 +736,18 @@ resulting from any service provided, or unintentional injury to my pet while und
                 updatePaymentAmounts();
             });
         });
+    </script>
+
+    <script>
+        // Fix for modal not closing
+    $(document).ready(function() {
+        // Ensure the modal backdrop is removed when the modal is closed
+        $('#petRegistrationModal').on('hidden.bs.modal', function () {
+            $('.modal-backdrop').remove();
+            $('body').removeClass('modal-open');
+            $('body').css('padding-right', '');
+        });
+    });
     </script>
 </body>
 </html>

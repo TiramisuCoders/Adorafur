@@ -112,223 +112,145 @@ $(document).ready(() => {
     highlightDateRange()
   }
 
-  // Add this function to your books.js file
-function updateAvailableSlots() {
-  if (!selectedDates.checkIn || !selectedDates.checkOut) {
-    return;
-  }
-
-  // Get the selected pet type and variant
-  let species = "";
-  let variant = "";
-  
-  if (window.bookingData.pets.length > 0) {
-    const pet = window.bookingData.pets[0];
-    
-    // Extract species and variant from pet size
-    if (pet.size.includes("Dog")) {
-      species = "dog";
-      if (pet.size.includes("Small")) {
-        variant = "small";
-      } else if (pet.size.includes("Large")) {
-        variant = "large";
-      } else {
-        variant = "regular";
-      }
-    } else if (pet.size.includes("Cat")) {
-      species = "cat";
-      variant = "regular";
+  // Modify the updateAvailableSlots function to match the daycare system's approach
+  function updateAvailableSlots() {
+    if (!selectedDates.checkIn || !selectedDates.checkOut) {
+      $(".available-slot").text("Available Slots: Select dates")
+      return
     }
-  }
 
-  // If no pet is selected yet, just return
-  if (!species || !variant) {
-    return;
-  }
+    // Get the selected pet type and variant
+    let species = ""
+    let variant = ""
 
-  const checkInDate = selectedDates.checkIn.toISOString().split("T")[0];
-  const checkOutDate = selectedDates.checkOut.toISOString().split("T")[0];
+    if (window.bookingData.pets.length > 0) {
+      const pet = window.bookingData.pets[0]
 
-  $.ajax({
-    type: "POST",
-    url: "get-available-slots-hotel.php",
-    data: {
-      action: "get_hotel_slots",
-      check_in_date: checkInDate,
-      check_out_date: checkOutDate,
-      species: species,
-      variant: variant,
-    },
-    dataType: "json",
-    beforeSend: function() {
-      console.log("Sending AJAX request with data:", {
+      // Extract species and variant from pet size
+      if (pet.size.includes("Dog")) {
+        species = "dog"
+        if (pet.size.includes("Small")) {
+          variant = "small"
+        } else if (pet.size.includes("Large")) {
+          variant = "large"
+        } else {
+          variant = "regular"
+        }
+      } else if (pet.size.includes("Cat")) {
+        species = "cat"
+        variant = "regular"
+      }
+    }
+
+    // If no pet is selected yet, just show a message
+    if (!species || !variant) {
+      $(".available-slot").text("Available Slots: Select a pet type first")
+      return
+    }
+
+    const checkInDate = selectedDates.checkIn.toISOString().split("T")[0]
+    const checkOutDate = selectedDates.checkOut.toISOString().split("T")[0]
+
+    $.ajax({
+      type: "POST",
+      url: "get-available-slots-hotel.php",
+      data: {
+        action: "get_hotel_slots",
         check_in_date: checkInDate,
         check_out_date: checkOutDate,
         species: species,
-        variant: variant
-      });
-    },
-    success: (response) => {
-      console.log("AJAX success, full response:", response);
-      
-      // Rest of your success handler...
-    },
-    error: (xhr, status, error) => {
-      console.error("AJAX Error:", error);
-      console.error("Status:", status);
-      console.error("Response:", xhr.responseText);
-      $(".available-slot").html(`Available Slots: <span id="available-slots-count">Error</span>`);
-    },
-  });
-}
+        variant: variant,
+      },
+      dataType: "json",
+      beforeSend: () => {
+        // Show loading indicator
+        $(".available-slot").html(`<span>Checking availability...</span>`)
+      },
+      success: (response) => {
+        console.log("AJAX success, full response:", response)
 
-function handleDateClick(date, element) {
-  if (!selectedDates.checkIn || (selectedDates.checkIn && selectedDates.checkOut)) {
-    // Start new selection
-    clearDateSelection()
-    selectedDates.checkIn = date
-    element.addClass("selected-date")
+        if (response.success) {
+          const availableSlots = response.available_slots || 0
+          const maxSlots = response.max_slots || 10
 
-    // Update booking data
-    window.bookingData.checkInDate = date.toLocaleDateString("en-US", {
-      month: "long",
-      day: "numeric",
-    })
-    window.bookingData.checkOutDate = window.bookingData.checkInDate
-  } else {
-    // Complete selection
-    if (date > selectedDates.checkIn) {
-      selectedDates.checkOut = date
+          // Update the UI with the available slots count
+          $(".available-slot").html(`
+          Available Slots: <span class="slot-count">${availableSlots}</span>/${maxSlots}
+        `)
 
-      // Update booking data
-      window.bookingData.checkOutDate = date.toLocaleDateString("en-US", {
-        month: "long",
-        day: "numeric",
-      })
-
-      // Apply highlighting to dates in between
-      $(".day").each(function () {
-        const dateStr = $(this).attr("data-date")
-        if (!dateStr) return
-
-        const currentDate = new Date(dateStr)
-        const currentDateStr = currentDate.toISOString().split("T")[0]
-        const checkInDateStr = selectedDates.checkIn.toISOString().split("T")[0]
-        const checkOutDateStr = selectedDates.checkOut.toISOString().split("T")[0]
-
-        if (currentDateStr === checkInDateStr || currentDateStr === checkOutDateStr) {
-          $(this).removeClass("highlighted").addClass("selected-date")
-        } else if (currentDate > selectedDates.checkIn && currentDate < selectedDates.checkOut) {
-          $(this).removeClass("selected-date").addClass("highlighted")
-        }
-      })
-      
-      // Update available slots after date range is selected
-      updateAvailableSlots()
-    }
-  }
-
-  // Enable time selection after date selection
-  $(".checkin-out").removeClass("disabled-section")
-
-  // Update summary
-  updateBookingSummary()
-}
-
-function updateAvailableSlots(date) {
-  $.ajax({
-    url: "get_available_slots_hotel.php", 
-    type: "GET",
-    data: { date: date },
-    dataType: "json",
-    success: (response) => {
-      console.log("AJAX success, full response:", response)
-
-      if (response.success && response.available_slots) {
-        let availableCount
-
-        // Handle both formats - either a number or an object with 'Overall' key
-        if (typeof response.available_slots === "number") {
-          availableCount = response.available_slots
-        } else if (response.available_slots.Overall !== undefined) {
-          availableCount = response.available_slots.Overall
+          // Add visual indicator based on availability
+          if (availableSlots <= 0) {
+            $(".available-slot").addClass("no-slots").removeClass("few-slots")
+          } else if (availableSlots <= 3) {
+            $(".available-slot").addClass("few-slots").removeClass("no-slots")
+          } else {
+            $(".available-slot").removeClass("few-slots no-slots")
+          }
         } else {
-          // If it's still in the old format with variants, just take the first value
-          const firstKey = Object.keys(response.available_slots)[0]
-          availableCount = response.available_slots[firstKey] || 0
+          $(".available-slot").html(`Available Slots: <span class="slot-count">Error</span>`)
         }
-
-        // Update the UI with the available slots count
-        $(".available-slot").html(`Available Slots: <span class="slot-count">${availableCount}</span>`)
-
-        // If no slots available, show a message
-        if (availableCount <= 0) {
-          $(".available-slot").html(`<span class="text-danger">No slots available for selected dates</span>`)
-        }
-      } else {
-        $(".available-slot").html(`Available Slots: <span id="available-slots-count">Error</span>`)
-      }
-    },
-    error: (xhr, status, error) => {
-      console.error("AJAX error:", status, error)
-      $(".available-slot").html(`Available Slots: <span id="available-slots-count">Error</span>`)
-    },
-  })
-}
-
-
-function handleDateClick(date, element) {
-  if (!selectedDates.checkIn || (selectedDates.checkIn && selectedDates.checkOut)) {
-    // Start new selection
-    clearDateSelection()
-    selectedDates.checkIn = date
-    element.addClass("selected-date")
-
-    // Update booking data
-    window.bookingData.checkInDate = date.toLocaleDateString("en-US", {
-      month: "long",
-      day: "numeric",
+      },
+      error: (xhr, status, error) => {
+        console.error("AJAX Error:", error)
+        console.error("Status:", status)
+        console.error("Response:", xhr.responseText)
+        $(".available-slot").html(`Available Slots: <span class="slot-count">Error</span>`)
+      },
     })
-    window.bookingData.checkOutDate = window.bookingData.checkInDate
-  } else {
-    // Complete selection
-    if (date > selectedDates.checkIn) {
-      selectedDates.checkOut = date
+  }
+
+  function handleDateClick(date, element) {
+    if (!selectedDates.checkIn || (selectedDates.checkIn && selectedDates.checkOut)) {
+      // Start new selection
+      clearDateSelection()
+      selectedDates.checkIn = date
+      element.addClass("selected-date")
 
       // Update booking data
-      window.bookingData.checkOutDate = date.toLocaleDateString("en-US", {
+      window.bookingData.checkInDate = date.toLocaleDateString("en-US", {
         month: "long",
         day: "numeric",
       })
+      window.bookingData.checkOutDate = window.bookingData.checkInDate
+    } else {
+      // Complete selection
+      if (date > selectedDates.checkIn) {
+        selectedDates.checkOut = date
 
-      // Apply highlighting to dates in between
-      $(".day").each(function () {
-        const dateStr = $(this).attr("data-date")
-        if (!dateStr) return
+        // Update booking data
+        window.bookingData.checkOutDate = date.toLocaleDateString("en-US", {
+          month: "long",
+          day: "numeric",
+        })
 
-        const currentDate = new Date(dateStr)
-        const currentDateStr = currentDate.toISOString().split("T")[0]
-        const checkInDateStr = selectedDates.checkIn.toISOString().split("T")[0]
-        const checkOutDateStr = selectedDates.checkOut.toISOString().split("T")[0]
+        // Apply highlighting to dates in between
+        $(".day").each(function () {
+          const dateStr = $(this).attr("data-date")
+          if (!dateStr) return
 
-        if (currentDateStr === checkInDateStr || currentDateStr === checkOutDateStr) {
-          $(this).removeClass("highlighted").addClass("selected-date")
-        } else if (currentDate > selectedDates.checkIn && currentDate < selectedDates.checkOut) {
-          $(this).removeClass("selected-date").addClass("highlighted")
-        }
-      })
+          const currentDate = new Date(dateStr)
+          const currentDateStr = currentDate.toISOString().split("T")[0]
+          const checkInDateStr = selectedDates.checkIn.toISOString().split("T")[0]
+          const checkOutDateStr = selectedDates.checkOut.toISOString().split("T")[0]
 
-      // Update available slots after date range is selected
-      updateAvailableSlots()
+          if (currentDateStr === checkInDateStr || currentDateStr === checkOutDateStr) {
+            $(this).removeClass("highlighted").addClass("selected-date")
+          } else if (currentDate > selectedDates.checkIn && currentDate < selectedDates.checkOut) {
+            $(this).removeClass("selected-date").addClass("highlighted")
+          }
+        })
+
+        // Update available slots after date range is selected
+        updateAvailableSlots()
+      }
     }
+
+    // Enable time selection after date selection
+    $(".checkin-out").removeClass("disabled-section")
+
+    // Update summary
+    updateBookingSummary()
   }
-
-  // Enable time selection after date selection
-  $(".checkin-out").removeClass("disabled-section")
-
-  // Update summary
-  updateBookingSummary()
-}
 
   // Clear date selection
   function clearDateSelection() {
