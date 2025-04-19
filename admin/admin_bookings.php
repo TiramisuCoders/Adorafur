@@ -30,7 +30,7 @@ if (!isset($_SESSION['admin_id'])) {
           </div>
 
           <div class="book-button active">
-            <a href="admin_bookings.php" class="booking-text">Bookings</a>
+            <a href="admin_bookings.php" class="booking-text">Appointments</a>
           </div>
 
           <div class="customer-button">
@@ -57,7 +57,7 @@ if (!isset($_SESSION['admin_id'])) {
     <!-- BOOKINGS PANEL -->
     <div class="panel-container">
       <div class="head">
-        <div class="head-text"> Bookings</div>
+        <div class="head-text">Appointments</div>
         <div class="time-text" id="real-time-clock">Loading...</div>
       </div>
 

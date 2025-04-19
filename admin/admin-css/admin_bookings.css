@@ -971,16 +971,16 @@
 }
 
 .confirm-delete-btn {
-  background-color: #d32f2f;
+  background-color: #d48d64;
   color: white;
 }
 
 .confirm-delete-btn:hover {
-  background-color: #b71c1c;
+  background-color: #db6622;
 }
 
 .cancel-delete-btn {
-  background-color: #d48d64;
+  background-color: #969696;
   color: white;
 }
 

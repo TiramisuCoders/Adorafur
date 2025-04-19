@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="header1.css">
-    <link rel="stylesheet" href="home1.css">
+    <link rel="stylesheet" href="home.css">
     <script src="script.js" defer></script>
     <link rel="icon" type="image/png" href="Header-Pics/logo.png">
     <title>Adorafur Home</title>
@@ -46,7 +46,7 @@ include 'header.php'; ?>
         <!-- Slideshow Section -->
         <div class="home-1">
             <div class="welcome-to-text">
-                <div class="welcome-text">WELCOME TO</div>
+                <div class="welcome-text1">WELCOME TO</div>
                 <div class="welcome-text">ADORAFUR HAPPY STAY!</div>
                 <a href = "#second-scroll"><img class="scroll_button" src="Home-Pics/scroll_button.png"/></a>
             </div>

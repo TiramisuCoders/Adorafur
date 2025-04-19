@@ -79,7 +79,7 @@ try {
                 <a href="admin_home.php" class="home-text">Home</a>
             </div>
             <div class="book-button">
-                <a href="admin_bookings.php" class="booking-text">Bookings</a>
+                <a href="admin_bookings.php" class="booking-text">Appointments</a>
             </div>
             <div class="customer-button">
                 <a href="admin_customers.php" class="customers-text">Customers</a>

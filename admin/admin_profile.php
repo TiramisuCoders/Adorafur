@@ -64,7 +64,7 @@ require_once 'create_admin_modal.php';
           </div>
 
           <div class="book-button">
-            <a href="admin_bookings.php" class="booking-text">Bookings</a>
+            <a href="admin_bookings.php" class="booking-text">Appointments</a>
           </div>
 
           <div class="customer-button">
