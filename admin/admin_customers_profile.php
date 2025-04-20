@@ -87,6 +87,7 @@ try {
     
     // Query to fetch pets with correct breeds
     $petsSql = "SELECT 
+                pet_id,
                 pet_name,
                 pet_breed
                 FROM 
@@ -232,8 +233,9 @@ if (empty($transactions)) {
                         <img src="admin-pics/edit-icon.png" class="edit-img" alt="Edit">
                     </button>
                 </div>
+                <?php include('view-pets.php'); ?>
                 <?php foreach ($pets as $pet): ?>
-                <div class="pet-card">
+                <div class="pet-card" onclick="viewPetDetails(<?php echo $pet['pet_id']; ?>)">
                     <div class="pet-profile1"><?php echo htmlspecialchars($pet['pet_name']); ?></div>
                     <div class="pet-profile2"><?php echo htmlspecialchars($pet['pet_breed']); ?></div>
                 </div>
@@ -452,6 +454,86 @@ if (empty($transactions)) {
         proofOfPayment.setAttribute("required", "true");
     }
 }
+
+
+// Define the viewPetDetails function directly in this file
+function viewPetDetails(petId) {
+            // Fetch pet details via AJAX
+            fetch(`view-pets.php?fetch_pet=1&pet_id=${petId}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.error) {
+                        alert('Error fetching pet details: ' + data.error);
+                        return;
+                    }
+                    
+                    // Update modal with pet details
+                    document.getElementById('pet-owner').textContent = data.c_first_name + ' ' + data.c_last_name;
+                    document.getElementById('pet-name').textContent = data.pet_name;
+                    document.getElementById('pet-breed').textContent = data.pet_breed;
+                    document.getElementById('pet-size').textContent = data.pet_size;
+                    
+                    // Format age
+                    let ageText = '';
+                    if (data.pet_age_years > 0) {
+                        ageText += data.pet_age_years + ' year(s)';
+                    }
+                    document.getElementById('pet-age').textContent = ageText || 'Not specified';
+                    
+                    document.getElementById('pet-gender').textContent = data.pet_gender;
+                    document.getElementById('pet-description').textContent = data.pet_description || 'None';
+                    document.getElementById('pet_special_instruction').textContent = data.pet_special_instruction || 'None';
+                    document.getElementById('pet_vaccination_status').textContent = data.pet_vaccination_status;
+                    
+                    // Format dates
+                    const vacDate = data.pet_vaccination_date_administered ? new Date(data.pet_vaccination_date_administered).toLocaleDateString() : 'Not specified';
+                    const expDate = data.pet_vaccination_date_expiry ? new Date(data.pet_vaccination_date_expiry).toLocaleDateString() : 'Not specified';
+                    
+                    document.getElementById('pet_vaccination_date_administered').textContent = vacDate;
+                    document.getElementById('pet_vaccination_date_expiry').textContent = expDate;
+                    
+                    // Set pet image if available
+                    if (data.pet_picture) {
+                        document.getElementById('pet_picture').src = data.pet_picture;
+                    } else {
+                        document.getElementById('pet_picture').src = 'Profile-Pics/pet_icon.png';
+                    }
+                    
+                    // Show the modal
+                    const modal = new bootstrap.Modal(document.getElementById('viewPetModal'));
+                    modal.show();
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('An error occurred while fetching pet details.');
+                });
+        }
+ // Search functionality
+ document.getElementById('petSearch').addEventListener('keyup', function() {
+            const searchTerm = this.value.toLowerCase();
+            const petCards = document.querySelectorAll('.pet-card');
+            
+            petCards.forEach(card => {
+                const petName = card.querySelector('.pet-name').textContent.toLowerCase();
+                const petBreed = card.querySelector('.pet-breed').textContent.toLowerCase();
+                
+                if (petName.includes(searchTerm) || petBreed.includes(searchTerm)) {
+                    card.style.display = '';
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+        });
+        
+        // Add a visual indicator for clickable cards
+        document.querySelectorAll('.pet-card').forEach(card => {
+            card.addEventListener('click', function() {
+                this.classList.add('active');
+                setTimeout(() => {
+                    this.classList.remove('active');
+                }, 200);
+            });
+        });
     </script>
         <script src="admin.js"></script>
 </body>
