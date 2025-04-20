@@ -61,12 +61,13 @@ try {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="icon" type="image/png" href="admin-pics/adorafur-logo.png">
-    <link rel="stylesheet" href="admin-css/admin_header01.css">
+    <link rel="stylesheet" href="admin-css/admin_header.css">
     <link rel="stylesheet" href="admin-css/admin_home01.css">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="admin.js"></script>
     <title>Admin Homepage</title>
+
 
 </head>
 
@@ -100,13 +101,12 @@ try {
     <div class="panel-container">
         <div class="head">
             <h6  class="head-text">Admin Panel</h6>
-            <!-- Real-time clock -->
-            <div class="time-text" id="real-time-clock">Loading...</div>
-           
+            <!-- Current date display with day of week -->
+            <div class="time-text" id="current-date">Loading...</div>
         </div>      
        
-        <div class="date-and-day">Loading date...</div>
-
+        
+       
         <div class="reservations-container">
         <table class="reservations">
             <?php
@@ -358,6 +358,27 @@ try {
     
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+    // Update date display
+    function updateDateDisplay() {
+    const now = new Date();
+    
+    // Get day of week, month, day, and year separately
+    const dayOfWeek = now.toLocaleDateString('en-US', { weekday: 'long' });
+    const month = now.toLocaleDateString('en-US', { month: 'long' });
+    const day = now.getDate();
+    const year = now.getFullYear();
+    
+    // Combine them without comma
+    const formattedDate = `${dayOfWeek} ${month} ${day} ${year}`;
+    
+    // Update the element
+    document.getElementById('current-date').textContent = formattedDate;
+}
+   
+   // Call immediately and set up to update daily
+   updateDateDisplay();
+   setInterval(updateDateDisplay, 86400000); // Update once per day (in milliseconds)
+    
     var bookingModal = document.getElementById('bookingModal');
     bookingModal.addEventListener('show.bs.modal', function (event) {
         var button = event.relatedTarget;
