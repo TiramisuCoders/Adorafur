@@ -30,7 +30,7 @@ if (!isset($_SESSION['admin_id'])) {
           </div>
 
           <div class="book-button active">
-            <a href="admin_bookings.php" class="booking-text">Bookings</a>
+            <a href="admin_bookings.php" class="booking-text">Appointments</a>
           </div>
 
           <div class="customer-button">
@@ -57,7 +57,7 @@ if (!isset($_SESSION['admin_id'])) {
     <!-- BOOKINGS PANEL -->
     <div class="panel-container">
       <div class="head">
-        <div class="head-text"> Bookings</div>
+        <div class="head-text">Appointments</div>
         <div class="time-text" id="real-time-clock">Loading...</div>
       </div>
 
@@ -105,6 +105,18 @@ if (!isset($_SESSION['admin_id'])) {
 <br>
             <button id="submitActivityBtn">Add</button>
             <button class="close-btn" onclick="closeSidebarModal()">Cancel</button>
+        </div>
+    </div>
+
+    <!-- Delete Confirmation Modal -->
+    <div class="delete-modal" id="deleteModal">
+        <div class="delete-modal-content">
+            <h3 class="delete-modal-title">Confirm Delete</h3>
+            <p class="delete-modal-message">Are you sure you want to delete this item?</p>
+            <div class="delete-modal-buttons">
+                <button id="confirmDeleteBtn" class="confirm-delete-btn">Yes, Delete</button>
+                <button id="cancelDeleteBtn" class="cancel-delete-btn">Cancel</button>
+            </div>
         </div>
     </div>
 

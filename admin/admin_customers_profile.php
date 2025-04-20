@@ -170,7 +170,7 @@ if (empty($transactions)) {
           </div>
 
           <div class="book-button">
-            <a href="admin_bookings.php" class="booking-text">Bookings</a>
+            <a href="admin_bookings.php" class="booking-text">Appointments</a>
           </div>
 
           <div class="customer-button active">
