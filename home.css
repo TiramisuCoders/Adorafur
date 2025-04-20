@@ -25,6 +25,14 @@ html, body {
 /* Responsive text size */
 .welcome-text {
     font-family: "Baloo 2", sans-serif;
+    font-size: clamp(30px, 6vw, 75px); /* Adapts size from 30px to 55px based on screen width */
+    font-weight: 600;
+    text-align: center;
+    margin: 0 10px; /* Prevents text from touching the screen edges */
+}
+
+.welcome-text1 {
+    font-family: "Baloo 2", sans-serif;
     font-size: clamp(30px, 6vw, 55px); /* Adapts size from 30px to 55px based on screen width */
     font-weight: 500;
     text-align: center;
@@ -183,7 +191,7 @@ html, body {
     text-align: center;
     color: white;
     font-family: "BalooTammudu2-Medium", sans-serif;
-    font-weight: 500;
+    font-weight: 600;
     padding: 0.5em;
     border: 1px solid white;
     border-radius: 70px;
@@ -250,6 +258,7 @@ html, body {
 
     .we-offer {
         font-size: 96px;
+        font-weight: 600;
     }
 }
 
@@ -261,6 +270,7 @@ html, body {
 
     .we-offer {
         font-size: 75px;
+        font-weight: 600;
     }
 }
 
@@ -272,6 +282,7 @@ html, body {
 
     .we-offer {
         font-size: 55px;
+        font-weight: 600;
     }
 }
 
@@ -283,6 +294,7 @@ html, body {
 
     .we-offer {
         font-size: 45px;
+        font-weight: 600;
     }
 
     /* Adjust the margin for very small screens */
@@ -624,13 +636,14 @@ html, body {
     word-wrap: break-word; /* Ensures long words wrap instead of overflowing */
 }
 
-.iap{
+.iap {
     color: #AB643C;
     text-align: center;
-    font-size: 90%;
+    font-weight: bold;
     font-style: normal;
-    font-weight: 500;
-    line-height: normal;
+    line-height: 1.2;
+    font-size: clamp(1.5rem, 2.5vw + 1rem, 3rem);
+    margin-bottom: 25px;
 }
 
 .iap-caption{
@@ -819,8 +832,9 @@ html, body {
 
 .perk{
     text-align: center;
-    font-size: 200%;
+    font-size: 250%;
     font-weight: bolder;
+    margin-top: 10px;
 }
 
 .bnow {

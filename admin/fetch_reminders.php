@@ -22,8 +22,27 @@ try {
         throw new Exception("Unauthorized access. Please log in.");
     }
 
+    // Check if the completed column exists, if not, add it
+    $checkColumnQuery = "SELECT column_name 
+                        FROM information_schema.columns 
+                        WHERE table_name = 'admin_activities_reminders' 
+                        AND column_name = 'completed'";
+    
+    $checkStmt = $conn->prepare($checkColumnQuery);
+    $checkStmt->execute();
+    
+    if ($checkStmt->rowCount() === 0) {
+        // Column doesn't exist, so add it
+        $alterTableQuery = "ALTER TABLE Admin_Activities_Reminders 
+                           ADD COLUMN completed BOOLEAN DEFAULT FALSE";
+        
+        $conn->exec($alterTableQuery);
+        error_log("Added 'completed' column to Admin_Activities_Reminders table");
+    }
+
     // Fetch latest reminders and tasks using PDO
-    $query = "SELECT activity_date, activity_time, activity_description, activity_type 
+    $query = "SELECT activity_id, activity_date, activity_time, activity_description, activity_type, 
+              COALESCE(completed, FALSE) as completed 
               FROM Admin_Activities_Reminders 
               WHERE admin_id = :admin_id 
               ORDER BY activity_date ASC, activity_time ASC";
@@ -40,6 +59,9 @@ try {
         
         $timeObj = new DateTime($row['activity_time']);
         $row['formatted_time'] = $timeObj->format('g:i A');
+        
+        // Convert completed to boolean for JavaScript
+        $row['completed'] = (bool)$row['completed'];
         
         $activities[] = $row;
     }
