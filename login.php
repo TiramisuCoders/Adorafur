@@ -182,6 +182,10 @@ function handleRegister($conn) {
     global $firstname, $lastname, $email, $contactNumber;
     global $firstname_error, $lastname_error, $email_error, $contact_error, $password_error, $firstname;
     $hasError = false;
+    
+    // Check if this is an AJAX request
+    $isAjax = isset($_SERVER['HTTP_X_REQUESTED_WITH']) && 
+              strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest';
 
     $firstname = htmlspecialchars($_POST['firstName'] ?? '');
     $lastname = htmlspecialchars($_POST['lastName'] ?? '');
@@ -329,6 +333,30 @@ function handleRegister($conn) {
     
     if ($hasError) {
         $_SESSION['register_error'] = true; // Flag to show the register modal with errors
+        
+        // For AJAX requests, return JSON with errors
+        if ($isAjax) {
+            header('Content-Type: application/json');
+            echo json_encode([
+                'success' => false,
+                'errors' => [
+                    'firstname_error' => $firstname_error,
+                    'lastname_error' => $lastname_error,
+                    'email_error' => $email_error,
+                    'contact_error' => $contact_error,
+                    'password_error' => $password_error
+                ]
+            ]);
+            exit;
+        }
+    } else if ($isAjax) {
+        // For successful AJAX requests
+        header('Content-Type: application/json');
+        echo json_encode([
+            'success' => true,
+            'message' => 'Registration successful'
+        ]);
+        exit;
     }
     
     return !$hasError;
@@ -927,7 +955,7 @@ function handleForgotPassword($conn) {
                                                  <button type="button" class="btn w-100" id="cancel-but" data-bs-dismiss="modal">Cancel</button>
                                              </div>
                                              <div class="col-6">
-                                                 <button type="submit" class="btn create-button w-100" id="create-but">Create</button>
+                                                 <button type="button" class="btn create-button w-100" id="create-but">Create</button>
                                              </div>
                                          </div>
                                     </div>
@@ -958,14 +986,14 @@ function handleForgotPassword($conn) {
         <div class="modal-dialog modal-lg modal-dialog-centered">
             <div class="modal-content">
                 <div class="modal-body" id="congrats-body">
-                    <h5 class="modal-title">Congratulations!</h5>
-                    <h2 class="modal-title">You are now registered with Adorafur!</h2>
+                    <h5 class="modal-title">You're almost there!</h5>
+                    <h2 class="modal-title">Thank you for registering with Adorafur.</h2>
                     <p>
                         We've sent a verification link to your email address. Please check your inbox and click the link to verify your account.
                         <strong>You must verify your email before you can log in.</strong>
                     </p>
                     <p>
-                        If you don't see the email in your inbox, please check your spam folder. The verification link will expire in 24 hours.
+                        If you don't see the email in your inbox, please check your spam folder. The verification link will expire in <strong>24 hours.</strong>
                     </p>
 
                     <button type="button" class="btn btn-primary" id="returnToLogin">Return</button>
@@ -1091,14 +1119,329 @@ function handleForgotPassword($conn) {
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script>
     document.addEventListener("DOMContentLoaded", function() {
+        // Check if we need to show the register modal (after a failed submission)
+        if (sessionStorage.getItem('showRegisterModal') === 'true') {
+            // Clear the flag
+            sessionStorage.removeItem('showRegisterModal');
+            
+            // Show the register modal
+            setTimeout(() => {
+                const registerModal = new bootstrap.Modal(document.getElementById('registerModal'));
+                registerModal.show();
+            }, 100);
+        }
+
+        // Prevent modals from closing when there are errors
+        const loginForm = document.getElementById('loginForm');
+        const registerForm = document.getElementById('registerForm');
+        
+        // In the JavaScript section, find the loginForm event listener and replace it with this improved version:
+
+        if (loginForm) {
+            loginForm.addEventListener('submit', function(e) {
+                // Always prevent the default form submission
+                e.preventDefault();
+                
+                // Clear previous error messages
+                document.getElementById('loginEmailError').style.display = 'none';
+                document.getElementById('loginPasswordError').style.display = 'none';
+                
+                // Get form data
+                const formData = new FormData(this);
+                
+                // Show loading state
+                const loginButton = document.getElementById('loginbut');
+                const originalButtonText = loginButton.innerHTML;
+                loginButton.disabled = true;
+                loginButton.innerHTML = 'Logging in...';
+                
+                // Send AJAX request
+                fetch('login.php', {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => {
+                    // Check if we were redirected (successful login)
+                    if (response.redirected) {
+                        // If redirected, go to the new location
+                        window.location.href = response.url;
+                    } else {
+                        // If not redirected, parse the response to check for errors
+                        return response.text().then(html => {
+                            // Create a temporary element to parse the HTML response
+                            const tempDiv = document.createElement('div');
+                            tempDiv.innerHTML = html;
+                            
+                            // Check for email error
+                            const emailError = tempDiv.querySelector('.login-email-error');
+                            if (emailError && emailError.textContent.trim()) {
+                                document.getElementById('loginEmailError').textContent = emailError.textContent;
+                                document.getElementById('loginEmailError').style.display = 'block';
+                            }
+                            
+                            // Check for password error
+                            const passwordError = tempDiv.querySelector('.login-password-error');
+                            if (passwordError && passwordError.textContent.trim()) {
+                                document.getElementById('loginPasswordError').textContent = passwordError.textContent;
+                                document.getElementById('loginPasswordError').style.display = 'block';
+                            }
+                            
+                            // If no specific errors found but login failed, show generic error
+                            if (!emailError && !passwordError) {
+                                document.getElementById('loginPasswordError').textContent = 'Login failed. Please try again.';
+                                document.getElementById('loginPasswordError').style.display = 'block';
+                            }
+                            
+                            // Do NOT close the modal on error - it will stay open
+                        });
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    document.getElementById('loginPasswordError').textContent = 'An error occurred. Please try again.';
+                    document.getElementById('loginPasswordError').style.display = 'block';
+                })
+                .finally(() => {
+                    // Reset button state
+                    loginButton.disabled = false;
+                    loginButton.innerHTML = originalButtonText;
+                });
+            });
+        }
+        
+        if (registerForm) {
+            registerForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                validateAndSubmitForm();
+            });
+        }
+
+        // Function to validate and submit the registration form
+        function validateAndSubmitForm() {
+            // Get form data
+            const formData = new FormData(registerForm);
+            
+            // Send AJAX request
+            fetch('login.php', {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'  // Add this to identify AJAX requests
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                // Clear previous error messages
+                document.querySelectorAll('.error').forEach(el => {
+                    el.style.display = 'none';
+                    el.textContent = '';
+                });
+                
+                if (data.success) {
+                    // Close the register modal first
+                    const registerModalEl = document.getElementById('registerModal');
+                    const registerModal = bootstrap.Modal.getInstance(registerModalEl);
+                    if (registerModal) {
+                        registerModal.hide();
+                    }
+                    
+                    // Reload the page after the modal is hidden to show the congrats modal
+                    registerModalEl.addEventListener('hidden.bs.modal', function handler() {
+                        registerModalEl.removeEventListener('hidden.bs.modal', handler);
+                        window.location.reload();
+                    });
+                } else {
+                    // Display error messages
+                    if (data.errors.firstname_error) {
+                        const firstNameError = document.querySelector('.firstname-error');
+                        if (firstNameError) {
+                            firstNameError.textContent = data.errors.firstname_error;
+                            firstNameError.style.display = 'block';
+                        }
+                    }
+                    
+                    if (data.errors.lastname_error) {
+                        const lastNameError = document.querySelector('.lastname-error');
+                        if (lastNameError) {
+                            lastNameError.textContent = data.errors.lastname_error;
+                            lastNameError.style.display = 'block';
+                        }
+                    }
+                    
+                    if (data.errors.email_error) {
+                        const emailError = document.querySelector('.email-error');
+                        if (emailError) {
+                            emailError.textContent = data.errors.email_error;
+                            emailError.style.display = 'block';
+                        }
+                    }
+                    
+                    if (data.errors.contact_error) {
+                        const contactError = document.querySelector('.contact-error');
+                        if (contactError) {
+                            contactError.textContent = data.errors.contact_error;
+                            contactError.style.display = 'block';
+                        }
+                    }
+                    
+                    if (data.errors.password_error) {
+                        const passwordError = document.querySelector('.password-error');
+                        if (passwordError) {
+                            passwordError.textContent = data.errors.password_error;
+                            passwordError.style.display = 'block';
+                        }
+                    }
+                    
+                    // Make sure the register modal stays open
+                    const registerModal = bootstrap.Modal.getInstance(document.getElementById('registerModal'));
+                    if (!registerModal) {
+                        // If modal instance doesn't exist, create and show it
+                        const newRegisterModal = new bootstrap.Modal(document.getElementById('registerModal'));
+                        newRegisterModal.show();
+                    }
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                // Keep the register modal open on error
+                const registerModal = bootstrap.Modal.getInstance(document.getElementById('registerModal'));
+                if (registerModal) {
+                    registerModal.show();
+                } else {
+                    const newRegisterModal = new bootstrap.Modal(document.getElementById('registerModal'));
+                    newRegisterModal.show();
+                }
+            });
+        }
+
+        // Attach click handler to the Create button
+        const createButton = document.getElementById('create-but');
+        if (createButton) {
+            createButton.addEventListener('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation(); // Stop event propagation to prevent modal from closing
+                validateAndSubmitForm();
+                return false; // Prevent default action
+            });
+        }
+
+        // Prevent the sign-in link from automatically closing the register modal
+        const signInLink = document.getElementById('sign-in');
+        if (signInLink) {
+            signInLink.addEventListener('click', function(e) {
+                e.preventDefault();
+                
+                // Close register modal first
+                const registerModalEl = document.getElementById('registerModal');
+                const registerModal = bootstrap.Modal.getInstance(registerModalEl);
+                if (registerModal) {
+                    registerModal.hide();
+                    
+                    // Wait for the modal to fully close before opening the login modal
+                    registerModalEl.addEventListener('hidden.bs.modal', function handler() {
+                        // Remove the event listener to prevent multiple triggers
+                        registerModalEl.removeEventListener('hidden.bs.modal', handler);
+                        
+                        // Now open the login modal
+                        const loginModal = new bootstrap.Modal(document.getElementById('loginModal'));
+                        loginModal.show();
+                    });
+                }
+            });
+        }
+        
+        // Fix password toggle functionality
+        // Login password toggle
+        const loginPasswordToggle = document.getElementById('loginPasswordToggle');
+        const loginPasswordField = document.getElementById('loginPassword');
+        
+        if (loginPasswordToggle && loginPasswordField) {
+            loginPasswordToggle.addEventListener('click', function() {
+                if (loginPasswordField.type === 'password') {
+                    loginPasswordField.type = 'text';
+                    loginPasswordToggle.classList.remove('fa-eye');
+                    loginPasswordToggle.classList.add('fa-eye-slash');
+                } else {
+                    loginPasswordField.type = 'password';
+                    loginPasswordToggle.classList.remove('fa-eye-slash');
+                    loginPasswordToggle.classList.add('fa-eye');
+                }
+            });
+        }
+        
+        // Register password toggles
+        const passwordToggle = document.getElementById('passwordToggle');
+        const passwordField = document.getElementById('password');
+        const repeatPasswordToggle = document.getElementById('repeatPasswordToggle');
+        const repeatPasswordField = document.getElementById('repeatPassword');
+        
+        if (passwordToggle && passwordField) {
+            passwordToggle.addEventListener('click', function() {
+                if (passwordField.type === 'password') {
+                    passwordField.type = 'text';
+                    passwordToggle.classList.remove('fa-eye');
+                    passwordToggle.classList.add('fa-eye-slash');
+                } else {
+                    passwordField.type = 'password';
+                    passwordToggle.classList.remove('fa-eye-slash');
+                    passwordToggle.classList.add('fa-eye');
+                }
+            });
+        }
+        
+        if (repeatPasswordToggle && repeatPasswordField) {
+            repeatPasswordToggle.addEventListener('click', function() {
+                if (repeatPasswordField.type === 'password') {
+                    repeatPasswordField.type = 'text';
+                    repeatPasswordToggle.classList.remove('fa-eye');
+                    repeatPasswordToggle.classList.add('fa-eye-slash');
+                } else {
+                    repeatPasswordField.type = 'password';
+                    repeatPasswordToggle.classList.remove('fa-eye-slash');
+                    repeatPasswordToggle.classList.add('fa-eye');
+                }
+            });
+        }
+        
+        // Reset password toggles
+        const resetPasswordToggle = document.getElementById('resetPasswordToggle');
+        const resetPasswordField = document.getElementById('resetPassword');
+        const resetConfirmPasswordToggle = document.getElementById('resetConfirmPasswordToggle');
+        const resetConfirmPasswordField = document.getElementById('resetConfirmPassword');
+        
+        if (resetPasswordToggle && resetPasswordField) {
+            resetPasswordToggle.addEventListener('click', function() {
+                if (resetPasswordField.type === 'password') {
+                    resetPasswordField.type = 'text';
+                    resetPasswordToggle.classList.remove('fa-eye');
+                    resetPasswordToggle.classList.add('fa-eye-slash');
+                } else {
+                    resetPasswordField.type = 'password';
+                    resetPasswordToggle.classList.remove('fa-eye-slash');
+                    resetPasswordToggle.classList.add('fa-eye');
+                }
+            });
+        }
+        
+        if (resetConfirmPasswordToggle && resetConfirmPasswordField) {
+            resetConfirmPasswordToggle.addEventListener('click', function() {
+                if (resetConfirmPasswordField.type === 'password') {
+                    resetConfirmPasswordField.type = 'text';
+                    resetConfirmPasswordToggle.classList.remove('fa-eye');
+                    resetConfirmPasswordToggle.classList.add('fa-eye-slash');
+                } else {
+                    resetConfirmPasswordField.type = 'password';
+                    resetConfirmPasswordToggle.classList.remove('fa-eye-slash');
+                    resetConfirmPasswordToggle.classList.add('fa-eye');
+                }
+            });
+        }
+        
         // Resend verification email
         const resendLink = document.getElementById('resendVerificationLink');
         const resendButton = document.getElementById('resendButton');
         const resendMessage = document.getElementById('resendMessage');
         
-        // Find the event listener for the resendLink and replace it with this improved version
-        // Look for this code around line 700-720 in the JavaScript section
-
         if (resendLink) {
             resendLink.addEventListener('click', function(e) {
                 e.preventDefault();
@@ -1186,106 +1529,6 @@ function handleForgotPassword($conn) {
             resendMessage.classList.remove('d-none');
         }
         
-        // Password toggle functionality
-        const passwordToggle = document.getElementById('passwordToggle');
-        const repeatPasswordToggle = document.getElementById('repeatPasswordToggle');
-        const loginPasswordToggle = document.getElementById('loginPasswordToggle');
-        const resetPasswordToggle = document.getElementById('resetPasswordToggle');
-        const resetConfirmPasswordToggle = document.getElementById('resetConfirmPasswordToggle');
-        const passwordField = document.getElementById('password');
-        const repeatPasswordField = document.getElementById('repeatPassword');
-        const loginPasswordField = document.getElementById('loginPassword');
-        const resetPasswordField = document.getElementById('resetPassword');
-        const resetConfirmPasswordField = document.getElementById('resetConfirmPassword');
-        
-        // Function to toggle password visibility
-        function togglePasswordVisibility(passwordField, toggleIcon) {
-            if (passwordField && toggleIcon) {
-                if (passwordField.type === 'password') {
-                    passwordField.type = 'text';
-                    toggleIcon.classList.remove('fa-eye');
-                    toggleIcon.classList.add('fa-eye-slash');
-                } else {
-                    passwordField.type = 'password';
-                    toggleIcon.classList.remove('fa-eye-slash');
-                    toggleIcon.classList.add('fa-eye');
-                }
-            }
-        }
-        
-        // Toggle password fields
-        if (passwordToggle && passwordField) {
-            passwordToggle.addEventListener('click', function() {
-                togglePasswordVisibility(passwordField, passwordToggle);
-            });
-        }
-        
-        if (repeatPasswordToggle && repeatPasswordField) {
-            repeatPasswordToggle.addEventListener('click', function() {
-                togglePasswordVisibility(repeatPasswordField, repeatPasswordToggle);
-            });
-        }
-        
-        if (loginPasswordToggle && loginPasswordField) {
-            loginPasswordToggle.addEventListener('click', function() {
-                togglePasswordVisibility(loginPasswordField, loginPasswordToggle);
-            });
-        }
-        
-        if (resetPasswordToggle && resetPasswordField) {
-            resetPasswordToggle.addEventListener('click', function() {
-                togglePasswordVisibility(resetPasswordField, resetPasswordToggle);
-            });
-        }
-        
-        if (resetConfirmPasswordToggle && resetConfirmPasswordField) {
-            resetConfirmPasswordToggle.addEventListener('click', function() {
-                togglePasswordVisibility(resetConfirmPasswordField, resetConfirmPasswordToggle);
-            });
-        }
-        
-        // Check if registration was successful
-        <?php if (isset($_SESSION['registration_success'])): ?>
-            var congratsModal = new bootstrap.Modal(document.getElementById('congratsModal'));
-            congratsModal.show();
-            <?php unset($_SESSION['registration_success']); // Clear session after showing modal ?>
-        <?php endif; ?>
-
-        // Show login modal if there's a login error
-        <?php if (isset($_SESSION['login_error']) || isset($login_email_error) || isset($login_password_error)): ?>
-            var loginModal = new bootstrap.Modal(document.getElementById('loginModal'));
-            loginModal.show();
-            <?php if (isset($_SESSION['login_error'])): ?>
-                <?php unset($_SESSION['login_error']); ?>
-            <?php endif; ?>
-        <?php endif; ?>
-
-        // Show register modal if there are registration errors
-        <?php if (isset($_SESSION['register_error']) || $firstname_error || $lastname_error || $email_error || $contact_error || $password_error): ?>
-            var registerModal = new bootstrap.Modal(document.getElementById('registerModal'));
-            registerModal.show();
-            <?php if (isset($_SESSION['register_error'])): ?>
-                <?php unset($_SESSION['register_error']); ?>
-            <?php endif; ?>
-        <?php endif; ?>
-
-        // When the return button is clicked, close congratsModal and open loginModal
-        const returnToLoginBtn = document.getElementById("returnToLogin");
-        if (returnToLoginBtn) {
-            returnToLoginBtn.addEventListener("click", function() {
-                const congratsModalEl = document.getElementById('congratsModal');
-                const congratsModal = bootstrap.Modal.getInstance(congratsModalEl);
-                if (congratsModal) {
-                    congratsModal.hide(); // Hide Congrats Modal
-                }
-
-                setTimeout(function() {
-                    const loginModal = new bootstrap.Modal(document.getElementById('loginModal'));
-                    loginModal.show(); // Show Login Modal after a slight delay
-                }, 500);
-            });
-        }
-
         // Handle forgot password form submission
         const forgotPasswordForm = document.getElementById('forgotPasswordForm');
         if (forgotPasswordForm) {
@@ -1316,8 +1559,7 @@ function handleForgotPassword($conn) {
                 .then(response => response.json())
                 .then(data => {
                     if (data.success) {
-                        showForgotPasswordMessage('Password reset link has been sent to your email.', 'success');  {
-                        showForgotPasswordMessage('Password reset link has been sent to your email.', 'success');
+                        showForgotPasswordMessage('Password reset link has been sent to your email.', 'success');  
                         document.getElementById('forgotPasswordEmail').value = '';
                         
                         // Close modal after 3 seconds on success
@@ -1429,6 +1671,48 @@ function handleForgotPassword($conn) {
                 messageDiv.className = `alert alert-${type}`;
                 messageDiv.classList.remove('d-none');
             }
+        }
+        
+        // Check if registration was successful
+        <?php if (isset($_SESSION['registration_success'])): ?>
+            var congratsModal = new bootstrap.Modal(document.getElementById('congratsModal'));
+            congratsModal.show();
+            <?php unset($_SESSION['registration_success']); // Clear session after showing modal ?>
+        <?php endif; ?>
+
+        // Show login modal if there's a login error
+        <?php if (isset($_SESSION['login_error']) || isset($login_email_error) || isset($login_password_error)): ?>
+            var loginModal = new bootstrap.Modal(document.getElementById('loginModal'));
+            loginModal.show();
+            <?php if (isset($_SESSION['login_error'])): ?>
+                <?php unset($_SESSION['login_error']); ?>
+            <?php endif; ?>
+        <?php endif; ?>
+
+        // Show register modal if there are registration errors
+        <?php if (isset($_SESSION['register_error']) || $firstname_error || $lastname_error || $email_error || $contact_error || $password_error): ?>
+            var registerModal = new bootstrap.Modal(document.getElementById('registerModal'));
+            registerModal.show();
+            <?php if (isset($_SESSION['register_error'])): ?>
+                <?php unset($_SESSION['register_error']); ?>
+            <?php endif; ?>
+        <?php endif; ?>
+
+        // When the return button is clicked, close congratsModal and open loginModal
+        const returnToLoginBtn = document.getElementById("returnToLogin");
+        if (returnToLoginBtn) {
+            returnToLoginBtn.addEventListener("click", function() {
+                const congratsModalEl = document.getElementById('congratsModal');
+                const congratsModal = bootstrap.Modal.getInstance(congratsModalEl);
+                if (congratsModal) {
+                    congratsModal.hide(); // Hide Congrats Modal
+                }
+
+                setTimeout(function() {
+                    const loginModal = new bootstrap.Modal(document.getElementById('loginModal'));
+                    loginModal.show(); // Show Login Modal after a slight delay
+                }, 500);
+            });
         }
     });
 </script>
