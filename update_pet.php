@@ -23,7 +23,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $breed = $_POST['breed'];
     $pet_size = $_POST['pet_size'];
     $gender = $_POST['gender'];
-    $description = $_POST['description'];
+    $description = $_POST['description'];   
     $special_instructions = $_POST['special_instructions'];
     $vaccination_status = $_POST['vaccination_status'];
     
@@ -135,6 +135,6 @@ if (isset($_SESSION['error_message'])) {
     error_log("No message set after processing");
 }
 
-header("Location: profile.php");
+header("Location: Profile.php");
 exit();
 ?>
