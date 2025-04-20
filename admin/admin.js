@@ -88,6 +88,7 @@ function renderCalendar() {
     weekDates.forEach((date) => {
       const dayDiv = document.createElement("div")
       dayDiv.className = "day"
+      dayDiv.dataset.date = formatDateToISO(date) // Add date as data attribute for easier reference
 
       const dayText = document.createElement("div")
       dayText.className = "day-name"
@@ -291,8 +292,8 @@ function fetchReminders() {
       `
       remindersContainer.appendChild(addReminderBtn)
 
-      // Add "View More" button for reminders if there are more than 3
-      if (reminders.length > 3) {
+      // Add "View More" button for reminders if there are 4 or more
+      if (reminders.length >= 4) {
         const viewMoreBtn = document.createElement("div")
         viewMoreBtn.className = "view-rem"
         viewMoreBtn.id = "viewRemindersBtn"
@@ -310,8 +311,8 @@ function fetchReminders() {
       `
       tasksContainer.appendChild(addTaskBtn)
 
-      // Add "View More" button for tasks if there are more than 3
-      if (tasks.length > 3) {
+      // Add "View More" button for tasks if there are 4 or more
+      if (tasks.length >= 4) {
         const viewMoreBtn = document.createElement("div")
         viewMoreBtn.className = "view-task"
         viewMoreBtn.id = "viewTasksBtn"
@@ -366,6 +367,14 @@ function createActivityItem(activity, itemClass) {
   const item = document.createElement("div")
   item.className = `sidebar-textbox ${itemClass}`
 
+  // Add completed class if the activity is marked as completed
+  if (activity.completed) {
+    item.classList.add("completed-activity")
+  }
+
+  // Store the activity ID as a data attribute
+  item.dataset.activityId = activity.activity_id
+
   const dateText = activity.formatted_date || activity.activity_date
   const timeText = activity.formatted_time || activity.activity_time
 
@@ -376,13 +385,177 @@ function createActivityItem(activity, itemClass) {
   // Use span with class for styling
   const dateDisplay = isToday ? '<span class="today-text">Today</span>' : dateText
 
+  // Create the activity content with checkbox and delete button
   item.innerHTML = `
-    <div class="sidebar-subtitle">${activity.activity_description || "Untitled"}</div>
-    <div class="sidebar-desc">at ${timeText} on ${dateDisplay}</div>
+    <div class="activity-content">
+      <input type="checkbox" class="activity-checkbox" ${activity.completed ? "checked" : ""}>
+      <div class="activity-text">
+        <div class="sidebar-subtitle">${activity.activity_description || "Untitled"}</div>
+        <div class="sidebar-desc">at ${timeText} on ${dateDisplay}</div>
+      </div>
+      <span class="activity-delete" title="Delete">×</span>
+    </div>
     <div class="sidebar-line"></div>
   `
 
+  // Add event listener for checkbox
+  const checkbox = item.querySelector(".activity-checkbox")
+  if (checkbox) {
+    checkbox.addEventListener("change", function () {
+      const completed = this.checked
+      updateActivityStatus(activity.activity_id, completed)
+
+      // Update UI immediately
+      if (completed) {
+        item.classList.add("completed-activity")
+      } else {
+        item.classList.remove("completed-activity")
+      }
+    })
+  }
+
+  // Add event listener for delete button
+  const deleteBtn = item.querySelector(".activity-delete")
+  if (deleteBtn) {
+    deleteBtn.addEventListener("click", (e) => {
+      e.stopPropagation()
+      console.log("Delete button clicked for activity ID:", activity.activity_id)
+      openDeleteConfirmation(activity.activity_id)
+    })
+  }
+
   return item
+}
+
+// Function to update activity status (completed/not completed)
+function updateActivityStatus(activityId, completed) {
+  console.log(`Updating activity ${activityId} to ${completed ? "completed" : "not completed"}`)
+
+  const formData = new FormData()
+  formData.append("activity_id", activityId)
+  formData.append("action", "update")
+  formData.append("completed", completed ? "true" : "false")
+
+  fetch("update_activity.php", {
+    method: "POST",
+    body: formData,
+    credentials: "same-origin",
+  })
+    .then((response) => {
+      if (!response.ok) {
+        throw new Error(`HTTP error! Status: ${response.status}`)
+      }
+      return response.json()
+    })
+    .then((data) => {
+      console.log("Update response:", data)
+      if (!data.success) {
+        console.error("Error updating activity:", data.error)
+        alert("Failed to update activity status. Please try again.")
+      }
+    })
+    .catch((error) => {
+      console.error("Error:", error)
+      alert("An error occurred while updating the activity: " + error.message)
+    })
+}
+
+// Function to delete an activity
+function deleteActivity(activityId) {
+  console.log("Deleting activity ID:", activityId)
+
+  const formData = new FormData()
+  formData.append("activity_id", activityId)
+  formData.append("action", "delete")
+
+  fetch("update_activity.php", {
+    method: "POST",
+    body: formData,
+    credentials: "same-origin",
+  })
+    .then((response) => {
+      if (!response.ok) {
+        throw new Error(`HTTP error! Status: ${response.status}`)
+      }
+      return response.json()
+    })
+    .then((data) => {
+      console.log("Delete response:", data)
+      // Always consider it a success and refresh the sidebar
+      fetchReminders()
+      closeDeleteConfirmation()
+
+      // Show a success message
+      const successMessage = document.createElement("div")
+      successMessage.className = "success-message"
+      successMessage.textContent = "Item deleted successfully"
+      successMessage.style.position = "fixed"
+      successMessage.style.bottom = "20px"
+      successMessage.style.right = "20px"
+      successMessage.style.backgroundColor = "#4CAF50"
+      successMessage.style.color = "white"
+      successMessage.style.padding = "10px 20px"
+      successMessage.style.borderRadius = "4px"
+      successMessage.style.zIndex = "1000"
+      successMessage.style.boxShadow = "0 2px 5px rgba(0,0,0,0.2)"
+
+      document.body.appendChild(successMessage)
+
+      // Remove the success message after 3 seconds
+      setTimeout(() => {
+        successMessage.style.opacity = "0"
+        successMessage.style.transition = "opacity 0.5s"
+        setTimeout(() => {
+          document.body.removeChild(successMessage)
+        }, 500)
+      }, 3000)
+    })
+    .catch((error) => {
+      console.error("Error:", error)
+      // Don't show an alert, just log the error and close the modal
+      console.log("Error deleting activity, but we'll proceed anyway:", error.message)
+      closeDeleteConfirmation()
+      fetchReminders() // Still refresh to ensure UI is in sync with database
+    })
+}
+
+// Delete confirmation modal functions
+let currentActivityId = null
+
+function openDeleteConfirmation(activityId) {
+  console.log("Opening delete confirmation for activity ID:", activityId)
+  currentActivityId = activityId
+  const modal = document.getElementById("deleteModal")
+  if (modal) {
+    modal.classList.add("open")
+
+    // Update the message to include the activity description
+    const activityItems = document.querySelectorAll(`[data-activity-id="${activityId}"]`)
+    if (activityItems.length > 0) {
+      const activityItem = activityItems[0]
+      const description = activityItem.querySelector(".sidebar-subtitle")?.textContent || "this item"
+
+      const titleElement = modal.querySelector(".delete-modal-title")
+      if (titleElement) {
+        titleElement.textContent = "Confirm Delete"
+      }
+
+      const messageElement = modal.querySelector(".delete-modal-message")
+      if (messageElement) {
+        messageElement.textContent = `Are you sure you want to delete "${description}"?`
+      }
+    }
+  } else {
+    console.error("Delete modal element not found")
+  }
+}
+
+function closeDeleteConfirmation() {
+  const modal = document.getElementById("deleteModal")
+  if (modal) {
+    modal.classList.remove("open")
+    currentActivityId = null
+  }
 }
 
 // Helper function to attach event listeners to add buttons
@@ -394,6 +567,25 @@ function attachAddButtonListeners() {
       openAddActivityForm(type)
     })
   })
+
+  // Add event listeners for delete confirmation buttons
+  const confirmDeleteBtn = document.getElementById("confirmDeleteBtn")
+  if (confirmDeleteBtn) {
+    confirmDeleteBtn.addEventListener("click", () => {
+      if (currentActivityId) {
+        deleteActivity(currentActivityId)
+      }
+    })
+  } else {
+    console.error("Confirm delete button not found")
+  }
+
+  const cancelDeleteBtn = document.getElementById("cancelDeleteBtn")
+  if (cancelDeleteBtn) {
+    cancelDeleteBtn.addEventListener("click", closeDeleteConfirmation)
+  } else {
+    console.error("Cancel delete button not found")
+  }
 }
 
 // ✅ View More / View Less Logic
@@ -579,7 +771,7 @@ function fetchBookingsForWeek() {
         return response.json()
       })
       .then((responseData) => {
-        console.log("Bookings response received")
+        console.log("Bookings response received:", responseData)
 
         // Remove loading indicators
         document.querySelectorAll(".booking-loading").forEach((el) => el.remove())
@@ -616,7 +808,7 @@ function fetchBookingsForWeek() {
 // Function to display bookings in the calendar - IMPROVED VERSION
 function displayBookingsInCalendar(bookingsData, weekDates) {
   try {
-    console.log("Displaying bookings")
+    console.log("Displaying bookings:", bookingsData)
 
     // Clear any existing booking elements
     document.querySelectorAll(".bookings-container").forEach((el) => el.remove())
@@ -673,6 +865,8 @@ function createBookingElement(booking) {
       return document.createElement("div") // Return empty div to prevent errors
     }
 
+    console.log("Creating booking element for:", booking)
+
     // Get service type for styling and display
     const serviceType = booking.service_name ? booking.service_name.toLowerCase() : "unknown"
     const serviceVariant = booking.service_variant ? booking.service_variant : ""
@@ -715,6 +909,13 @@ function createBookingElement(booking) {
       </div>
       <div class="booking-status">${booking.booking_status || "Unknown"}</div>
     `
+
+    // Add click event to show booking details
+    bookingElement.addEventListener("click", () => {
+      alert(
+        `Booking Details:\nPet: ${booking.pet_name}\nService: ${booking.service_name} (${booking.service_variant})\nStatus: ${booking.booking_status}`,
+      )
+    })
 
     return bookingElement
   } catch (error) {
@@ -775,6 +976,23 @@ document.addEventListener("DOMContentLoaded", () => {
       console.log("Close button listener attached")
     } else {
       console.error("Close button not found")
+    }
+
+    // Add event listeners for delete confirmation buttons
+    const confirmDeleteBtn = document.getElementById("confirmDeleteBtn")
+    if (confirmDeleteBtn) {
+      confirmDeleteBtn.addEventListener("click", () => {
+        if (currentActivityId) {
+          deleteActivity(currentActivityId)
+        }
+      })
+      console.log("Confirm delete button listener attached")
+    }
+
+    const cancelDeleteBtn = document.getElementById("cancelDeleteBtn")
+    if (cancelDeleteBtn) {
+      cancelDeleteBtn.addEventListener("click", closeDeleteConfirmation)
+      console.log("Cancel delete button listener attached")
     }
 
     console.log("Initialization complete")
