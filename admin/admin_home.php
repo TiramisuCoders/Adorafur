@@ -103,13 +103,53 @@ try {
         }
     </style>
     
+    <style>
+    /* Additional styles for scrollable panel */
+    html, body {
+        height: 100%;
+        margin: 0;
+        padding: 0;
+    }
+
+    .panel-container {
+        max-height: calc(100vh - 80px);
+        overflow-y: scroll; /* Changed from auto to scroll */
+        scrollbar-width: none; /* Firefox */
+        -ms-overflow-style: none; /* IE and Edge */
+        padding: 0 15px 20px;
+        width: 100%;
+        max-width: 1400px;
+        margin: 0 auto;
+        box-sizing: border-box;
+    }
+
+    /* Hide scrollbar for Chrome, Safari and Opera */
+    .panel-container::-webkit-scrollbar {
+        display: none;
+    }
+
+    /* Media queries for responsiveness */
+    @media (max-width: 1200px) {
+        .panel-container {
+            width: 95%;
+        }
+    }
+
+    @media (max-width: 768px) {
+        .panel-container {
+            width: 100%;
+            padding: 0 10px 20px;
+        }
+    }
+</style>
+    
     <!-- Font Awesome for search icon -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
 
 </head>
 
-<body style="background-color: #eee;">
+<body style="background-color: #eee; height: 100vh;">
     <!-- NAVIGATION BAR -->
     <nav class="nav-bar">
         <a href = "../home.php"><img class="adorafur-logo" src="admin-pics/adorafur-logo.png" alt="Adorafur Logo" /></a>
@@ -138,20 +178,183 @@ try {
     <!-- HOME PAGE -->
     <div class="panel-container">
         <div class="head">
-            <h6  class="head-text">Admin Panel</h6>
+            <h6  class="head-text">Dashboard</h6>
             <!-- Current date display with day of week -->
-            <div class="time-text" id="current-date">Loading...</div>
-        </div>      
-       
-        <!-- Add search box here -->
-        <div class="search-box-container" style="margin: 20px 0; display: flex; justify-content: flex-start;">
+            <div class="search-box-container" style="margin: 20px 0; display: flex; justify-content: flex-start;">
             <div class="search-box">
                 <input type="text" id="searchInput" placeholder="Search">
                 <span class="icon"><i class="fa-solid fa-magnifying-glass"></i></span>
             </div>
         </div>
+    </div>      
        
-        <div class="reservations-container">
+        <!-- Add search box here -->
+       
+       
+        <div class="dashboard-overview" style="margin: 20px;">
+    
+    <!-- Stats Cards -->
+    <div class="stats-container" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; margin-bottom: 25px;">
+        <!-- Total Bookings -->
+        <?php
+        // Get total bookings count
+        $total_bookings_query = "SELECT COUNT(*) as total FROM bookings WHERE booking_status IN ('Pending', 'Confirmed')";
+        $total_stmt = $conn->prepare($total_bookings_query);
+        $total_stmt->execute();
+        $total_bookings = $total_stmt->fetch(PDO::FETCH_ASSOC)['total'];
+        
+        // Get pending bookings count
+        $pending_bookings_query = "SELECT COUNT(*) as pending FROM bookings WHERE booking_status = 'Pending'";
+        $pending_stmt = $conn->prepare($pending_bookings_query);
+        $pending_stmt->execute();
+        $pending_bookings = $pending_stmt->fetch(PDO::FETCH_ASSOC)['pending'];
+        
+        // Get confirmed bookings count
+        $confirmed_bookings_query = "SELECT COUNT(*) as confirmed FROM bookings WHERE booking_status = 'Confirmed'";
+        $confirmed_stmt = $conn->prepare($confirmed_bookings_query);
+        $confirmed_stmt->execute();
+        $confirmed_bookings = $confirmed_stmt->fetch(PDO::FETCH_ASSOC)['confirmed'];
+        ?>
+        
+        <div class="stat-card" style="background-color: white; border-radius: 8px; padding: 20px; box-shadow: 0 4px 8px rgba(0,0,0,0.15); border-left: 4px solid #1a4b8c;">
+            <div style="display: flex; align-items: center;">
+                <div style="background-color: rgba(26, 75, 140, 0.1); border-radius: 50%; width: 50px; height: 50px; display: flex; align-items: center; justify-content: center; margin-right: 15px;">
+                    <i class="fa-solid fa-calendar" style="color: #1a4b8c; font-size: 24px;"></i>
+                </div>
+                <div>
+                    <p style="color: #666; font-size: 14px; margin: 0;">Total Bookings</p>
+                    <p style="font-size: 24px; font-weight: bold; color: #421D11; margin: 0;"><?php echo $total_bookings; ?></p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Pending Bookings -->
+        <div class="stat-card" style="background-color: white; border-radius: 8px; padding: 20px; box-shadow: 0 4px 8px rgba(0,0,0,0.15); border-left: 4px solid #ffd700;">
+            <div style="display: flex; align-items: center;">
+                <div style="background-color: rgba(255, 215, 0, 0.1); border-radius: 50%; width: 50px; height: 50px; display: flex; align-items: center; justify-content: center; margin-right: 15px;">
+                    <i class="fa-solid fa-clock" style="color: #ffd700; font-size: 24px;"></i>
+                </div>
+                <div>
+                    <p style="color: #666; font-size: 14px; margin: 0;">Pending Bookings</p>
+                    <p style="font-size: 24px; font-weight: bold; color: #421D11; margin: 0;"><?php echo $pending_bookings; ?></p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Confirmed Bookings -->
+        <div class="stat-card" style="background-color: white; border-radius: 8px; padding: 20px; box-shadow: 0 4px 8px rgba(0,0,0,0.15); border-left: 4px solid #4CAF50;">
+            <div style="display: flex; align-items: center;">
+                <div style="background-color: rgba(76, 175, 80, 0.1); border-radius: 50%; width: 50px; height: 50px; display: flex; align-items: center; justify-content: center; margin-right: 15px;">
+                    <i class="fa-solid fa-check-circle" style="color: #4CAF50; font-size: 24px;"></i>
+                </div>
+                <div>
+                    <p style="color: #666; font-size: 14px; margin: 0;">Confirmed Bookings</p>
+                    <p style="font-size: 24px; font-weight: bold; color: #421D11; margin: 0;"><?php echo $confirmed_bookings; ?></p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Service Breakdown and Today's Activity -->
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; margin-bottom: 25px;">
+        <!-- Bookings by Service -->
+        <div style="background-color: white; border-radius: 8px; padding: 20px; box-shadow: 0 4px 8px rgba(0,0,0,0.15);">
+            <h3 style="color: #421D11; font-family: 'BalooTammudu2-SemiBold', sans-serif; font-size: 18px; margin-bottom: 15px;">Bookings by Service</h3>
+            
+            <?php
+            // Get pet hotel bookings count
+            $hotel_query = "SELECT COUNT(*) as hotel FROM bookings b 
+                           JOIN service s ON b.service_id = s.service_id 
+                           WHERE s.service_name = 'Pet Hotel' AND b.booking_status IN ('Pending', 'Confirmed')";
+            $hotel_stmt = $conn->prepare($hotel_query);
+            $hotel_stmt->execute();
+            $hotel_bookings = $hotel_stmt->fetch(PDO::FETCH_ASSOC)['hotel'];
+            
+            // Get pet daycare bookings count
+            $daycare_query = "SELECT COUNT(*) as daycare FROM bookings b 
+                             JOIN service s ON b.service_id = s.service_id 
+                             WHERE s.service_name = 'Pet Daycare' AND b.booking_status IN ('Pending', 'Confirmed')";
+            $daycare_stmt = $conn->prepare($daycare_query);
+            $daycare_stmt->execute();
+            $daycare_bookings = $daycare_stmt->fetch(PDO::FETCH_ASSOC)['daycare'];
+            ?>
+            
+            <div style="display: flex; justify-content: space-around; align-items: center;">
+                <div style="text-align: center;">
+                    <div style="background-color: rgba(26, 75, 140, 0.1); border-radius: 50%; width: 60px; height: 60px; display: flex; align-items: center; justify-content: center; margin: 0 auto 10px;">
+                        <i class="fa-solid fa-hotel" style="color: #1a4b8c; font-size: 28px;"></i>
+                    </div>
+                    <h4 style="font-size: 20px; font-weight: bold; color: #421D11; margin: 0;"><?php echo $hotel_bookings; ?></h4>
+                    <p style="color: #666; font-size: 14px; margin: 5px 0 0;">Pet Hotel</p>
+                </div>
+                
+                <div style="text-align: center;">
+                    <div style="background-color: rgba(255, 215, 0, 0.1); border-radius: 50%; width: 60px; height: 60px; display: flex; align-items: center; justify-content: center; margin: 0 auto 10px;">
+                        <i class="fa-solid fa-paw" style="color: #ffd700; font-size: 28px;"></i>
+                    </div>
+                    <h4 style="font-size: 20px; font-weight: bold; color: #421D11; margin: 0;"><?php echo $daycare_bookings; ?></h4>
+                    <p style="color: #666; font-size: 14px; margin: 5px 0 0;">Pet Daycare</p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Today's Activity -->
+        <div style="background-color: white; border-radius: 8px; padding: 20px; box-shadow: 0 4px 8px rgba(0,0,0,0.15);">
+            <h3 style="color: #421D11; font-family: 'BalooTammudu2-SemiBold', sans-serif; font-size: 18px; margin-bottom: 15px;">Today's Activity</h3>
+            
+            <?php
+            // Get today's date
+            $today = date('Y-m-d');
+            
+            // Get check-ins for today
+            $checkin_query = "SELECT COUNT(*) as checkins FROM bookings 
+                             WHERE DATE(booking_check_in) = :today AND booking_status IN ('Pending', 'Confirmed')";
+            $checkin_stmt = $conn->prepare($checkin_query);
+            $checkin_stmt->bindParam(':today', $today);
+            $checkin_stmt->execute();
+            $checkins = $checkin_stmt->fetch(PDO::FETCH_ASSOC)['checkins'];
+            
+            // Get check-outs for today
+            $checkout_query = "SELECT COUNT(*) as checkouts FROM bookings 
+                              WHERE DATE(booking_check_out) = :today AND booking_status IN ('Pending', 'Confirmed')";
+            $checkout_stmt = $conn->prepare($checkout_query);
+            $checkout_stmt->bindParam(':today', $today);
+            $checkout_stmt->execute();
+            $checkouts = $checkout_stmt->fetch(PDO::FETCH_ASSOC)['checkouts'];
+            ?>
+            
+            <div style="display: flex; justify-content: space-between; gap: 15px;">
+                <div style="background-color: rgba(26, 75, 140, 0.1); border-radius: 8px; padding: 15px; flex: 1;">
+                    <div style="display: flex; align-items: center;">
+                        <div style="background-color: rgba(26, 75, 140, 0.2); border-radius: 8px; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; margin-right: 10px;">
+                            <i class="fa-solid fa-sign-in-alt" style="color: #1a4b8c; font-size: 20px;"></i>
+                        </div>
+                        <div>
+                            <p style="color: #666; font-size: 14px; margin: 0;">Check-ins Today</p>
+                            <p style="font-size: 20px; font-weight: bold; color: #421D11; margin: 0;"><?php echo $checkins; ?></p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div style="background-color: rgba(76, 175, 80, 0.1); border-radius: 8px; padding: 15px; flex: 1;">
+                    <div style="display: flex; align-items: center;">
+                        <div style="background-color: rgba(76, 175, 80, 0.2); border-radius: 8px; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; margin-right: 10px;">
+                            <i class="fa-solid fa-sign-out-alt" style="color: #4CAF50; font-size: 20px;"></i>
+                        </div>
+                        <div>
+                            <p style="color: #666; font-size: 14px; margin: 0;">Check-outs Today</p>
+                            <p style="font-size: 20px; font-weight: bold; color: #421D11; margin: 0;"><?php echo $checkouts; ?></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+<div class="reservations-container">
         <table class="reservations">
             <?php
             if ($stmt->rowCount() > 0) {
