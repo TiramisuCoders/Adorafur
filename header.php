@@ -1,3 +1,34 @@
+<?php
+// Make sure session is started at the top of your file
+if (session_status() == PHP_SESSION_NONE) {
+    session_start();
+}
+
+// If user is logged in, fetch their name from the database
+$customer_name = "";
+if (isset($_SESSION['c_id'])) {
+    // Include your database connection
+    require_once 'connect.php';
+    
+    $customer_id = $_SESSION['c_id'];
+    
+    try {
+        // Prepare statement to prevent SQL injection
+        $stmt = $conn->prepare("SELECT c_first_name FROM customer WHERE c_id = :customer_id");
+        $stmt->bindParam(':customer_id', $customer_id, PDO::PARAM_INT);
+        $stmt->execute();
+        
+        // Fetch the result
+        if ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+            // Convert the name to uppercase
+            $customer_name = strtoupper($row['c_first_name']);
+        }
+    } catch (PDOException $e) {
+        // Handle any errors (you might want to log this instead of displaying)
+        // echo "Error: " . $e->getMessage();
+    }
+}
+?>
 <!DOCTYPE html>
 <html lang="en" dir="ltr">
 <head>
@@ -71,28 +102,30 @@
               </ul>
             </li>
 
-            <!-- LOGIN BUTTON -->
+            <!-- LOGIN/PROFILE BUTTON - MODIFIED TO SHOW CUSTOMER NAME IN UPPERCASE -->
             <?php if (isset($_SESSION['c_id'])): ?>
-                                <!-- If the user is logged in -->
+              <!-- If the user is logged in -->
               <li class="nav-item dropdown">
-                <a href="Profile.php" class="nav-link <?php echo ($activePage == 'profile') ? 'active' : ''; ?> dropdown-toggle">PROFILE</a>
+                <a href="Profile.php" class="nav-link <?php echo ($activePage == 'profile') ? 'active' : ''; ?> dropdown-toggle">
+                  <?php echo htmlspecialchars($customer_name); ?>'S PROFILE
+                </a>
                 <ul class="dropdown-menu">
+                  <li><a class="dropdown-item" href="Profile.php">View Profile</a></li>
                   <li><a class="dropdown-item" href="logout.php">Logout</a></li>
                 </ul>
               </li>
-              
-              <?php else: ?>
-                <li class="nav-item">
-                  <button type="button" class="nav-link dropdown-toggle" data-bs-toggle="modal" data-bs-target="#loginModal" data-backdrop="false">LOGIN</button>
-                </li>
-              <?php endif; ?>
-
-              <!-- Replace your current exit button with this -->
-              <li class="nav-item exit-nav-item">
-                <a href="#" class="nav-link exit-button" data-bs-dismiss="offcanvas">
-                  EXIT
-                </a>
+            <?php else: ?>
+              <li class="nav-item">
+                <button type="button" class="nav-link dropdown-toggle" data-bs-toggle="modal" data-bs-target="#loginModal" data-backdrop="false">LOGIN</button>
               </li>
+            <?php endif; ?>
+
+            <!-- Replace your current exit button with this -->
+            <li class="nav-item exit-nav-item">
+              <a href="#" class="nav-link exit-button" data-bs-dismiss="offcanvas">
+                EXIT
+              </a>
+            </li>
 
           </ul>
         </div>

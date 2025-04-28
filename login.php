@@ -182,6 +182,13 @@ function handleRegister($conn) {
     global $firstname, $lastname, $email, $contactNumber;
     global $firstname_error, $lastname_error, $email_error, $contact_error, $password_error, $firstname;
     $hasError = false;
+    
+    // Check if this is an AJAX request
+    $isAjax = isset($_SERVER['HTTP_X_REQUESTED_WITH']) && 
+              strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest';
+
+    // For debugging
+    error_log("Registration attempt started. AJAX request: " . ($isAjax ? "Yes" : "No"));
 
     $firstname = htmlspecialchars($_POST['firstName'] ?? '');
     $lastname = htmlspecialchars($_POST['lastName'] ?? '');
@@ -190,78 +197,91 @@ function handleRegister($conn) {
     $password = $_POST['password'] ?? '';
     $repeatPassword = $_POST['repeatPassword'] ?? '';
     
+    error_log("Registration data: First Name: $firstname, Last Name: $lastname, Email: $email, Contact: $contactNumber");
+    
     // Validate first name - MODIFIED to allow apostrophes
     if (!preg_match("/^[a-zA-Z\s'-]+$/", $firstname)) {
         $firstname_error = 'First name must only contain letters, apostrophes, or dashes.';
         $hasError = true;
+        error_log("First name validation failed: $firstname_error");
     }
 
     // Validate last name - MODIFIED to allow apostrophes
     if (!preg_match("/^[a-zA-Z\s'-]+$/", $lastname)) {
         $lastname_error = 'Last name must only contain letters, apostrophes, or dashes.';
         $hasError = true;
+        error_log("Last name validation failed: $lastname_error");
     }
 
     // Validate email
-    $domain = substr(strrchr($email, "@"), 1);
-    if (!checkdnsrr($domain, "MX")) {
-        $email_error = 'Invalid email format.';
-        $hasError = true;
-    }
-
     if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
         $email_error = 'Invalid email format.';
         $hasError = true;
+        error_log("Email validation failed: $email_error");
+    } else {
+        $domain = substr(strrchr($email, "@"), 1);
+        if (!checkdnsrr($domain, "MX")) {
+            $email_error = 'Invalid email domain.';
+            $hasError = true;
+            error_log("Email domain validation failed: $email_error");
+        }
     }
     
     // Validate contact number
     if (!preg_match('/^09[0-9]{9}$/', $contactNumber)) {
         $contact_error = "Invalid Philippine phone number format.";
         $hasError = true;
+        error_log("Contact number validation failed: $contact_error");
     }
 
     // Validate password
     if (strlen($password) < 8 || strlen($password) > 12) {
         $password_error = 'Password must be between 8 and 12 characters.';
         $hasError = true;
-    }
-
-    if (!preg_match('/[A-Z]/', $password)) {
-        $password_error  = 'Password must contain at least 1 uppercase letter';
+        error_log("Password length validation failed: $password_error");
+    } else if (!preg_match('/[A-Z]/', $password)) {
+        $password_error = 'Password must contain at least 1 uppercase letter';
         $hasError = true;
-    }
-
-    if (!preg_match('/\d/', $password)) {
-        $password_error  = 'Password must contain at least 1 number';
+        error_log("Password uppercase validation failed: $password_error");
+    } else if (!preg_match('/\d/', $password)) {
+        $password_error = 'Password must contain at least 1 number';
         $hasError = true;
-    }
-
-    if (!preg_match('/[\W_]/', $password)) {
-        $password_error  = 'Password must contain at least 1 special character';
+        error_log("Password number validation failed: $password_error");
+    } else if (!preg_match('/[\W_]/', $password)) {
+        $password_error = 'Password must contain at least 1 special character';
         $hasError = true;
-    }
-
-    if ($password !== $repeatPassword) {
-        $password_error= 'Passwords do not match.';
+        error_log("Password special character validation failed: $password_error");
+    } else if ($password !== $repeatPassword) {
+        $password_error = 'Passwords do not match.';
         $hasError = true;
-    } 
+        error_log("Password match validation failed: $password_error");
+    }
 
     // Check if email already exists in database
     if (!$hasError && $email) {
-        $stmt = $conn->prepare("SELECT * FROM customer WHERE c_email = :email");
-        $stmt->bindParam(':email', $email);
-        $stmt->execute();
+        try {
+            $stmt = $conn->prepare("SELECT * FROM customer WHERE c_email = :email");
+            $stmt->bindParam(':email', $email);
+            $stmt->execute();
 
-        if ($stmt->rowCount() > 0) {
-            $email_error= 'Email already registered.';
+            if ($stmt->rowCount() > 0) {
+                $email_error = 'Email already registered.';
+                $hasError = true;
+                error_log("Email already exists in database: $email");
+            }
+        } catch (PDOException $e) {
+            $email_error = 'Database error checking email.';
             $hasError = true;
-        } 
+            error_log("Database error checking email: " . $e->getMessage());
+        }
     }
 
     if (!$hasError) {
+        error_log("Validation passed, proceeding with Supabase registration");
+        
         // Create user in Supabase Auth via API
         $supabase_url = "https://ygbwanzobuielhttdzsw.supabase.co";
-        $supabase_key = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlnYndhbnpvYnVpZWxodHRkenN3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDM1MTY3NTMsImV4cCI6MjA1OTA5Mjc1M30.bIaP_7rfHyne5PQ_Wmt8qdMYFDzurdnEAUR7U2bxbDQ"; // Replace with your actual anon key
+        $supabase_key = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlnYndhbnpvYnVpZWxodHRkenN3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDM1MTY3NTMsImV4cCI6MjA1OTA5Mjc1M30.bIaP_7rfHyne5PQ_Wmt8qdMYFDzurdnEAUR7U2bxbDQ";
         
         $ch = curl_init();
         curl_setopt($ch, CURLOPT_URL, $supabase_url . "/auth/v1/signup");
@@ -291,44 +311,92 @@ function handleRegister($conn) {
         $response = curl_exec($ch);
         $http_code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
         
+        error_log("Supabase registration response: HTTP $http_code - $response");
+        
         curl_close($ch);
         
         // Check if Supabase Auth creation was successful
         if ($http_code === 200 || $http_code === 201) {
-            // Now insert into your database
-            $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
+            error_log("Supabase registration successful, proceeding with database insertion");
             
-            $stmt = $conn->prepare("INSERT INTO customer (c_first_name, c_last_name, c_email, c_contact_number, c_password) 
-                                    VALUES (:firstName, :lastName, :email, :contactNumber, :password)");
-            $stmt->bindParam(':firstName', $firstname);
-            $stmt->bindParam(':lastName', $lastname);
-            $stmt->bindParam(':email', $email);
-            $stmt->bindParam(':contactNumber', $contactNumber);
-            $stmt->bindParam(':password', $hashedPassword);
-        
-            if ($stmt->execute()) {
-                $_SESSION['registration_success'] = true; // Store success in session
-                $_SESSION['registered_email'] = $email; // Store email for JS to use
-                // Clear form data after successful registration
-                $firstname = "";
-                $lastname = "";
-                $email = "";
-                $contactNumber = "";
-            } 
+            // Now insert into your database with a proper bcrypt hash
+            try {
+                $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
+                
+                $stmt = $conn->prepare("INSERT INTO customer (c_first_name, c_last_name, c_email, c_contact_number, c_password) 
+                                        VALUES (:firstName, :lastName, :email, :contactNumber, :password)");
+                $stmt->bindParam(':firstName', $firstname);
+                $stmt->bindParam(':lastName', $lastname);
+                $stmt->bindParam(':email', $email);
+                $stmt->bindParam(':contactNumber', $contactNumber);
+                $stmt->bindParam(':password', $hashedPassword);
+            
+                if ($stmt->execute()) {
+                    error_log("Database insertion successful");
+                    $_SESSION['registration_success'] = true; // Store success in session
+                    $_SESSION['registered_email'] = $email; // Store email for JS to use
+                    // Clear form data after successful registration
+                    $firstname = "";
+                    $lastname = "";
+                    $email = "";
+                    $contactNumber = "";
+                } else {
+                    error_log("Database insertion failed: " . print_r($stmt->errorInfo(), true));
+                    $email_error = 'Error creating user in database. Please try again.';
+                    $hasError = true;
+                }
+            } catch (PDOException $e) {
+                error_log("Database exception: " . $e->getMessage());
+                $email_error = 'Error creating user in database. Please try again.';
+                $hasError = true;
+            }
         } else {
+            error_log("Supabase registration failed");
             // Handle Supabase Auth error
             $response_data = json_decode($response, true);
             if (isset($response_data['message']) && strpos($response_data['message'], 'already registered') !== false) {
                 $email_error = 'Email already registered in authentication system.';
+                error_log("Email already registered in Supabase: $email");
             } else {
-                $email_error = 'Error creating user in authentication system. Please try again.';
+                $error_message = isset($response_data['message']) ? $response_data['message'] : 'Unknown error';
+                $email_error = 'Error creating user in authentication system: ' . $error_message;
+                error_log("Supabase error: $error_message");
             }
             $hasError = true;
         }
     }
     
     if ($hasError) {
+        error_log("Registration failed with errors");
         $_SESSION['register_error'] = true; // Flag to show the register modal with errors
+        
+        // For AJAX requests, return JSON with errors
+        if ($isAjax) {
+            error_log("Returning JSON error response for AJAX request");
+            header('Content-Type: application/json');
+            echo json_encode([
+                'success' => false,
+                'errors' => [
+                    'firstname_error' => $firstname_error,
+                    'lastname_error' => $lastname_error,
+                    'email_error' => $email_error,
+                    'contact_error' => $contact_error,
+                    'password_error' => $password_error
+                ]
+            ]);
+            exit;
+        }
+    } else if ($isAjax) {
+        error_log("Registration successful, returning JSON success response for AJAX request");
+        // For successful AJAX requests
+        header('Content-Type: application/json');
+        echo json_encode([
+            'success' => true,
+            'message' => 'Registration successful'
+        ]);
+        exit;
+    } else {
+        error_log("Registration successful, returning true for non-AJAX request");
     }
     
     return !$hasError;
@@ -341,6 +409,9 @@ function handleLogin($conn) {
     $email = $_POST['email'] ?? '';
     $password = $_POST['password'] ?? '';
 
+    // For debugging
+    error_log("Login attempt for email: " . $email);
+
     // First check if the user is an admin
     $stmt = $conn->prepare("SELECT admin_id, admin_name, admin_email, admin_password, admin_position, supabase_uid FROM admin WHERE admin_email = ?");
     $stmt->execute([$email]);
@@ -348,237 +419,171 @@ function handleLogin($conn) {
 
     // If admin exists, check admin password
     if ($admin) {
+        error_log("Admin found: " . $admin['admin_email']);
         $passwordMatches = false;
         
         // First try password_verify for hashed passwords
         if (password_verify($password, $admin['admin_password'])) {
             $passwordMatches = true;
+            error_log("Admin password verified with password_verify");
         } 
         // Then try direct comparison for legacy plain text passwords
         else if ($password === $admin['admin_password']) {
             $passwordMatches = true;
+            error_log("Admin password verified with direct comparison");
             
             // Update the password to be hashed for future logins
             $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
             $updateStmt = $conn->prepare("UPDATE admin SET admin_password = ? WHERE admin_id = ?");
             $updateStmt->execute([$hashedPassword, $admin['admin_id']]);
+        } else {
+            error_log("Admin password verification failed. Provided: " . substr($password, 0, 3) . "..., Stored: " . substr($admin['admin_password'], 0, 10) . "...");
         }
         
         if ($passwordMatches) {
-            // Check if admin has a Supabase UID
-            if (empty($admin['supabase_uid'])) {
-                // Admin doesn't have a Supabase UID, create one in Supabase
-                $supabase_url = "https://ygbwanzobuielhttdzsw.supabase.co";
-                $supabase_key = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlnYndhbnpvYnVpZWxodHRkenN3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDM1MTY3NTMsImV4cCI6MjA1OTA5Mjc1M30.bIaP_7rfHyne5PQ_Wmt8qdMYFDzurdnEAUR7U2bxbDQ";
-                
-                $ch = curl_init();
-                curl_setopt($ch, CURLOPT_URL, $supabase_url . "/auth/v1/signup");
-                curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
-                curl_setopt($ch, CURLOPT_POST, 1);
-                
-                // Prepare the data for Supabase Auth with display name
-                $auth_data = [
-                    'email' => $email,
-                    'password' => $password,
-                    'data' => [
-                        'name' => $admin['admin_name'],
-                        'position' => $admin['admin_position'],
-                        'full_name' => $admin['admin_name'] // Add full_name for display name
-                    ],
-                    'email_confirm' => true // Skip email verification for admins
-                ];
-                
-                curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($auth_data));
-                
-                $headers = [
-                    'Content-Type: application/json',
-                    'apikey: ' . $supabase_key
-                ];
-                
-                curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
-                
-                $response = curl_exec($ch);
-                $http_code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-                
-                curl_close($ch);
-                
-                // If Supabase user creation was successful, update admin with Supabase UID
-                if ($http_code === 200 || $http_code === 201) {
-                    $response_data = json_decode($response, true);
-                    if (isset($response_data['user']) && isset($response_data['user']['id'])) {
-                        $supabase_uid = $response_data['user']['id'];
-                        
-                        // Update admin with Supabase UID
-                        $updateStmt = $conn->prepare("UPDATE admin SET supabase_uid = ? WHERE admin_id = ?");
-                        $updateStmt->execute([$supabase_uid, $admin['admin_id']]);
-                    }
-                } else {
-                    // If user already exists in Supabase, try to sign in to get the UID
-                    $ch = curl_init();
-                    curl_setopt($ch, CURLOPT_URL, $supabase_url . "/auth/v1/token?grant_type=password");
-                    curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
-                    curl_setopt($ch, CURLOPT_POST, 1);
-                    
-                    $auth_data = [
-                        'email' => $email,
-                        'password' => $password
-                    ];
-                    
-                    curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($auth_data));
-                    curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
-                    
-                    $response = curl_exec($ch);
-                    $http_code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-                    
-                    curl_close($ch);
-                    
-                    if ($http_code === 200) {
-                        $response_data = json_decode($response, true);
-                        if (isset($response_data['user']) && isset($response_data['user']['id'])) {
-                            $supabase_uid = $response_data['user']['id'];
-                            
-                            // Update admin with Supabase UID
-                            $updateStmt = $conn->prepare("UPDATE admin SET supabase_uid = ? WHERE admin_id = ?");
-                            $updateStmt->execute([$supabase_uid, $admin['admin_id']]);
-                            
-                            // Update user metadata to include display name
-                            $ch = curl_init();
-                            curl_setopt($ch, CURLOPT_URL, $supabase_url . "/auth/v1/user");
-                            curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
-                            curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "PUT");
-                            
-                            $update_data = [
-                                'data' => [
-                                    'name' => $admin['admin_name'],
-                                    'position' => $admin['admin_position'],
-                                    'full_name' => $admin['admin_name'] // Add full_name for display name
-                                ]
-                            ];
-                            
-                            curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($update_data));
-                            
-                            $auth_headers = [
-                                'Content-Type: application/json',
-                                'apikey: ' . $supabase_key,
-                                'Authorization: Bearer ' . $response_data['access_token']
-                            ];
-                            
-                            curl_setopt($ch, CURLOPT_HTTPHEADER, $auth_headers);
-                            
-                            $update_response = curl_exec($ch);
-                            $update_http_code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-                            
-                            curl_close($ch);
-                            
-                            // Log the update response for debugging
-                            error_log("Supabase User Metadata Update Response: " . $update_response);
-                            error_log("Update HTTP Code: " . $update_http_code);
-                        }
-                    }
-                }
-            }
-            
             // Set session variables and redirect
             $_SESSION['admin_id'] = $admin['admin_id'];
             $_SESSION['admin_name'] = $admin['admin_name'];
             $_SESSION['admin_email'] = $admin['admin_email'];
             $_SESSION['admin_position'] = $admin['admin_position'];
             
+            error_log("Admin login successful, redirecting to admin/admin_home.php");
             header("Location: admin/admin_home.php");
             exit();
         } else {
+            error_log("Admin password verification failed");
             $login_password_error = 'Wrong password';
             $hasError = true;
         }
     } 
     // If not an admin, proceed with Supabase Auth for regular users
     else {
-        // Check if user exists in Supabase Auth and is verified
-        $supabase_url = "https://ygbwanzobuielhttdzsw.supabase.co";
-        $supabase_key = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlnYndhbnpvYnVpZWxodHRkenN3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDM1MTY3NTMsImV4cCI6MjA1OTA5Mjc1M30.bIaP_7rfHyne5PQ_Wmt8qdMYFDzurdnEAUR7U2bxbDQ";
+        error_log("Not an admin, checking customer login with Supabase");
+    
+    // First check if the user exists in our database
+    $customerStmt = $conn->prepare("SELECT c_id, c_email, c_password FROM customer WHERE c_email = ?");
+    $customerStmt->execute([$email]);
+    $customer = $customerStmt->fetch(PDO::FETCH_ASSOC);
+    
+    if ($customer) {
+        error_log("Customer found in database: " . $customer['c_id']);
         
-        $ch = curl_init();
-        curl_setopt($ch, CURLOPT_URL, $supabase_url . "/auth/v1/token?grant_type=password");
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
-        curl_setopt($ch, CURLOPT_POST, 1);
+        // Try password verification with the database password first
+        if (password_verify($password, $customer['c_password'])) {
+            // Password matches the database hash
+            error_log("Customer password verified with database hash");
+            
+            $_SESSION['c_id'] = $customer['c_id'];
+            $_SESSION['customer_id'] = $customer['c_id'];
+            $_SESSION['login_time'] = date('Y-m-d H:i:s');
+            $_SESSION['login_email'] = $email;
+            
+            header("Location: Profile.php");
+            exit();
+        }
         
-        $auth_data = [
-            'email' => $email,
-            'password' => $password
-        ];
+        // If database password check fails, try Supabase Auth
+    } else {
+        error_log("Customer not found in database");
+    }
+    
+    // Check if user exists in Supabase Auth and is verified
+    $supabase_url = "https://ygbwanzobuielhttdzsw.supabase.co";
+    $supabase_key = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlnYndhbnpvYnVpZWxodHRkenN3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDM1MTY3NTMsImV4cCI6MjA1OTA5Mjc1M30.bIaP_7rfHyne5PQ_Wmt8qdMYFDzurdnEAUR7U2bxbDQ";
+    
+    $ch = curl_init();
+    curl_setopt($ch, CURLOPT_URL, $supabase_url . "/auth/v1/token?grant_type=password");
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+    curl_setopt($ch, CURLOPT_POST, 1);
+    
+    $auth_data = [
+        'email' => $email,
+        'password' => $password
+    ];
+    
+    curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($auth_data));
+    
+    $headers = [
+        'Content-Type: application/json',
+        'apikey: ' . $supabase_key
+    ];
+    
+    curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+    
+    $response = curl_exec($ch);
+    $http_code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    
+    // For debugging
+    error_log("Supabase Auth Login Response: HTTP " . $http_code);
+    error_log("Supabase Auth Login Response Body: " . $response);
+    
+    curl_close($ch);
+    
+    // If Supabase Auth login is successful, proceed with database login
+    if ($http_code === 200) {
+        error_log("Supabase authentication successful");
         
-        curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($auth_data));
-        
-        $headers = [
-            'Content-Type: application/json',
-            'apikey: ' . $supabase_key
-        ];
-        
-        curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
-        
-        $response = curl_exec($ch);
-        $http_code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-        
-        // For debugging
-        error_log("Supabase Auth Login Response: " . $response);
-        error_log("HTTP Code: " . $http_code);
-        
-        curl_close($ch);
-        
-        // If Supabase Auth login is successful, proceed with database login
-        if ($http_code === 200) {
-            // Check customer login
-            $stmt = $conn->prepare("SELECT c_id, c_password FROM customer WHERE c_email = ?");
-            $stmt->execute([$email]);
-            $customer = $stmt->fetch(PDO::FETCH_ASSOC);
-
-            // If customer exists, check customer password
-            if ($customer) {
-                // Since we've already verified with Supabase, we can skip password verification
-                // or keep it for double security
-                if (password_verify($password, $customer['c_password'])) {
-                    $_SESSION['c_id'] = $customer['c_id'];
-                    $_SESSION['customer_id'] = $customer['c_id'];
-                    
-                    $_SESSION['login_time'] = date('Y-m-d H:i:s');
-                    $_SESSION['login_email'] = $email;
-                    
-                    header("Location: Profile.php");
-                    exit();
-                } else {
-                    $login_password_error = 'Password mismatch between systems. Please contact support.';
-                    $hasError = true;
-                }
-            } else {
-                // User exists in Supabase but not in our database
-                $login_email_error = 'User exists in authentication system but not in database. Please register again.';
-                $hasError = true;
+        // Check if customer exists in database
+        if ($customer) {
+            error_log("Customer found in database, proceeding with login");
+            
+            // IMPORTANT: We trust Supabase's authentication and don't check the password again
+            $_SESSION['c_id'] = $customer['c_id'];
+            $_SESSION['customer_id'] = $customer['c_id'];
+            
+            $_SESSION['login_time'] = date('Y-m-d H:i:s');
+            $_SESSION['login_email'] = $email;
+            
+            // Update the password hash in our database to match what the user entered
+            // This ensures our database stays in sync with Supabase
+            try {
+                $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
+                $updateStmt = $conn->prepare("UPDATE customer SET c_password = ? WHERE c_id = ?");
+                $result = $updateStmt->execute([$hashedPassword, $customer['c_id']]);
+                error_log("Password hash update result: " . ($result ? "success" : "failed"));
+            } catch (Exception $e) {
+                error_log("Error updating password hash: " . $e->getMessage());
             }
+            
+            error_log("Customer login successful, redirecting to Profile.php");
+            header("Location: Profile.php");
+            exit();
         } else {
-            // Handle Supabase Auth error
-            $response_data = json_decode($response, true);
-            
-            if (isset($response_data['error_description'])) {
-                if (strpos($response_data['error_description'], 'Email not confirmed') !== false) {
-                    $login_email_error = 'Please verify your email before logging in.';
-                } else if (strpos($response_data['error_description'], 'Invalid login credentials') !== false) {
-                    // Changed error message to "Wrong Email" as requested
-                    $login_email_error = 'Wrong Email';
-                } else {
-                    $login_password_error = $response_data['error_description'];
-                }
-            } else if (isset($response_data['message'])) {
-                $login_password_error = $response_data['message'];
-            } else {
-                // If we can't parse the error, show a simpler message
-                $login_password_error = 'Invalid Credentials';
-            }
-            
+            // User exists in Supabase but not in our database
+            error_log("User exists in Supabase but not in database");
+            $login_email_error = 'User exists in authentication system but not in database. Please register again.';
             $hasError = true;
         }
+    } else {
+        // Handle Supabase Auth error
+        error_log("Supabase authentication failed");
+        $response_data = json_decode($response, true);
+        
+        if (isset($response_data['error_description'])) {
+            error_log("Error description: " . $response_data['error_description']);
+            if (strpos($response_data['error_description'], 'Email not confirmed') !== false) {
+                $login_email_error = 'Please verify your email before logging in.';
+            } else if (strpos($response_data['error_description'], 'Invalid login credentials') !== false) {
+                // Changed error message to be more specific
+                $login_email_error = 'Invalid email or password. Please try again.';
+            } else {
+                $login_password_error = $response_data['error_description'];
+            }
+        } else if (isset($response_data['message'])) {
+            error_log("Error message: " . $response_data['message']);
+            $login_password_error = $response_data['message'];
+        } else {
+            // If we can't parse the error, show a simpler message
+            error_log("Unknown error format from Supabase");
+            $login_password_error = 'Invalid Credentials';
+        }
+        
+        $hasError = true;
     }
+}
 
     if ($hasError) {
+        error_log("Login failed with errors");
         $_SESSION['login_error'] = true; // Flag to show the login modal with errors
     }
     
@@ -927,7 +932,7 @@ function handleForgotPassword($conn) {
                                                  <button type="button" class="btn w-100" id="cancel-but" data-bs-dismiss="modal">Cancel</button>
                                              </div>
                                              <div class="col-6">
-                                                 <button type="submit" class="btn create-button w-100" id="create-but">Create</button>
+                                                 <button type="button" class="btn create-button w-100" id="create-but">Create</button>
                                              </div>
                                          </div>
                                     </div>
@@ -958,14 +963,14 @@ function handleForgotPassword($conn) {
         <div class="modal-dialog modal-lg modal-dialog-centered">
             <div class="modal-content">
                 <div class="modal-body" id="congrats-body">
-                    <h5 class="modal-title">Congratulations!</h5>
-                    <h2 class="modal-title">You are now registered with Adorafur!</h2>
+                    <h5 class="modal-title">You're almost there!</h5>
+                    <h2 class="modal-title">Thank you for registering with Adorafur.</h2>
                     <p>
                         We've sent a verification link to your email address. Please check your inbox and click the link to verify your account.
                         <strong>You must verify your email before you can log in.</strong>
                     </p>
                     <p>
-                        If you don't see the email in your inbox, please check your spam folder. The verification link will expire in 24 hours.
+                        If you don't see the email in your inbox, please check your spam folder. The verification link will expire in <strong>24 hours.</strong>
                     </p>
 
                     <button type="button" class="btn btn-primary" id="returnToLogin">Return</button>
@@ -1091,14 +1096,272 @@ function handleForgotPassword($conn) {
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script>
     document.addEventListener("DOMContentLoaded", function() {
+    // Get references to the form and button
+    const registerForm = document.getElementById('registerForm');
+    const createButton = document.getElementById('create-but');
+    
+    // Function to validate and submit the registration form
+    function validateAndSubmitForm() {
+        // Get form data
+        const formData = new FormData(registerForm);
+        
+        // Add debugging to see what's being submitted
+        console.log("Submitting registration form with data:");
+        for (let pair of formData.entries()) {
+            console.log(pair[0] + ': ' + pair[1]);
+        }
+        
+        // Send AJAX request
+        fetch('login.php', {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'  // Add this to identify AJAX requests
+            }
+        })
+        .then(response => {
+            console.log("Registration response status:", response.status);
+            return response.json();
+        })
+        .then(data => {
+            console.log("Registration response data:", data);
+            
+            // Clear previous error messages
+            document.querySelectorAll('.error').forEach(el => {
+                el.style.display = 'none';
+                el.textContent = '';
+            });
+            
+            if (data.success) {
+                console.log("Registration successful, closing modal");
+                // Close the register modal first
+                const registerModalEl = document.getElementById('registerModal');
+                const registerModal = bootstrap.Modal.getInstance(registerModalEl);
+                if (registerModal) {
+                    registerModal.hide();
+                }
+                
+                // Reload the page after the modal is hidden to show the congrats modal
+                registerModalEl.addEventListener('hidden.bs.modal', function handler() {
+                    registerModalEl.removeEventListener('hidden.bs.modal', handler);
+                    window.location.reload();
+                });
+            } else {
+                console.log("Registration failed, displaying errors");
+                // Display error messages
+                if (data.errors) {
+                    if (data.errors.firstname_error) {
+                        const firstNameError = document.querySelector('.firstname-error');
+                        if (firstNameError) {
+                            firstNameError.textContent = data.errors.firstname_error;
+                            firstNameError.style.display = 'block';
+                        }
+                    }
+                    
+                    if (data.errors.lastname_error) {
+                        const lastNameError = document.querySelector('.lastname-error');
+                        if (lastNameError) {
+                            lastNameError.textContent = data.errors.lastname_error;
+                            lastNameError.style.display = 'block';
+                        }
+                    }
+                    
+                    if (data.errors.email_error) {
+                        const emailError = document.querySelector('.email-error');
+                        if (emailError) {
+                            emailError.textContent = data.errors.email_error;
+                            emailError.style.display = 'block';
+                        }
+                    }
+                    
+                    if (data.errors.contact_error) {
+                        const contactError = document.querySelector('.contact-error');
+                        if (contactError) {
+                            contactError.textContent = data.errors.contact_error;
+                            contactError.style.display = 'block';
+                        }
+                    }
+                    
+                    if (data.errors.password_error) {
+                        const passwordError = document.querySelector('.password-error');
+                        if (passwordError) {
+                            passwordError.textContent = data.errors.password_error;
+                            passwordError.style.display = 'block';
+                        }
+                    }
+                } else {
+                    // If no specific errors provided, show a generic error
+                    const passwordError = document.querySelector('.password-error');
+                    if (passwordError) {
+                        passwordError.textContent = 'Registration failed. Please try again.';
+                        passwordError.style.display = 'block';
+                    }
+                }
+                
+                // Make sure the register modal stays open
+                const registerModal = bootstrap.Modal.getInstance(document.getElementById('registerModal'));
+                if (!registerModal) {
+                    // If modal instance doesn't exist, create and show it
+                    const newRegisterModal = new bootstrap.Modal(document.getElementById('registerModal'));
+                    newRegisterModal.show();
+                }
+            }
+        })
+        .catch(error => {
+            console.error('Error during registration:', error);
+            // Keep the register modal open on error
+            const registerModal = bootstrap.Modal.getInstance(document.getElementById('registerModal'));
+            if (registerModal) {
+                registerModal.show();
+            } else {
+                const newRegisterModal = new bootstrap.Modal(document.getElementById('registerModal'));
+                newRegisterModal.show();
+            }
+        });
+    }
+
+    // Attach submit handler to the form
+    if (registerForm) {
+        registerForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            console.log("Form submit event triggered");
+            validateAndSubmitForm();
+        });
+    } else {
+        console.error("Register form not found in the DOM");
+    }
+
+    // Attach click handler to the Create button
+    if (createButton) {
+        createButton.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation(); // Stop event propagation to prevent modal from closing
+            console.log("Create button clicked");
+            // Submit the form instead of calling validateAndSubmitForm directly
+            registerForm.dispatchEvent(new Event('submit'));
+            return false; // Prevent default action
+        });
+    } else {
+        console.error("Create button not found in the DOM");
+    }
+
+        // Prevent the sign-in link from automatically closing the register modal
+        const signInLink = document.getElementById('sign-in');
+        if (signInLink) {
+            signInLink.addEventListener('click', function(e) {
+                e.preventDefault();
+                
+                // Close register modal first
+                const registerModalEl = document.getElementById('registerModal');
+                const registerModal = bootstrap.Modal.getInstance(registerModalEl);
+                if (registerModal) {
+                    registerModal.hide();
+                    
+                    // Wait for the modal to fully close before opening the login modal
+                    registerModalEl.addEventListener('hidden.bs.modal', function handler() {
+                        // Remove the event listener to prevent multiple triggers
+                        registerModalEl.removeEventListener('hidden.bs.modal', handler);
+                        
+                        // Now open the login modal
+                        const loginModal = new bootstrap.Modal(document.getElementById('loginModal'));
+                        loginModal.show();
+                    });
+                }
+            });
+        }
+        
+        // Fix password toggle functionality
+        // Login password toggle
+        const loginPasswordToggle = document.getElementById('loginPasswordToggle');
+        const loginPasswordField = document.getElementById('loginPassword');
+        
+        if (loginPasswordToggle && loginPasswordField) {
+            loginPasswordToggle.addEventListener('click', function() {
+                if (loginPasswordField.type === 'password') {
+                    loginPasswordField.type = 'text';
+                    loginPasswordToggle.classList.remove('fa-eye');
+                    loginPasswordToggle.classList.add('fa-eye-slash');
+                } else {
+                    loginPasswordField.type = 'password';
+                    loginPasswordToggle.classList.remove('fa-eye-slash');
+                    loginPasswordToggle.classList.add('fa-eye');
+                }
+            });
+        }
+        
+        // Register password toggles
+        const passwordToggle = document.getElementById('passwordToggle');
+        const passwordField = document.getElementById('password');
+        const repeatPasswordToggle = document.getElementById('repeatPasswordToggle');
+        const repeatPasswordField = document.getElementById('repeatPassword');
+        
+        if (passwordToggle && passwordField) {
+            passwordToggle.addEventListener('click', function() {
+                if (passwordField.type === 'password') {
+                    passwordField.type = 'text';
+                    passwordToggle.classList.remove('fa-eye');
+                    passwordToggle.classList.add('fa-eye-slash');
+                } else {
+                    passwordField.type = 'password';
+                    passwordToggle.classList.remove('fa-eye-slash');
+                    passwordToggle.classList.add('fa-eye');
+                }
+            });
+        }
+        
+        if (repeatPasswordToggle && repeatPasswordField) {
+            repeatPasswordToggle.addEventListener('click', function() {
+                if (repeatPasswordField.type === 'password') {
+                    repeatPasswordField.type = 'text';
+                    repeatPasswordToggle.classList.remove('fa-eye');
+                    repeatPasswordToggle.classList.add('fa-eye-slash');
+                } else {
+                    repeatPasswordField.type = 'password';
+                    repeatPasswordToggle.classList.remove('fa-eye-slash');
+                    repeatPasswordToggle.classList.add('fa-eye');
+                }
+            });
+        }
+        
+        // Reset password toggles
+        const resetPasswordToggle = document.getElementById('resetPasswordToggle');
+        const resetPasswordField = document.getElementById('resetPassword');
+        const resetConfirmPasswordToggle = document.getElementById('resetConfirmPasswordToggle');
+        const resetConfirmPasswordField = document.getElementById('resetConfirmPassword');
+        
+        if (resetPasswordToggle && resetPasswordField) {
+            resetPasswordToggle.addEventListener('click', function() {
+                if (resetPasswordField.type === 'password') {
+                    resetPasswordField.type = 'text';
+                    resetPasswordToggle.classList.remove('fa-eye');
+                    resetPasswordToggle.classList.add('fa-eye-slash');
+                } else {
+                    resetPasswordField.type = 'password';
+                    resetPasswordToggle.classList.remove('fa-eye-slash');
+                    resetPasswordToggle.classList.add('fa-eye');
+                }
+            });
+        }
+        
+        if (resetConfirmPasswordToggle && resetConfirmPasswordField) {
+            resetConfirmPasswordToggle.addEventListener('click', function() {
+                if (resetConfirmPasswordField.type === 'password') {
+                    resetConfirmPasswordField.type = 'text';
+                    resetConfirmPasswordToggle.classList.remove('fa-eye');
+                    resetConfirmPasswordToggle.classList.add('fa-eye-slash');
+                } else {
+                    resetConfirmPasswordField.type = 'password';
+                    resetConfirmPasswordToggle.classList.remove('fa-eye-slash');
+                    resetConfirmPasswordToggle.classList.add('fa-eye');
+                }
+            });
+        }
+        
         // Resend verification email
         const resendLink = document.getElementById('resendVerificationLink');
         const resendButton = document.getElementById('resendButton');
         const resendMessage = document.getElementById('resendMessage');
         
-        // Find the event listener for the resendLink and replace it with this improved version
-        // Look for this code around line 700-720 in the JavaScript section
-
         if (resendLink) {
             resendLink.addEventListener('click', function(e) {
                 e.preventDefault();
@@ -1186,106 +1449,6 @@ function handleForgotPassword($conn) {
             resendMessage.classList.remove('d-none');
         }
         
-        // Password toggle functionality
-        const passwordToggle = document.getElementById('passwordToggle');
-        const repeatPasswordToggle = document.getElementById('repeatPasswordToggle');
-        const loginPasswordToggle = document.getElementById('loginPasswordToggle');
-        const resetPasswordToggle = document.getElementById('resetPasswordToggle');
-        const resetConfirmPasswordToggle = document.getElementById('resetConfirmPasswordToggle');
-        const passwordField = document.getElementById('password');
-        const repeatPasswordField = document.getElementById('repeatPassword');
-        const loginPasswordField = document.getElementById('loginPassword');
-        const resetPasswordField = document.getElementById('resetPassword');
-        const resetConfirmPasswordField = document.getElementById('resetConfirmPassword');
-        
-        // Function to toggle password visibility
-        function togglePasswordVisibility(passwordField, toggleIcon) {
-            if (passwordField && toggleIcon) {
-                if (passwordField.type === 'password') {
-                    passwordField.type = 'text';
-                    toggleIcon.classList.remove('fa-eye');
-                    toggleIcon.classList.add('fa-eye-slash');
-                } else {
-                    passwordField.type = 'password';
-                    toggleIcon.classList.remove('fa-eye-slash');
-                    toggleIcon.classList.add('fa-eye');
-                }
-            }
-        }
-        
-        // Toggle password fields
-        if (passwordToggle && passwordField) {
-            passwordToggle.addEventListener('click', function() {
-                togglePasswordVisibility(passwordField, passwordToggle);
-            });
-        }
-        
-        if (repeatPasswordToggle && repeatPasswordField) {
-            repeatPasswordToggle.addEventListener('click', function() {
-                togglePasswordVisibility(repeatPasswordField, repeatPasswordToggle);
-            });
-        }
-        
-        if (loginPasswordToggle && loginPasswordField) {
-            loginPasswordToggle.addEventListener('click', function() {
-                togglePasswordVisibility(loginPasswordField, loginPasswordToggle);
-            });
-        }
-        
-        if (resetPasswordToggle && resetPasswordField) {
-            resetPasswordToggle.addEventListener('click', function() {
-                togglePasswordVisibility(resetPasswordField, resetPasswordToggle);
-            });
-        }
-        
-        if (resetConfirmPasswordToggle && resetConfirmPasswordField) {
-            resetConfirmPasswordToggle.addEventListener('click', function() {
-                togglePasswordVisibility(resetConfirmPasswordField, resetConfirmPasswordToggle);
-            });
-        }
-        
-        // Check if registration was successful
-        <?php if (isset($_SESSION['registration_success'])): ?>
-            var congratsModal = new bootstrap.Modal(document.getElementById('congratsModal'));
-            congratsModal.show();
-            <?php unset($_SESSION['registration_success']); // Clear session after showing modal ?>
-        <?php endif; ?>
-
-        // Show login modal if there's a login error
-        <?php if (isset($_SESSION['login_error']) || isset($login_email_error) || isset($login_password_error)): ?>
-            var loginModal = new bootstrap.Modal(document.getElementById('loginModal'));
-            loginModal.show();
-            <?php if (isset($_SESSION['login_error'])): ?>
-                <?php unset($_SESSION['login_error']); ?>
-            <?php endif; ?>
-        <?php endif; ?>
-
-        // Show register modal if there are registration errors
-        <?php if (isset($_SESSION['register_error']) || $firstname_error || $lastname_error || $email_error || $contact_error || $password_error): ?>
-            var registerModal = new bootstrap.Modal(document.getElementById('registerModal'));
-            registerModal.show();
-            <?php if (isset($_SESSION['register_error'])): ?>
-                <?php unset($_SESSION['register_error']); ?>
-            <?php endif; ?>
-        <?php endif; ?>
-
-        // When the return button is clicked, close congratsModal and open loginModal
-        const returnToLoginBtn = document.getElementById("returnToLogin");
-        if (returnToLoginBtn) {
-            returnToLoginBtn.addEventListener("click", function() {
-                const congratsModalEl = document.getElementById('congratsModal');
-                const congratsModal = bootstrap.Modal.getInstance(congratsModalEl);
-                if (congratsModal) {
-                    congratsModal.hide(); // Hide Congrats Modal
-                }
-
-                setTimeout(function() {
-                    const loginModal = new bootstrap.Modal(document.getElementById('loginModal'));
-                    loginModal.show(); // Show Login Modal after a slight delay
-                }, 500);
-            });
-        }
-
         // Handle forgot password form submission
         const forgotPasswordForm = document.getElementById('forgotPasswordForm');
         if (forgotPasswordForm) {
@@ -1316,8 +1479,7 @@ function handleForgotPassword($conn) {
                 .then(response => response.json())
                 .then(data => {
                     if (data.success) {
-                        showForgotPasswordMessage('Password reset link has been sent to your email.', 'success');  {
-                        showForgotPasswordMessage('Password reset link has been sent to your email.', 'success');
+                        showForgotPasswordMessage('Password reset link has been sent to your email.', 'success');  
                         document.getElementById('forgotPasswordEmail').value = '';
                         
                         // Close modal after 3 seconds on success
@@ -1429,6 +1591,48 @@ function handleForgotPassword($conn) {
                 messageDiv.className = `alert alert-${type}`;
                 messageDiv.classList.remove('d-none');
             }
+        }
+        
+        // Check if registration was successful
+        <?php if (isset($_SESSION['registration_success'])): ?>
+            var congratsModal = new bootstrap.Modal(document.getElementById('congratsModal'));
+            congratsModal.show();
+            <?php unset($_SESSION['registration_success']); // Clear session after showing modal ?>
+        <?php endif; ?>
+
+        // Show login modal if there's a login error
+        <?php if (isset($_SESSION['login_error']) || isset($login_email_error) || isset($login_password_error)): ?>
+            var loginModal = new bootstrap.Modal(document.getElementById('loginModal'));
+            loginModal.show();
+            <?php if (isset($_SESSION['login_error'])): ?>
+                <?php unset($_SESSION['login_error']); ?>
+            <?php endif; ?>
+        <?php endif; ?>
+
+        // Show register modal if there are registration errors
+        <?php if (isset($_SESSION['register_error']) || $firstname_error || $lastname_error || $email_error || $contact_error || $password_error): ?>
+            var registerModal = new bootstrap.Modal(document.getElementById('registerModal'));
+            registerModal.show();
+            <?php if (isset($_SESSION['register_error'])): ?>
+                <?php unset($_SESSION['register_error']); ?>
+            <?php endif; ?>
+        <?php endif; ?>
+
+        // When the return button is clicked, close congratsModal and open loginModal
+        const returnToLoginBtn = document.getElementById("returnToLogin");
+        if (returnToLoginBtn) {
+            returnToLoginBtn.addEventListener("click", function() {
+                const congratsModalEl = document.getElementById('congratsModal');
+                const congratsModal = bootstrap.Modal.getInstance(congratsModalEl);
+                if (congratsModal) {
+                    congratsModal.hide(); // Hide Congrats Modal
+                }
+
+                setTimeout(function() {
+                    const loginModal = new bootstrap.Modal(document.getElementById('loginModal'));
+                    loginModal.show(); // Show Login Modal after a slight delay
+                }, 500);
+            });
         }
     });
 </script>

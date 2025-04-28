@@ -171,11 +171,10 @@ body {
 .time-text {
   color: #663a2c;
   text-align: left;
-  font-family: "BarlowCondensed-Italic", sans-serif;
-  font-size: 42px;
+  font-family: "BalooTammudu2-Bold", sans-serif;
+  font-size: 30px;
   letter-spacing: 0.02em;
-  font-weight: 550;
-  font-style: italic;
+  font-weight: 700;
   position: absolute;
   top: 20px;
   width: 512px;
