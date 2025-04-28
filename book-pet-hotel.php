@@ -343,7 +343,21 @@ unset($_SESSION['pet_form_data']);
                                 
                                 <div class="mb-3">
                                     <label class="form-label">BREED</label>
-                                    <input type="text" name="breed" class="form-control" placeholder="Type Breed Here" required  value="<?php echo htmlspecialchars($pet_form_data['breed'] ?? ''); ?>">
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <select class="form-select" name="breed_primary" id="breed_primary">
+                                                <option value="">Select Breed</option>
+                                                <!-- Options will be populated by JavaScript -->
+                                            </select>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <select class="form-select" name="breed_secondary" id="breed_secondary" disabled>
+                                                <option value="">Mixed with (optional)</option>
+                                                <!-- Options will be populated by JavaScript -->
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <input type="hidden" name="breed" id="combined_breed">
                                 </div>
                                 
                                 <div class="mb-3">
@@ -433,6 +447,18 @@ unset($_SESSION['pet_form_data']);
                                    document.getElementById("confirm-but").addEventListener("click", function() {
                                             // Get the form element
                                             const petForm = document.querySelector('.pet-form');
+                                            
+                                            // Combine the breed values before submission
+                                            const primaryBreed = document.getElementById('breed_primary').value;
+                                            const secondaryBreed = document.getElementById('breed_secondary').value;
+                                            
+                                            if (primaryBreed) {
+                                                let combinedBreed = primaryBreed;
+                                                if (secondaryBreed) {
+                                                    combinedBreed += ', ' + secondaryBreed;
+                                                }
+                                                document.getElementById('combined_breed').value = combinedBreed;
+                                            }
                                             
                                             // Create a FormData object
                                             const formData = new FormData(petForm);
@@ -764,6 +790,89 @@ resulting from any service provided, or unintentional injury to my pet while und
             $('body').css('padding-right', '');
         });
     });
+</script>
+<!-- Add breed selection JavaScript -->
+<script>
+// Dog and cat breeds data
+const dogBreeds = [
+    "Affenpinscher", "Afghan Hound", "Airedale Terrier", "Akita", "Alaskan Malamute", 
+    "American Bulldog", "American Pit Bull Terrier", "Australian Shepherd", "Basenji", 
+    "Basset Hound", "Beagle", "Bernese Mountain Dog", "Bichon Frise", "Border Collie", 
+    "Boston Terrier", "Boxer", "Bulldog", "Cavalier King Charles Spaniel", "Chihuahua", 
+    "Chow Chow", "Cocker Spaniel", "Corgi", "Dachshund", "Dalmatian", "Doberman Pinscher", 
+    "English Setter", "French Bulldog", "German Shepherd", "Golden Retriever", "Great Dane", 
+    "Greyhound", "Havanese", "Husky", "Jack Russell Terrier", "Labrador Retriever", 
+    "Maltese", "Mastiff", "Miniature Pinscher", "Newfoundland", "Papillon", "Pekingese", 
+    "Pomeranian", "Poodle", "Pug", "Rottweiler", "Saint Bernard", "Samoyed", "Schnauzer", 
+    "Shar Pei", "Shiba Inu", "Shih Tzu", "Siberian Husky", "Weimaraner", "Yorkshire Terrier"
+];
+
+const catBreeds = [
+    "Abyssinian", "American Bobtail", "American Shorthair", "Bengal", "Birman", 
+    "Bombay", "British Shorthair", "Burmese", "Chartreux", "Cornish Rex", 
+    "Devon Rex", "Egyptian Mau", "Exotic Shorthair", "Himalayan", "Japanese Bobtail", 
+    "Maine Coon", "Manx", "Norwegian Forest Cat", "Ocicat", "Oriental", 
+    "Persian", "Ragdoll", "Russian Blue", "Scottish Fold", "Siamese", 
+    "Siberian", "Singapura", "Somali", "Sphynx", "Tonkinese", "Turkish Angora", "Turkish Van"
+];
+
+// Function to populate breed dropdowns based on pet type
+function populateBreedDropdowns(petType) {
+    const primaryDropdown = document.getElementById('breed_primary');
+    const secondaryDropdown = document.getElementById('breed_secondary');
+    
+    // Clear existing options
+    primaryDropdown.innerHTML = '<option value="">Select Breed</option>';
+    secondaryDropdown.innerHTML = '<option value="">Mixed with (optional)</option>';
+    
+    // Enable secondary dropdown
+    secondaryDropdown.disabled = false;
+    
+    // Determine which breed list to use
+    const breeds = petType.includes('cat') ? catBreeds : dogBreeds;
+    
+    // Populate dropdowns
+    breeds.forEach(breed => {
+        const primaryOption = document.createElement('option');
+        primaryOption.value = breed;
+        primaryOption.textContent = breed;
+        primaryDropdown.appendChild(primaryOption);
+        
+        const secondaryOption = document.createElement('option');
+        secondaryOption.value = breed;
+        secondaryOption.textContent = breed;
+        secondaryDropdown.appendChild(secondaryOption);
+    });
+}
+
+// Event listener for pet size selection (to determine cat or dog)
+document.querySelectorAll('input[name="pet_size"]').forEach(radio => {
+    radio.addEventListener('change', function() {
+        populateBreedDropdowns(this.value);
+    });
+});
+
+// Event listener to combine breeds into a single value for submission
+document.querySelector('.pet-form').addEventListener('submit', function(e) {
+    const primaryBreed = document.getElementById('breed_primary').value;
+    const secondaryBreed = document.getElementById('breed_secondary').value;
+    
+    if (primaryBreed) {
+        let combinedBreed = primaryBreed;
+        if (secondaryBreed) {
+            combinedBreed += ', ' + secondaryBreed;
+        }
+        document.getElementById('combined_breed').value = combinedBreed;
+    }
+});
+
+// Initialize breed dropdowns if a pet type is already selected
+document.addEventListener('DOMContentLoaded', function() {
+    const selectedPetSize = document.querySelector('input[name="pet_size"]:checked');
+    if (selectedPetSize) {
+        populateBreedDropdowns(selectedPetSize.value);
+    }
+});
 </script>
 </body>
 </html>
