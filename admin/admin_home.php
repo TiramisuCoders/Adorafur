@@ -62,11 +62,49 @@ try {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="icon" type="image/png" href="admin-pics/adorafur-logo.png">
     <link rel="stylesheet" href="admin-css/admin_header.css">
-    <link rel="stylesheet" href="admin-css/admin_home01.css">
+    <link rel="stylesheet" href="admin-css/admin_home.css">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="admin.js"></script>
     <title>Admin Homepage</title>
+
+    <style>
+        .search-box {
+            position: relative;
+            width: 300px;
+        }
+        
+        .search-box input {
+            width: 100%;
+            padding: 10px 15px;
+            padding-right: 40px;
+            border-radius: 20px;
+            border: 1px solid #ccc;
+            outline: none;
+            transition: all 0.3s;
+        }
+        
+        .search-box input:focus {
+            border-color: #5a3e36;
+            box-shadow: 0 0 5px rgba(90, 62, 54, 0.3);
+        }
+        
+        .search-box .icon {
+            position: absolute;
+            right: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #5a3e36;
+        }
+        
+        /* Hide rows that don't match search */
+        tr.hidden-row {
+            display: none;
+        }
+    </style>
+    
+    <!-- Font Awesome for search icon -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
 
 </head>
@@ -105,7 +143,13 @@ try {
             <div class="time-text" id="current-date">Loading...</div>
         </div>      
        
-        
+        <!-- Add search box here -->
+        <div class="search-box-container" style="margin: 20px 0; display: flex; justify-content: flex-start;">
+            <div class="search-box">
+                <input type="text" id="searchInput" placeholder="Search">
+                <span class="icon"><i class="fa-solid fa-magnifying-glass"></i></span>
+            </div>
+        </div>
        
         <div class="reservations-container">
         <table class="reservations">
@@ -707,6 +751,40 @@ function recalculateBookingAmount() {
     </div>
   </div>
 </div>
+
+<script>
+    // Search functionality
+    document.addEventListener('DOMContentLoaded', function() {
+        const searchInput = document.getElementById('searchInput');
+        
+        searchInput.addEventListener('keyup', function() {
+            const searchTerm = this.value.toLowerCase();
+            const rows = document.querySelectorAll('.reservations tbody tr');
+            
+            rows.forEach(row => {
+                // Get all the text content from the row's cells
+                const id = row.querySelector('.deets-id button').textContent.trim().toLowerCase();
+                const pet = row.querySelector('.deets-pet').textContent.trim().toLowerCase();
+                const service = row.querySelector('.deets-service').textContent.trim().toLowerCase();
+                const name = row.querySelector('.deets-name').textContent.trim().toLowerCase();
+                const payment = row.querySelector('.deets-payment').textContent.trim().toLowerCase();
+                const date = row.querySelector('.deets-date').textContent.trim().toLowerCase();
+                
+                // Check if any of the fields contain the search term
+                if (id.includes(searchTerm) || 
+                    pet.includes(searchTerm) || 
+                    service.includes(searchTerm) || 
+                    name.includes(searchTerm) || 
+                    payment.includes(searchTerm) || 
+                    date.includes(searchTerm)) {
+                    row.classList.remove('hidden-row');
+                } else {
+                    row.classList.add('hidden-row');
+                }
+            });
+        });
+    });
+</script>
 
 </body>
 </html>

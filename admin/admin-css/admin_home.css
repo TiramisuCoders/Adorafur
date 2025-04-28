@@ -19,7 +19,7 @@
     width: 100%;
     max-height: 100%; /* Set a height for scrolling */
     overflow-y: auto;  /* Enable vertical scrolling */
-    padding-top: 50px;
+    padding-top: 10px;
 }
 
 .reservations th, .reservations td{
