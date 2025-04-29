@@ -362,7 +362,7 @@ function fetchReminders() {
     })
 }
 
-// Helper function to create an activity item with proper styling
+// Change the createActivityItem function to use an eye icon instead of X
 function createActivityItem(activity, itemClass) {
   const item = document.createElement("div")
   item.className = `sidebar-textbox ${itemClass}`
@@ -385,7 +385,7 @@ function createActivityItem(activity, itemClass) {
   // Use span with class for styling
   const dateDisplay = isToday ? '<span class="today-text">Today</span>' : dateText
 
-  // Create the activity content with checkbox and delete button
+  // Create the activity content with checkbox and hide button (eye icon)
   item.innerHTML = `
     <div class="activity-content">
       <input type="checkbox" class="activity-checkbox" ${activity.completed ? "checked" : ""}>
@@ -393,7 +393,7 @@ function createActivityItem(activity, itemClass) {
         <div class="sidebar-subtitle">${activity.activity_description || "Untitled"}</div>
         <div class="sidebar-desc">at ${timeText} on ${dateDisplay}</div>
       </div>
-      <span class="activity-delete" title="Delete">×</span>
+      <span class="activity-delete" title="Hide"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg></span>
     </div>
     <div class="sidebar-line"></div>
   `
@@ -414,13 +414,13 @@ function createActivityItem(activity, itemClass) {
     })
   }
 
-  // Add event listener for delete button
-  const deleteBtn = item.querySelector(".activity-delete")
-  if (deleteBtn) {
-    deleteBtn.addEventListener("click", (e) => {
+  // Add event listener for hide button
+  const hideBtn = item.querySelector(".activity-delete")
+  if (hideBtn) {
+    hideBtn.addEventListener("click", (e) => {
       e.stopPropagation()
-      console.log("Delete button clicked for activity ID:", activity.activity_id)
-      openDeleteConfirmation(activity.activity_id)
+      console.log("Hide button clicked for activity ID:", activity.activity_id)
+      openHideConfirmation(activity.activity_id)
     })
   }
 
@@ -460,13 +460,13 @@ function updateActivityStatus(activityId, completed) {
     })
 }
 
-// Function to delete an activity
-function deleteActivity(activityId) {
-  console.log("Deleting activity ID:", activityId)
+// Rename the function from deleteActivity to hideActivity
+function hideActivity(activityId) {
+  console.log("Hiding activity ID:", activityId)
 
   const formData = new FormData()
   formData.append("activity_id", activityId)
-  formData.append("action", "delete")
+  formData.append("action", "hide")
 
   fetch("update_activity.php", {
     method: "POST",
@@ -480,15 +480,15 @@ function deleteActivity(activityId) {
       return response.json()
     })
     .then((data) => {
-      console.log("Delete response:", data)
+      console.log("Hide response:", data)
       // Always consider it a success and refresh the sidebar
       fetchReminders()
-      closeDeleteConfirmation()
+      closeHideConfirmation()
 
       // Show a success message
       const successMessage = document.createElement("div")
       successMessage.className = "success-message"
-      successMessage.textContent = "Item deleted successfully"
+      successMessage.textContent = "Item hidden successfully"
       successMessage.style.position = "fixed"
       successMessage.style.bottom = "20px"
       successMessage.style.right = "20px"
@@ -513,8 +513,8 @@ function deleteActivity(activityId) {
     .catch((error) => {
       console.error("Error:", error)
       // Don't show an alert, just log the error and close the modal
-      console.log("Error deleting activity, but we'll proceed anyway:", error.message)
-      closeDeleteConfirmation()
+      console.log("Error hiding activity, but we'll proceed anyway:", error.message)
+      closeHideConfirmation()
       fetchReminders() // Still refresh to ensure UI is in sync with database
     })
 }
@@ -522,8 +522,9 @@ function deleteActivity(activityId) {
 // Delete confirmation modal functions
 let currentActivityId = null
 
-function openDeleteConfirmation(activityId) {
-  console.log("Opening delete confirmation for activity ID:", activityId)
+// Rename the function from openDeleteConfirmation to openHideConfirmation
+function openHideConfirmation(activityId) {
+  console.log("Opening hide confirmation for activity ID:", activityId)
   currentActivityId = activityId
   const modal = document.getElementById("deleteModal")
   if (modal) {
@@ -537,20 +538,21 @@ function openDeleteConfirmation(activityId) {
 
       const titleElement = modal.querySelector(".delete-modal-title")
       if (titleElement) {
-        titleElement.textContent = "Confirm Delete"
+        titleElement.textContent = "Confirm Hide"
       }
 
       const messageElement = modal.querySelector(".delete-modal-message")
       if (messageElement) {
-        messageElement.textContent = `Are you sure you want to delete "${description}"?`
+        messageElement.textContent = `Are you sure you want to hide "${description}"?`
       }
     }
   } else {
-    console.error("Delete modal element not found")
+    console.error("Hide modal element not found")
   }
 }
 
-function closeDeleteConfirmation() {
+// Rename the function from closeDeleteConfirmation to closeHideConfirmation
+function closeHideConfirmation() {
   const modal = document.getElementById("deleteModal")
   if (modal) {
     modal.classList.remove("open")
@@ -558,7 +560,7 @@ function closeDeleteConfirmation() {
   }
 }
 
-// Helper function to attach event listeners to add buttons
+// Update the attachAddButtonListeners function to use the new hide functionality
 function attachAddButtonListeners() {
   // Use event delegation instead of direct binding
   document.querySelectorAll(".add-sidebar").forEach((button) => {
@@ -568,23 +570,23 @@ function attachAddButtonListeners() {
     })
   })
 
-  // Add event listeners for delete confirmation buttons
+  // Add event listeners for hide confirmation buttons
   const confirmDeleteBtn = document.getElementById("confirmDeleteBtn")
   if (confirmDeleteBtn) {
     confirmDeleteBtn.addEventListener("click", () => {
       if (currentActivityId) {
-        deleteActivity(currentActivityId)
+        hideActivity(currentActivityId)
       }
     })
   } else {
-    console.error("Confirm delete button not found")
+    console.error("Confirm hide button not found")
   }
 
   const cancelDeleteBtn = document.getElementById("cancelDeleteBtn")
   if (cancelDeleteBtn) {
-    cancelDeleteBtn.addEventListener("click", closeDeleteConfirmation)
+    cancelDeleteBtn.addEventListener("click", closeHideConfirmation)
   } else {
-    console.error("Cancel delete button not found")
+    console.error("Cancel hide button not found")
   }
 }
 
@@ -938,7 +940,7 @@ function getServiceShortName(serviceType) {
   }
 }
 
-// ✅ Event Listeners - Improved initialization with error handling
+// Update the DOMContentLoaded event listener to use the new hide functionality
 document.addEventListener("DOMContentLoaded", () => {
   try {
     console.log("DOM fully loaded - Starting initialization")
@@ -978,21 +980,21 @@ document.addEventListener("DOMContentLoaded", () => {
       console.error("Close button not found")
     }
 
-    // Add event listeners for delete confirmation buttons
+    // Add event listeners for hide confirmation buttons
     const confirmDeleteBtn = document.getElementById("confirmDeleteBtn")
     if (confirmDeleteBtn) {
       confirmDeleteBtn.addEventListener("click", () => {
         if (currentActivityId) {
-          deleteActivity(currentActivityId)
+          hideActivity(currentActivityId)
         }
       })
-      console.log("Confirm delete button listener attached")
+      console.log("Confirm hide button listener attached")
     }
 
     const cancelDeleteBtn = document.getElementById("cancelDeleteBtn")
     if (cancelDeleteBtn) {
-      cancelDeleteBtn.addEventListener("click", closeDeleteConfirmation)
-      console.log("Cancel delete button listener attached")
+      cancelDeleteBtn.addEventListener("click", closeHideConfirmation)
+      console.log("Cancel hide button listener attached")
     }
 
     console.log("Initialization complete")

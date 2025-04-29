@@ -34,13 +34,32 @@ try {
     // Debug log
     error_log("Processing {$action} for activity ID: {$activity_id}");
     
-    // For delete action, we don't need to verify if it exists first - if it's gone, that's fine
-    if ($action === 'delete') {
-        // Debug log
-        error_log("Deleting activity ID: $activity_id");
+    // Check if the hidden column exists, if not, add it
+    $checkColumnQuery = "SELECT column_name 
+                        FROM information_schema.columns 
+                        WHERE table_name = 'admin_activities_reminders' 
+                        AND column_name = 'hidden'";
+    
+    $checkStmt = $conn->prepare($checkColumnQuery);
+    $checkStmt->execute();
+    
+    if ($checkStmt->rowCount() === 0) {
+        // Column doesn't exist, so add it
+        $alterTableQuery = "ALTER TABLE Admin_Activities_Reminders 
+                           ADD COLUMN hidden BOOLEAN DEFAULT FALSE";
         
-        // Delete the activity
-        $sql = "DELETE FROM Admin_Activities_Reminders 
+        $conn->exec($alterTableQuery);
+        error_log("Added 'hidden' column to Admin_Activities_Reminders table");
+    }
+    
+    // For hide action (previously delete), we don't need to verify if it exists first
+    if ($action === 'delete' || $action === 'hide') {
+        // Debug log
+        error_log("Hiding activity ID: $activity_id");
+        
+        // Hide the activity instead of deleting it
+        $sql = "UPDATE Admin_Activities_Reminders 
+                SET hidden = TRUE 
                 WHERE activity_id = :activity_id AND admin_id = :admin_id";
         
         $stmt = $conn->prepare($sql);
@@ -51,11 +70,11 @@ try {
         $result = $stmt->execute();
         
         if (!$result) {
-            error_log("Database error during delete: " . print_r($stmt->errorInfo(), true));
-            throw new Exception('Failed to delete the activity');
+            error_log("Database error during hide: " . print_r($stmt->errorInfo(), true));
+            throw new Exception('Failed to hide the activity');
         }
         
-        // Even if no rows were affected, consider it a success (it might have been deleted already)
+        // Even if no rows were affected, consider it a success
         ob_end_clean();
         header('Content-Type: application/json');
         echo json_encode(['success' => true]);
