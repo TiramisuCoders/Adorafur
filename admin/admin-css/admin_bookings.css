@@ -901,6 +901,7 @@
   transform: translateY(-50%) scale(1.1);
   box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
 }
+
 /* Delete confirmation modal */
 .delete-modal {
   display: none;
@@ -992,7 +993,6 @@
 .success-message {
   animation: fadeInOut 3.5s ease-in-out;
   font-family: "BalooTammudu2-SemiBold", sans-serif;
-
 }
 
 @keyframes fadeInOut {
