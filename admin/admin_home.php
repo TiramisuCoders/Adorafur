@@ -116,6 +116,94 @@ try {
         tr.hidden-row {
             display: none;
         }
+        
+        /* Modal styling from admin_home.php */
+        .modal-header {
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #dee2e6;
+        }
+        
+        
+        
+        
+        
+        .header-id {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: black !important;
+        }
+        
+        .header-controls {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+        
+        .staff-section {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .staff-label {
+            margin-bottom: 0;
+            color: inherit;
+            font-weight: 500;
+        }
+        
+        .staff-select {
+            padding: 5px 10px;
+            border-radius: 4px;
+            border: 1px solid #ced4da;
+        }
+        
+        .button-group {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .button {
+            padding: 6px 15px;
+            border-radius: 4px;
+            border: none;
+            background-color: #4CAF50;
+            color: white;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        
+        .button:hover {
+            background-color: #45a049;
+        }
+        
+        #cancelButton {
+            background-color: #f44336;
+            color: white;
+        }
+        
+        #cancelButton:hover {
+            background-color: #d32f2f;
+        }
+        
+        .form-label {
+            font-weight: 500;
+            color: #421D11;
+        }
+        
+        #view-photo {
+            background-color: #5a3e36;
+            color: white;
+            padding: 6px 15px;
+            border-radius: 4px;
+            text-decoration: none;
+        }
+        
+        #view-photo:hover {
+            background-color: #4a3026;
+        }
     </style>
 
     <style>
@@ -250,7 +338,7 @@ try {
                 <div class="stat-card" style="background-color: white; border-radius: 8px; padding: 20px; box-shadow: 0 4px 8px rgba(0,0,0,0.15); border-left: 4px solid #ffd700;">
                     <div style="display: flex; align-items: center;">
                         <div style="background-color: rgba(255, 215, 0, 0.1); border-radius: 50%; width: 50px; height: 50px; display: flex; align-items: center; justify-content: center; margin-right: 15px;">
-                            <i class="fa-solid fa-clock" style="color: #ffd700; font-size: 24px;"></i>
+                            <i class="fa-solid fa-clock" style="color: #ffd7কিন্তon0; font-size: 24px;"></i>
                         </div>
                         <div>
                             <p style="color: #666; font-size: 14px; margin: 0;">Pending Bookings</p>
@@ -370,8 +458,6 @@ try {
             </div>
         </div>
 
-
-
         <div class="reservations-container">
             <table class="reservations">
                 <?php
@@ -408,9 +494,7 @@ try {
                                     data-mop="<?php echo htmlspecialchars($fetch_reservations['pay_mop']); ?>"
                                     data-reference-number="<?php echo htmlspecialchars($fetch_reservations['pay_reference_number']); ?>"
                                     data-book-balance="<?php echo htmlspecialchars($fetch_reservations['b_balance']) ?>"
-
-
-
+                                    data-proof-of-payment="<?php echo htmlspecialchars($fetch_reservations['pay_proof_of_payment']); ?>">
                                     <strong> <?php echo htmlspecialchars($fetch_reservations['b_id']); ?> </strong> 
                                 </button>
                             </td>
@@ -450,7 +534,7 @@ try {
         </div>
     </div>
 
-    <!-- Bootstrap Modal -->
+    <!-- Bootstrap Modal - Using the design from admin_home.php -->
     <div class="modal fade" id="bookingModal" tabindex="-1" aria-labelledby="bookingModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-xl modal-dialog-center">
             <div class="modal-content" id="book-modal">
@@ -488,7 +572,7 @@ try {
                                 <div class="mb-3">
                                     <label class="form-label">Owner Name:</label>
                                     <input type="text" class="form-control" name="ownerName" id="ownerName" readonly>
-                                    <input type="hidden" name="ownerId" id="ownerId" ?>
+                                    <input type="hidden" name="ownerId" id="ownerId">
                                 </div>
                                 <div class="mb-3">
                                     <label class="form-label">Contact:</label>
@@ -537,16 +621,9 @@ try {
                                 </div>
                                 <div class="mb-3">
                                     <label class="form-label">Proof of Payment</label><br>
-                                    <?php
-                                    $proof_path = '/Adorafur/' . $fetch_reservations['pay_proof_of_payment'];
-                                    $full_path = $_SERVER['DOCUMENT_ROOT'] . $proof_path;
-
-                                    if (!empty($fetch_reservations['pay_proof_of_payment']) && file_exists($full_path)) {
-                                        echo '<a href="' . $proof_path . '" target="_blank" class="btn" id="view-photo">View Proof</a>';
-                                    } else {
-                                        echo '<span>No proof of payment</span>';
-                                    }
-                                    ?>
+                                    <div id="proofOfPaymentContainer">
+                                        <!-- Will be populated by JavaScript -->
+                                    </div>
                                 </div>
                                 <div class="mb-3">
                                     <div class="form-group">
@@ -568,50 +645,9 @@ try {
                                 </div>
                                 <!-- Add Payment Section -->
                                 <div class="card mt-4">
-                                    <!-- Replace the card with this button -->
-                                    <!-- <div class="mb-3"> -->
                                     <button type="button" class="btn btn-primary w-100" onclick="openPaymentModal(document.getElementById('modalBookingId').textContent, document.getElementById('bookBalance').value)">
                                         Add Payment
                                     </button>
-                                    <!-- </div> -->
-                                    <!-- <div id="paymentForm" class="collapse">
-                                        <div class="card-body">
-                                            <div class="row g-3">
-                                                <div class="col-md-6">
-                                                    <div class="form-group">
-                                                        <label class="form-label fw-bold text-brown mb-2">Amount Paid:</label>
-                                                        <input type="text" class="form-control" name="amountPaid" id="amountPaid">
-                                                    </div>
-                                                </div>
-                                                <div class="col-md-6">
-                                                <label class="form-label fw-bold text-brown mb-2">Mode of Payment:</label>
-                                                <select class="form-control" name="paymentModeAdd" id="paymentModeAdd" onchange="toggleOtherPaymentMode()">
-                                                    <option value="cash">Cash</option>
-                                                    <option value="gcash">GCash</option>
-                                                    <option value="maya">Maya</option>
-                                                </select>
-                                                </div>
-                                                <div class="col-md-6">
-                                                    <div class="form-group">
-                                                    <label class="form-label fw-bold text-brown mb-2">Payment Status:</label>
-                                                    <select class="form-control" name="paymentStatusAdd" id="paymentStatusAdd">
-                                                        <option value="fully_paid">Fully Paid</option>
-                                                        <option value="down_payment">Down Payment</option>
-                                                    </select>
-                                                    </div>
-                                                </div>
-                                                <div class="col-md-6">
-                                                    <div class="form-group">
-                                                        <label class="form-label fw-bold text-brown mb-2">Reference No.:</label>
-                                                        <input type="text" class="form-control" name="refNo" id="refNo">
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            <div class="mt-3">
-                                                <button type="button" class="btn btn-success w-100" onclick="savePayment()">Save Payment</button>
-                                            </div>
-                                        </div>
-                                    </div> -->
                                 </div>
                             </div>
                         </div>
@@ -620,304 +656,6 @@ try {
             </div>
         </div>
     </div>
-
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            // Update date display
-            function updateDateDisplay() {
-                const now = new Date();
-
-                // Get day of week, month, day, and year separately
-                const dayOfWeek = now.toLocaleDateString('en-US', {
-                    weekday: 'long'
-                });
-                const month = now.toLocaleDateString('en-US', {
-                    month: 'long'
-                });
-                const day = now.getDate();
-                const year = now.getFullYear();
-
-                // Combine them without comma
-                const formattedDate = `${dayOfWeek} ${month} ${day} ${year}`;
-
-                // Update the element
-                document.getElementById('current-date').textContent = formattedDate;
-            }
-
-            // Call immediately and set up to update daily
-            updateDateDisplay();
-            setInterval(updateDateDisplay, 86400000); // Update once per day (in milliseconds)
-
-            var bookingModal = document.getElementById('bookingModal');
-            bookingModal.addEventListener('show.bs.modal', function(event) {
-                var button = event.relatedTarget;
-                var bookingId = button.getAttribute('data-booking-id');
-                var modalBookingId = document.getElementById('modalBookingId');
-                modalBookingId.textContent = bookingId;
-
-                var service = button.getAttribute('data-service');
-                var modalHeader = document.getElementById('modalHeader');
-                modalHeader.className = 'modal-header ' + (service.toLowerCase() === 'pet hotel' ? 'modal-hotel' : 'modal-daycare');
-
-                document.getElementById('ownerName').value = button.getAttribute('data-owner-name');
-                document.getElementById('ownerId').value = button.getAttribute('data-owner-id');
-                document.getElementById('contact').value = button.getAttribute('data-owner-num');
-                document.getElementById('petName').value = button.getAttribute('data-pet-name');
-                document.getElementById('petBreed').value = button.getAttribute('data-pet-breed');
-                document.getElementById('petType').value = button.getAttribute('data-pet-size');
-                document.getElementById('service').value = button.getAttribute('data-service');
-                document.getElementById('checkIn').value = button.getAttribute('data-check-in');
-                document.getElementById('checkOut').value = button.getAttribute('data-check-out');
-                document.getElementById('paymentStatus').value = button.getAttribute('data-payment-status');
-                document.getElementById('paymentMode').value = button.getAttribute('data-mop');
-                document.getElementById('referenceNo').value = button.getAttribute('data-reference-number');
-                document.getElementById('bookBalance').value = button.getAttribute('data-book-balance');
-
-                fetch('get_booking_data.php?booking_id=' + bookingId)
-                    .then(response => response.json())
-                    .then(data => {
-                        if (data.booking_status) {
-                            var bookingStatusSelect = document.getElementById('bookingStatusUpdate');
-                            var bookingStatus = data.booking_status.toLowerCase();
-
-                            for (var i = 0; i < bookingStatusSelect.options.length; i++) {
-                                if (bookingStatusSelect.options[i].value === bookingStatus) {
-                                    bookingStatusSelect.selectedIndex = i;
-                                    break;
-                                }
-                            }
-                        }
-                    })
-                    .catch(error => console.error('Error:', error));
-            });
-
-            document.getElementById('saveButton').addEventListener('click', function(e) {
-                e.preventDefault();
-
-                var formData = new FormData();
-
-                formData.append('booking_id', document.getElementById('modalBookingId').textContent);
-
-                formData.append('checkIn', document.getElementById('checkIn').value);
-                formData.append('checkOut', document.getElementById('checkOut').value);
-
-                formData.append('booking_status', document.getElementById('bookingStatusUpdate').value);
-
-                formData.append('paymentStatus', document.getElementById('paymentStatus').value);
-
-                formData.append('staff', document.getElementById('staffSelect').value);
-
-                fetch('update_booking.php', {
-                        method: 'POST',
-                        body: formData
-                    })
-                    .then(response => response.json())
-                    .then(result => {
-                        if (result.success) {
-                            alert('Booking updated successfully!');
-                            location.reload();
-                        } else {
-                            alert('Error updating booking: ' + (result.message || 'Unknown error'));
-                        }
-                    })
-                    .catch(error => {
-                        console.error('Error:', error);
-                        alert('Error updating the booking!');
-                    });
-            });
-
-            function openModal(bookingId, currentStatus) {
-                document.getElementById('bookingId').value = bookingId;
-                document.getElementById('bookingStatus').value = currentStatus;
-                const myModal = new bootstrap.Modal(document.getElementById('bookingModal'));
-                myModal.show();
-            }
-        });
-
-        function openPaymentModal(bookingId, currentBalance) {
-            document.getElementById("paymentBookingId").value = bookingId
-            document.getElementById("currentBalance").value = currentBalance
-
-            document.getElementById("addPaymentForm").reset()
-            document.getElementById("amountPaid").value = ""
-            document.getElementById("refNo").value = ""
-
-            document.getElementById("otherPaymentMode").classList.add("d-none")
-
-            const paymentModal = new bootstrap.Modal(document.getElementById("addPaymentModal"))
-            paymentModal.show()
-        }
-
-        document.addEventListener("DOMContentLoaded", () => {
-            const savePaymentBtn = document.getElementById("savePaymentBtn")
-
-            if (savePaymentBtn) {
-                savePaymentBtn.addEventListener("click", () => {
-                    const form = document.getElementById("addPaymentForm")
-
-                    if (!form.checkValidity()) {
-                        form.reportValidity()
-                        return
-                    }
-
-                    // Disable button to prevent double submission
-                    savePaymentBtn.disabled = true
-                    savePaymentBtn.textContent = "Processing..."
-
-                    const formData = new FormData(form)
-
-                    const amountPaid = Number.parseFloat(formData.get("amount_paid"))
-                    const currentBalance = Number.parseFloat(formData.get("current_balance"))
-
-                    if (amountPaid <= 0) {
-                        alert("Amount paid must be greater than zero.")
-                        savePaymentBtn.disabled = false
-                        savePaymentBtn.textContent = "Save Payment"
-                        return
-                    }
-
-                    if (amountPaid > currentBalance) {
-                        alert("Amount paid cannot be greater than the current balance.")
-                        savePaymentBtn.disabled = false
-                        savePaymentBtn.textContent = "Save Payment"
-                        return
-                    }
-
-                    fetch("add_payment.php", {
-                            method: "POST",
-                            body: formData,
-                        })
-                        .then((response) => response.text())
-                        .then((text) => {
-                            // Try to parse as JSON, but handle HTML responses
-                            let data
-                            try {
-                                data = JSON.parse(text)
-                            } catch (e) {
-                                console.error("Server returned non-JSON response:", text)
-                                throw new Error("Server returned an invalid response. Check server logs.")
-                            }
-
-                            if (data.success) {
-                                // Close the modal
-                                const modalElement = document.getElementById("addPaymentModal")
-                                const modal = bootstrap.Modal.getInstance(modalElement)
-                                if (modal) {
-                                    modal.hide()
-                                }
-
-                                // Update the UI with new balance
-                                if (data.booking_balance !== undefined) {
-                                    document.getElementById("bookBalance").value = data.booking_balance
-
-                                    // Update payment status if balance is zero
-                                    if (Number.parseFloat(data.booking_balance) === 0) {
-                                        document.getElementById("paymentStatus").value = "Fully Paid"
-                                    } else if (Number.parseFloat(data.booking_balance) > 0) {
-                                        document.getElementById("paymentStatus").value = "Down Payment"
-                                    }
-
-                                    // Show success message
-                                    alert("Payment added successfully! New balance: " + data.booking_balance)
-                                } else {
-                                    alert("Payment added successfully!")
-                                }
-
-                                // Optional: Reload the page to refresh all data
-                                // location.reload();
-                            } else {
-                                alert("Error: " + (data.message || "Unknown error occurred"))
-                            }
-                        })
-                        .catch((error) => {
-                            console.error("Error:", error)
-                            alert("An error occurred while processing the payment: " + error.message)
-                        })
-                        .finally(() => {
-                            // Re-enable button
-                            savePaymentBtn.disabled = false
-                            savePaymentBtn.textContent = "Save Payment"
-                        })
-                })
-            }
-
-            // Add event listener for payment mode change
-            const paymentModeSelect = document.getElementById("paymentModeAdd")
-            if (paymentModeSelect) {
-                paymentModeSelect.addEventListener("change", function() {
-                    const otherPaymentMode = document.getElementById("otherPaymentMode")
-                    if (this.value === "others") {
-                        otherPaymentMode.classList.remove("d-none")
-                    } else {
-                        otherPaymentMode.classList.add("d-none")
-                    }
-                })
-            }
-        })
-
-
-
-        // Add event listeners to check-in and check-out date inputs to recalculate total amount and balance
-        document.getElementById('checkIn').addEventListener('change', recalculateBookingAmount);
-        document.getElementById('checkOut').addEventListener('change', recalculateBookingAmount);
-
-        function recalculateBookingAmount() {
-            const checkIn = document.getElementById('checkIn').value;
-            const checkOut = document.getElementById('checkOut').value;
-            const bookingId = document.getElementById('modalBookingId').textContent;
-            const petSize = document.getElementById('petType').value;
-            const service = document.getElementById('service').value;
-
-            // Validate dates
-            if (!checkIn || !checkOut) {
-                return;
-            }
-
-            // Ensure check-out is after check-in
-            if (new Date(checkOut) <= new Date(checkIn)) {
-                alert('Check-out date must be after check-in date');
-                return;
-            }
-
-            // Call API to recalculate amount
-            fetch('recalculate_booking.php', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/x-www-form-urlencoded',
-                    },
-                    body: new URLSearchParams({
-                        booking_id: bookingId,
-                        check_in: checkIn,
-                        check_out: checkOut,
-                        pet_size: petSize,
-                        service: service
-                    })
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        // Update the UI with new values
-                        document.getElementById('bookBalance').value = data.booking_balance;
-
-                        // Update payment status if balance is zero
-                        if (parseFloat(data.booking_balance) === 0) {
-                            document.getElementById('paymentStatus').value = 'Fully Paid';
-                        } else if (parseFloat(data.booking_balance) > 0) {
-                            document.getElementById('paymentStatus').value = 'Down Payment';
-                        }
-
-                        // Show notification
-                        alert('Booking amount recalculated. New balance: ' + data.booking_balance);
-                    } else {
-                        alert('Error: ' + data.message);
-                    }
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                    alert('An error occurred while recalculating the booking amount.');
-                });
-        }
-    </script>
 
     <!-- Add Payment Modal -->
     <div class="modal fade" id="addPaymentModal" tabindex="-1" aria-labelledby="addPaymentModalLabel" aria-hidden="true">
@@ -931,9 +669,7 @@ try {
                     <form id="addPaymentForm">
                         <input type="hidden" id="paymentBookingId" name="booking_id">
                         <input type="hidden" id="currentBalance" name="current_balance">
-
-                        <input type="hidden" name="customer_id" value="<?= $fetch_reservations['owner_id'] ?>">
-
+                        <input type="hidden" id="paymentOwnerId" name="customer_id">
 
                         <div class="mb-3">
                             <label for="amountPaid" class="form-label fw-bold text-brown">Amount Paid:</label>
@@ -946,6 +682,7 @@ try {
                                 <option value="cash">Cash</option>
                                 <option value="gcash">GCash</option>
                                 <option value="maya">Maya</option>
+                                <option value="others">Others</option>
                             </select>
                         </div>
 
@@ -977,39 +714,347 @@ try {
     </div>
 
     <script>
-        // Search functionality
         document.addEventListener('DOMContentLoaded', function() {
+            // Update date display
+            function updateDateDisplay() {
+                const now = new Date();
+
+                // Get day of week, month, day, and year separately
+                const dayOfWeek = now.toLocaleDateString('en-US', {
+                    weekday: 'long'
+                });
+                const month = now.toLocaleDateString('en-US', {
+                    month: 'long'
+                });
+                const day = now.getDate();
+                const year = now.getFullYear();
+
+                // Combine them without comma
+                const formattedDate = `${dayOfWeek} ${month} ${day} ${year}`;
+
+                // Update the element if it exists
+                const dateElement = document.getElementById('current-date');
+                if (dateElement) {
+                    dateElement.textContent = formattedDate;
+                }
+            }
+
+            // Call immediately and set up to update daily
+            updateDateDisplay();
+            setInterval(updateDateDisplay, 86400000); // Update once per day (in milliseconds)
+
+            // Search functionality
             const searchInput = document.getElementById('searchInput');
+            if (searchInput) {
+                searchInput.addEventListener('keyup', function() {
+                    const searchTerm = this.value.toLowerCase();
+                    const rows = document.querySelectorAll('.reservations tbody tr');
 
-            searchInput.addEventListener('keyup', function() {
-                const searchTerm = this.value.toLowerCase();
-                const rows = document.querySelectorAll('.reservations tbody tr');
+                    rows.forEach(row => {
+                        // Get all the text content from the row's cells
+                        const id = row.querySelector('.deets-id button').textContent.trim().toLowerCase();
+                        const pet = row.querySelector('.deets-pet').textContent.trim().toLowerCase();
+                        const service = row.querySelector('.deets-service').textContent.trim().toLowerCase();
+                        const name = row.querySelector('.deets-name').textContent.trim().toLowerCase();
+                        const payment = row.querySelector('.deets-payment').textContent.trim().toLowerCase();
+                        const date = row.querySelector('.deets-date').textContent.trim().toLowerCase();
 
-                rows.forEach(row => {
-                    // Get all the text content from the row's cells
-                    const id = row.querySelector('.deets-id button').textContent.trim().toLowerCase();
-                    const pet = row.querySelector('.deets-pet').textContent.trim().toLowerCase();
-                    const service = row.querySelector('.deets-service').textContent.trim().toLowerCase();
-                    const name = row.querySelector('.deets-name').textContent.trim().toLowerCase();
-                    const payment = row.querySelector('.deets-payment').textContent.trim().toLowerCase();
-                    const date = row.querySelector('.deets-date').textContent.trim().toLowerCase();
+                        // Check if any of the fields contain the search term
+                        if (id.includes(searchTerm) ||
+                            pet.includes(searchTerm) ||
+                            service.includes(searchTerm) ||
+                            name.includes(searchTerm) ||
+                            payment.includes(searchTerm) ||
+                            date.includes(searchTerm)) {
+                            row.classList.remove('hidden-row');
+                        } else {
+                            row.classList.add('hidden-row');
+                        }
+                    });
+                });
+            }
 
-                    // Check if any of the fields contain the search term
-                    if (id.includes(searchTerm) ||
-                        pet.includes(searchTerm) ||
-                        service.includes(searchTerm) ||
-                        name.includes(searchTerm) ||
-                        payment.includes(searchTerm) ||
-                        date.includes(searchTerm)) {
-                        row.classList.remove('hidden-row');
+            // Modal functionality
+            var bookingModal = document.getElementById('bookingModal');
+            if (bookingModal) {
+                bookingModal.addEventListener('show.bs.modal', function(event) {
+                    var button = event.relatedTarget;
+                    var bookingId = button.getAttribute('data-booking-id');
+                    var modalBookingId = document.getElementById('modalBookingId');
+                    modalBookingId.textContent = bookingId;
+
+                    var service = button.getAttribute('data-service');
+                    var modalHeader = document.getElementById('modalHeader');
+                    modalHeader.className = 'modal-header ' + (service.toLowerCase() === 'pet hotel' ? 'modal-hotel' : 'modal-daycare');
+
+                    document.getElementById('ownerName').value = button.getAttribute('data-owner-name');
+                    document.getElementById('ownerId').value = button.getAttribute('data-owner-id');
+                    document.getElementById('contact').value = button.getAttribute('data-owner-num');
+                    document.getElementById('petName').value = button.getAttribute('data-pet-name');
+                    document.getElementById('petBreed').value = button.getAttribute('data-pet-breed');
+                    document.getElementById('petType').value = button.getAttribute('data-pet-size');
+                    document.getElementById('service').value = button.getAttribute('data-service');
+                    document.getElementById('checkIn').value = button.getAttribute('data-check-in');
+                    document.getElementById('checkOut').value = button.getAttribute('data-check-out');
+                    document.getElementById('paymentStatus').value = button.getAttribute('data-payment-status');
+                    document.getElementById('paymentMode').value = button.getAttribute('data-mop');
+                    document.getElementById('referenceNo').value = button.getAttribute('data-reference-number');
+                    document.getElementById('bookBalance').value = button.getAttribute('data-book-balance');
+                    
+                    // Handle proof of payment
+                    const proofOfPayment = button.getAttribute('data-proof-of-payment');
+                    const proofContainer = document.getElementById('proofOfPaymentContainer');
+                    
+                    if (proofOfPayment && proofOfPayment !== 'null' && proofOfPayment !== '') {
+                        const proofPath = '/Adorafur/' + proofOfPayment;
+                        proofContainer.innerHTML = `<a href="${proofPath}" target="_blank" class="btn" id="view-photo">View Proof</a>`;
                     } else {
-                        row.classList.add('hidden-row');
+                        proofContainer.innerHTML = '<span>No proof of payment</span>';
+                    }
+
+                    // Fetch booking status from server
+                    fetch('get_booking_data.php?booking_id=' + bookingId)
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.booking_status) {
+                                var bookingStatusSelect = document.getElementById('bookingStatusUpdate');
+                                
+                                for (var i = 0; i < bookingStatusSelect.options.length; i++) {
+                                    if (bookingStatusSelect.options[i].value === data.booking_status) {
+                                        bookingStatusSelect.selectedIndex = i;
+                                        break;
+                                    }
+                                }
+                            }
+                        })
+                        .catch(error => console.error('Error:', error));
+                });
+            }
+
+            // Save button functionality
+            const saveButton = document.getElementById('saveButton');
+            if (saveButton) {
+                saveButton.addEventListener('click', function(e) {
+                    e.preventDefault();
+
+                    var formData = new FormData();
+                    
+                    formData.append('booking_id', document.getElementById('modalBookingId').textContent);
+                    formData.append('checkIn', document.getElementById('checkIn').value);
+                    formData.append('checkOut', document.getElementById('checkOut').value);
+                    formData.append('booking_status', document.getElementById('bookingStatusUpdate').value);
+                    formData.append('paymentStatus', document.getElementById('paymentStatus').value);
+                    formData.append('staff', document.getElementById('staffSelect').value);
+
+                    fetch('update_booking.php', {
+                            method: 'POST',
+                            body: formData
+                        })
+                        .then(response => response.json())
+                        .then(result => {
+                            if (result.success) {
+                                alert('Booking updated successfully!');
+                                location.reload();
+                            } else {
+                                alert('Error updating booking: ' + (result.message || 'Unknown error'));
+                            }
+                        })
+                        .catch(error => {
+                            console.error('Error:', error);
+                            alert('Error updating the booking!');
+                        });
+                });
+            }
+
+            // Add event listeners to check-in and check-out date inputs to recalculate total amount and balance
+            const checkInInput = document.getElementById('checkIn');
+            const checkOutInput = document.getElementById('checkOut');
+            
+            if (checkInInput) {
+                checkInInput.addEventListener('change', recalculateBookingAmount);
+            }
+            
+            if (checkOutInput) {
+                checkOutInput.addEventListener('change', recalculateBookingAmount);
+            }
+
+            // Add Payment Modal functionality
+            const paymentModeSelect = document.getElementById("paymentModeAdd");
+            if (paymentModeSelect) {
+                paymentModeSelect.addEventListener("change", function() {
+                    const otherPaymentMode = document.getElementById("otherPaymentMode");
+                    if (this.value === "others") {
+                        otherPaymentMode.classList.remove("d-none");
+                    } else {
+                        otherPaymentMode.classList.add("d-none");
                     }
                 });
-            });
-        });
-    </script>
+            }
 
+            const savePaymentBtn = document.getElementById("savePaymentBtn");
+            if (savePaymentBtn) {
+                savePaymentBtn.addEventListener("click", function() {
+                    const form = document.getElementById("addPaymentForm");
+
+                    if (!form.checkValidity()) {
+                        form.reportValidity();
+                        return;
+                    }
+
+                    // Disable button to prevent double submission
+                    savePaymentBtn.disabled = true;
+                    savePaymentBtn.textContent = "Processing...";
+
+                    const formData = new FormData(form);
+
+                    const amountPaid = Number.parseFloat(formData.get("amount_paid"));
+                    const currentBalance = Number.parseFloat(formData.get("current_balance"));
+
+                    if (amountPaid <= 0) {
+                        alert("Amount paid must be greater than zero.");
+                        savePaymentBtn.disabled = false;
+                        savePaymentBtn.textContent = "Save Payment";
+                        return;
+                    }
+
+                    if (amountPaid > currentBalance) {
+                        alert("Amount paid cannot be greater than the current balance.");
+                        savePaymentBtn.disabled = false;
+                        savePaymentBtn.textContent = "Save Payment";
+                        return;
+                    }
+
+                    fetch("add_payment.php", {
+                            method: "POST",
+                            body: formData,
+                        })
+                        .then((response) => response.text())
+                        .then((text) => {
+                            // Try to parse as JSON, but handle HTML responses
+                            let data;
+                            try {
+                                data = JSON.parse(text);
+                            } catch (e) {
+                                console.error("Server returned non-JSON response:", text);
+                                throw new Error("Server returned an invalid response. Check server logs.");
+                            }
+
+                            if (data.success) {
+                                // Close the modal
+                                const modalElement = document.getElementById("addPaymentModal");
+                                const modal = bootstrap.Modal.getInstance(modalElement);
+                                if (modal) {
+                                    modal.hide();
+                                }
+
+                                // Update the UI with new balance
+                                if (data.booking_balance !== undefined) {
+                                    document.getElementById("bookBalance").value = data.booking_balance;
+
+                                    // Update payment status if balance is zero
+                                    if (Number.parseFloat(data.booking_balance) === 0) {
+                                        document.getElementById("paymentStatus").value = "Fully Paid";
+                                    } else if (Number.parseFloat(data.booking_balance) > 0) {
+                                        document.getElementById("paymentStatus").value = "Down Payment";
+                                    }
+
+                                    // Show success message
+                                    alert("Payment added successfully! New balance: " + data.booking_balance);
+                                } else {
+                                    alert("Payment added successfully!");
+                                }
+                            } else {
+                                alert("Error: " + (data.message || "Unknown error occurred"));
+                            }
+                        })
+                        .catch((error) => {
+                            console.error("Error:", error);
+                            alert("An error occurred while processing the payment: " + error.message);
+                        })
+                        .finally(() => {
+                            // Re-enable button
+                            savePaymentBtn.disabled = false;
+                            savePaymentBtn.textContent = "Save Payment";
+                        });
+                });
+            }
+        });
+
+        // Function to open payment modal
+        function openPaymentModal(bookingId, currentBalance) {
+            document.getElementById("paymentBookingId").value = bookingId;
+            document.getElementById("currentBalance").value = currentBalance;
+            document.getElementById("paymentOwnerId").value = document.getElementById("ownerId").value;
+
+            // Reset form
+            document.getElementById("addPaymentForm").reset();
+            document.getElementById("amountPaid").value = "";
+            document.getElementById("refNo").value = "";
+            document.getElementById("otherPaymentMode").classList.add("d-none");
+
+            // Open modal
+            const paymentModal = new bootstrap.Modal(document.getElementById("addPaymentModal"));
+            paymentModal.show();
+        }
+
+        // Function to recalculate booking amount
+        function recalculateBookingAmount() {
+            const checkIn = document.getElementById('checkIn').value;
+            const checkOut = document.getElementById('checkOut').value;
+            const bookingId = document.getElementById('modalBookingId').textContent;
+            const petSize = document.getElementById('petType').value;
+            const service = document.getElementById('service').value;
+            
+            // Validate dates
+            if (!checkIn || !checkOut) {
+                return;
+            }
+            
+            // Ensure check-out is after check-in
+            if (new Date(checkOut) <= new Date(checkIn)) {
+                alert('Check-out date must be after check-in date');
+                return;
+            }
+            
+            // Call API to recalculate amount
+            fetch('recalculate_booking.php', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: new URLSearchParams({
+                    booking_id: bookingId,
+                    check_in: checkIn,
+                    check_out: checkOut,
+                    pet_size: petSize,
+                    service: service
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Update the UI with new values
+                    document.getElementById('bookBalance').value = data.booking_balance;
+                    
+                    // Update payment status if balance is zero
+                    if (parseFloat(data.booking_balance) === 0) {
+                        document.getElementById('paymentStatus').value = 'Fully Paid';
+                    } else if (parseFloat(data.booking_balance) > 0) {
+                        document.getElementById('paymentStatus').value = 'Down Payment';
+                    }
+                    
+                    // Show notification
+                    alert('Booking amount recalculated. New balance: ' + data.booking_balance);
+                } else {
+                    alert('Error: ' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('An error occurred while recalculating the booking amount.');
+            });
+        }
+    </script>
 </body>
 
 </html>
