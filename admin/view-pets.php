@@ -16,7 +16,7 @@ function getPetDetails($petId, $conn) {
                 p.pet_vaccination_status,
                 p.pet_vaccination_date_administered,
                 p.pet_vaccination_date_expiry,
-                p.pet_picture,
+                '../' || p.pet_picture as pet_picture,
                 c.c_first_name,
                 c.c_last_name
             FROM 
@@ -61,7 +61,7 @@ if (isset($_GET['fetch_pet']) && isset($_GET['pet_id'])) {
                     <div class="col-md-3">
                         <div class="image-container">
                             <div class="image-container text-center">
-                                <img id="pet_picture" src="Profile-Pics/pet_icon.png" class="img-fluid rounded" style="max-height: 200px; width: auto; object-fit: contain;">
+                                <img id="pet_picture" src="<?php echo !empty($pet['pet_picture']) ? $pet['pet_picture'] : 'Profile-Pics/pet_icon.png'; ?>" class="img-fluid rounded" style="max-height: 200px; width: auto; object-fit: contain;">
                             </div>
                         </div>
                     </div>

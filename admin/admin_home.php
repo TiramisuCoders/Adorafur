@@ -8,6 +8,7 @@ include("../connect.php");
 
 $sql = "SELECT
             b.booking_id AS b_id,
+            p.pet_id AS p_pet_id,
             p.pet_name AS p_pet,
             p.pet_breed AS p_breed,
             p.pet_size AS p_size,
