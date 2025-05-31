@@ -324,40 +324,43 @@ if (empty($transactions)) {
     <input type="hidden" name="customer_id" value="<?php echo htmlspecialchars($customerId); ?>">
     
     <div style="display: flex;">
-        <div style="width: 50%; padding-right: 10px;">
-            <label for="paymentMethod">Payment Method:</label>
-            <select id="paymentMethod" name="paymentMethod" onchange="togglePaymentFields()">
-                <option value="gcash">GCash</option>
-                <option value="maya">Maya</option>
-                <option value="cash">Cash</option>
-            </select>
-            
-            <br>
-            <label for="membershipStatus">Membership Status:</label><br>
-            <input type="radio" id="status-reg" name="memb-status" value="1" <?php echo ($customer['membership_status'] == 'REGULAR' || !$customer['membership_status']) ? 'checked' : ''; ?>>
-            <label for="status-reg">Regular</label><br>
-            <input type="radio" id="status-silver" name="memb-status" value="2" <?php echo ($customer['membership_status'] == 'SILVER') ? 'checked' : ''; ?>>
-            <label for="status-silver">Silver</label><br>
-            <input type="radio" id="status-gold" name="memb-status" value="3" <?php echo ($customer['membership_status'] == 'GOLD') ? 'checked' : ''; ?>>
-            <label for="status-gold">Gold</label><br>
-            <input type="radio" id="status-platinum" name="memb-status" value="4" <?php echo ($customer['membership_status'] == 'PLATINUM') ? 'checked' : ''; ?>>
-            <label for="status-platinum">Platinum</label><br>
+    <div style="width: 50%; padding-right: 10px;">
+        <label for="paymentMethod">Payment Method:</label>
+        <select id="paymentMethod" name="paymentMethod" onchange="togglePaymentFields()">
+            <option value="gcash">GCash</option>
+            <option value="maya">Maya</option>
+            <option value="cash">Cash</option>
+        </select>
+        
+        <br>
+        <label for="membershipStatus">Membership Status:</label><br>
+        <input type="radio" id="status-reg" name="memb-status" value="1" <?php echo ($customer['membership_status'] == 'REGULAR' || !$customer['membership_status']) ? 'checked' : ''; ?>>
+        <label for="status-reg">Regular</label><br>
+        <input type="radio" id="status-silver" name="memb-status" value="2" <?php echo ($customer['membership_status'] == 'SILVER') ? 'checked' : ''; ?>>
+        <label for="status-silver">Silver</label><br>
+        <input type="radio" id="status-gold" name="memb-status" value="3" <?php echo ($customer['membership_status'] == 'GOLD') ? 'checked' : ''; ?>>
+        <label for="status-gold">Gold</label><br>
+        <input type="radio" id="status-platinum" name="memb-status" value="4" <?php echo ($customer['membership_status'] == 'PLATINUM') ? 'checked' : ''; ?>>
+        <label for="status-platinum">Platinum</label><br>
+    </div>
+
+    <div style="width: 50%; padding-left: 10px;">
+        <div class="input-group">
+            <label for="membershipAmount">Amount</label>
+            <input type="text" name="membershipAmount" placeholder="Enter amount">
         </div>
 
-        <div style="width: 50%; padding-left: 10px;">
-            <div class="input-group">
-                <label for="membershipAmount">Amount</label>
-                <input type="text" name="membershipAmount" placeholder="Enter amount">
-            </div>
+        <div class="input-group">
+            <label for="refNumber">Reference No.</label>
+            <input type="text" id="refNumber" name="refNumber" placeholder="Enter reference number">
+        </div>
 
-            <div class="input-group">
-                <label for="refNumber">Reference No.</label>
-                <input type="text" id="refNumber" name="refNumber" placeholder="Enter reference number">
-            </div>
-
+        <div id="proofOfPaymentSection">
             <label for="proofofPayment">Proof of Payment</label>
             <input type="file" id="proofOfPayment" name="proofOfPayment">
         </div>
+    </div>
+
     </div>
 
     <div class="cancel-save-btns">
@@ -371,6 +374,9 @@ if (empty($transactions)) {
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
         
+       
+    // Initial call to set the correct visibility on page load
+    togglePaymentFields();
         // JavaScript for modal functionality
         var modal = document.getElementById("membershipModal");
         var btn = document.getElementById("openModalBtn");
@@ -478,7 +484,7 @@ function viewPetDetails(petId) {
                     if (data.pet_age_years > 0) {
                         ageText += data.pet_age_years + ' year(s)';
                     }
-                    document.getElementById('pet-age').textContent = ageText || 'Not specified';
+                    document.getElementById('pet-age').textContent = ageText || 'Not specified';    
                     
                     document.getElementById('pet-gender').textContent = data.pet_gender;
                     document.getElementById('pet-description').textContent = data.pet_description || 'None';
@@ -534,6 +540,19 @@ function viewPetDetails(petId) {
                 }, 200);
             });
         });
+
+ function togglePaymentFields() {
+        const paymentMethod = document.getElementById('paymentMethod').value;
+        const proofOfPaymentSection = document.getElementById('proofOfPaymentSection');
+
+        if (paymentMethod === 'cash') {
+            proofOfPaymentSection.style.display = 'none';
+        } else {
+            proofOfPaymentSection.style.display = 'block';
+        }
+    }
+
+    
     </script>
         <script src="admin.js"></script>
 </body>

@@ -40,11 +40,30 @@ try {
         error_log("Added 'completed' column to Admin_Activities_Reminders table");
     }
 
-    // Fetch latest reminders and tasks using PDO
+    // Check if the hidden column exists, if not, add it
+    $checkColumnQuery = "SELECT column_name 
+                        FROM information_schema.columns 
+                        WHERE table_name = 'admin_activities_reminders' 
+                        AND column_name = 'hidden'";
+    
+    $checkStmt = $conn->prepare($checkColumnQuery);
+    $checkStmt->execute();
+    
+    if ($checkStmt->rowCount() === 0) {
+        // Column doesn't exist, so add it
+        $alterTableQuery = "ALTER TABLE Admin_Activities_Reminders 
+                           ADD COLUMN hidden BOOLEAN DEFAULT FALSE";
+        
+        $conn->exec($alterTableQuery);
+        error_log("Added 'hidden' column to Admin_Activities_Reminders table");
+    }
+
+    // Fetch latest reminders and tasks using PDO, excluding hidden items
     $query = "SELECT activity_id, activity_date, activity_time, activity_description, activity_type, 
               COALESCE(completed, FALSE) as completed 
               FROM Admin_Activities_Reminders 
               WHERE admin_id = :admin_id 
+              AND (hidden IS NULL OR hidden = FALSE)
               ORDER BY activity_date ASC, activity_time ASC";
 
     $stmt = $conn->prepare($query);

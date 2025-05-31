@@ -111,10 +111,10 @@ if (!isset($_SESSION['admin_id'])) {
     <!-- Delete Confirmation Modal -->
     <div class="delete-modal" id="deleteModal">
         <div class="delete-modal-content">
-            <h3 class="delete-modal-title">Confirm Delete</h3>
-            <p class="delete-modal-message">Are you sure you want to delete this item?</p>
+            <h3 class="delete-modal-title">Confirm Hide</h3>
+            <p class="delete-modal-message">Are you sure you want to hide this item?</p>
             <div class="delete-modal-buttons">
-                <button id="confirmDeleteBtn" class="confirm-delete-btn">Yes, Delete</button>
+                <button id="confirmDeleteBtn" class="confirm-delete-btn">Yes, Hide</button>
                 <button id="cancelDeleteBtn" class="cancel-delete-btn">Cancel</button>
             </div>
         </div>

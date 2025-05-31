@@ -526,25 +526,34 @@ include 'header.php'; ?>
                                         <div id="petPhotoError" class="error pet-photo-error" style="display: none;"></div>
                                     </div>
                                     
-                                    <div class="mb-3">
+                                   <div class="mb-3">
                                         <label class="form-label">VACCINATION STATUS</label>
+                                        
                                         <input type="file" name="vaccination_file" class="form-control mb-2" accept="image/*,application/pdf" required id="vaccinationFileInput">
                                         <div class="form-text">File size must be less than 5MB.</div>
+
                                         <?php if ($vaccination_file_error): ?>
                                             <p class="error vaccination-file-error"><?php echo $vaccination_file_error; ?></p>
                                         <?php endif; ?>
                                         <div id="vaccinationFileError" class="error vaccination-file-error" style="display: none;"></div>
-                                        <div class="radio-group">
-                                            <div>
-                                                <input type="radio" name="vaccination_status" id="vaccinated" value="vaccinated" required <?php echo (isset($pet_form_data['vaccination_status']) && $pet_form_data['vaccination_status'] == 'vaccinated') ? 'checked' : ''; ?>>
-                                                <label for="vaccinated">Vaccinated</label>
-                                            </div>
-                                            <div>
-                                                <input type="radio" name="vaccination_status" id="not_vaccinated" value="not_vaccinated" <?php echo (isset($pet_form_data['vaccination_status']) && $pet_form_data['vaccination_status'] == 'not_vaccinated') ? 'checked' : ''; ?>>
-                                                <label for="not_vaccinated">Not Vaccinated</label>
-                                            </div>
+
+                                        <select name="vaccination_status" class="form-select mb-3" required>
+                                            <option value="" disabled selected>Select vaccination status</option>
+                                            <option value="vaccinated" <?php echo (isset($pet_form_data['vaccination_status']) && $pet_form_data['vaccination_status'] == 'vaccinated') ? 'selected' : ''; ?>>Vaccinated</option>
+                                            <option value="incomplete" <?php echo (isset($pet_form_data['vaccination_status']) && $pet_form_data['vaccination_status'] == 'incomplete') ? 'selected' : ''; ?>>Incomplete</option>
+                                            <option value="not_vaccinated" <?php echo (isset($pet_form_data['vaccination_status']) && $pet_form_data['vaccination_status'] == 'not_vaccinated') ? 'selected' : ''; ?>>Not Vaccinated</option>
+                                        </select>
+
+                                        <div class="alert alert-secondary" role="alert">
+                                            <strong>Vaccination Requirements:</strong><br>
+                                            <u>For Dogs:</u> Rabies, DHPP (Distemper, Hepatitis, Parvovirus, Parainfluenza), Bordetella (Kennel Cough), Canine Influenza (recommended)<br>
+                                            <u>For Cats:</u> Rabies, FVRCP (Feline Viral Rhinotracheitis, Calicivirus, Panleukopenia), FeLV (recommended)<br>
+                                            
+                                            <strong>Vaccinations must be up to date and administered at least 7–14 days before boarding.</strong>
                                         </div>
+                                        
                                     </div>
+
                                     
                                     <div class="mb-3">
                                         <label class="form-label">DATE ADMINISTERED</label>
