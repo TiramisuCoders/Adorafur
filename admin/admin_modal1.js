@@ -28,10 +28,10 @@ function togglePasswordVisibility(inputId, iconId) {
 
   if (passwordInput.type === "password") {
     passwordInput.type = "text"
-    icon.className = "fa fa-eye-slash" // Change to eye-slash icon when password is visible
+    icon.className = "fa fa-eye-slash"
   } else {
     passwordInput.type = "password"
-    icon.className = "fa fa-eye" // Change to eye icon when password is hidden
+    icon.className = "fa fa-eye"
   }
 }
 
@@ -137,7 +137,7 @@ async function createAdmin() {
         data: {
           name: adminName,
           position: position,
-          full_name: adminName, // Add full_name for display name
+          full_name: adminName,
         },
         emailRedirectTo: window.location.origin + "/admin/admin_login.php",
       },
@@ -155,6 +155,7 @@ async function createAdmin() {
     }
 
     // Now insert the admin data into your custom admin table using AJAX
+    // FIXED: Changed from "admin_ajax.php" to "login_ajax.php"
     console.log("Inserting admin data into database with Supabase UID:", authData.user.id)
     const formData = new FormData()
     formData.append("action", "create_admin")
@@ -162,10 +163,11 @@ async function createAdmin() {
     formData.append("admin_email", email)
     formData.append("admin_position", position)
     formData.append("supabase_uid", authData.user.id)
-    formData.append("password", password) // Add the plain text password
+    formData.append("password", password) // This will be hashed in login_ajax.php
 
     try {
-      const response = await fetch("admin_ajax.php", {
+      // FIXED: Changed from "admin_ajax.php" to "login_ajax.php"
+      const response = await fetch("login_ajax.php", {
         method: "POST",
         body: formData,
       })
@@ -222,10 +224,7 @@ document.addEventListener("DOMContentLoaded", () => {
   // Add event listeners for password toggle buttons
   const passwordToggle = document.getElementById("passwordToggle")
   if (passwordToggle) {
-    // Remove any existing event listeners to prevent duplication
     passwordToggle.replaceWith(passwordToggle.cloneNode(true))
-
-    // Get the fresh element and add the event listener
     document.getElementById("passwordToggle").addEventListener("click", () => {
       togglePasswordVisibility("password", "passwordEyeIcon")
     })
@@ -233,15 +232,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
   const repeatPasswordToggle = document.getElementById("repeatPasswordToggle")
   if (repeatPasswordToggle) {
-    // Remove any existing event listeners to prevent duplication
     repeatPasswordToggle.replaceWith(repeatPasswordToggle.cloneNode(true))
-
-    // Get the fresh element and add the event listener
     document.getElementById("repeatPasswordToggle").addEventListener("click", () => {
       togglePasswordVisibility("repeatPassword", "repeatPasswordEyeIcon")
     })
   }
 })
 
-// Add console log to check if the script is loaded
-console.log("admin_modal.js loaded")
+console.log("admin_modal1.js loaded")

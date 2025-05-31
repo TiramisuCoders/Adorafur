@@ -2,8 +2,8 @@
 // Start session
 session_start();
 
-// Include database connection
-require_once '../connect.php';
+// Use absolute path to include the DB connection
+require_once $_SERVER['DOCUMENT_ROOT'] . '/connect.php';
 
 // Initialize variables
 $email = $password = '';
@@ -15,6 +15,7 @@ if (isset($_SESSION['admin_id'])) {
     exit();
 }
 ?>
+
 
 <!DOCTYPE html>
 <html lang="en">

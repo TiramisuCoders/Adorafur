@@ -183,7 +183,7 @@ require_once 'create_admin_modal.php';
         </div>
     </div>
     
-    <script src="admin_modal.js"></script>
+    <script src="admin_modal1.js"></script>
     <script>
         // Update the clock and date
         function updateDateTime() {
