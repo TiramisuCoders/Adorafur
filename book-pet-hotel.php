@@ -135,7 +135,7 @@ unset($_SESSION['pet_form_data']);
                     <div class="line"></div>
                     <div class="calendar-body">
                         <div class="weekdays">
-                            <div>Sun</div>
+                            <div>test</div>
                             <div>Mon</div>
                             <div>Tue</div>
                             <div>Wed</div>
